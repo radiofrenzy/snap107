@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNAP 107 - TOTAL SYNC</title>
+    <title>SNAP 107 - THE FINAL FIX</title>
     <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -32,7 +32,7 @@
 <body>
 
     <div id="player-widget">
-        <div id="status-bar"><div id="status-dot"></div> TOTAL SYNC</div>
+        <div id="status-bar"><div id="status-dot"></div> <span id="sync-text">SYNC ACTIVE</span></div>
         <div id="player-content">
             <img id="album-art" src="https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107" alt="Art">
             <div id="text-info">
@@ -54,7 +54,7 @@ const SUPABASE_KEY = 'sb_publishable_fu_ULJb3PP0bde3uNFNEYA_rKglhlaw';
 const STATION_KEY  = 'SNAP107_SECRET'; 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { global: { headers: { 'x-station-key': STATION_KEY } } });
 
-let currentSong = "";
+let memory = "";
 
 function handleMarquee(element) {
     const container = element.parentElement;
@@ -77,61 +77,55 @@ async function getCover(artist, title) {
     } catch (e) { return "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107"; }
 }
 
-async function updateAll() {
-    let topDbTrack = "";
-
-    // PHASE 1: Update UI from Supabase (THE STABLE PART)
+// FUNCTION 1: Updates the SCREEN (The visual part)
+async function refreshUI() {
     try {
-        const { data, error } = await supabaseClient.from('radio_history').select('*').order('created_at', { ascending: false }).limit(35);
-        
-        if (data && data.length > 0) {
-            topDbTrack = data[0].track_title;
+        const { data } = await supabaseClient.from('radio_history').select('*').order('created_at', { ascending: false }).limit(35);
+        if (!data || data.length === 0) return;
 
-            // 1. Refresh Right Box
-            document.getElementById('tracks-inner').innerHTML = data.map(item => `
-                <div class="history-item">
-                    <span class="history-time">[${new Date(item.created_at).getHours()}:${String(new Date(item.created_at).getMinutes()).padStart(2, '0')}]</span> 
-                    <span class="history-track">${item.track_title}</span>
-                </div>`).join('');
+        // Update Right Box
+        document.getElementById('tracks-inner').innerHTML = data.map(item => `
+            <div class="history-item">
+                <span class="history-time">[${new Date(item.created_at).getHours()}:${String(new Date(item.created_at).getMinutes()).padStart(2, '0')}]</span> 
+                <span class="history-track">${item.track_title}</span>
+            </div>`).join('');
 
-            // 2. Mirror to Left Box
-            if (topDbTrack !== currentSong) {
-                currentSong = topDbTrack;
-                const [artist, song] = topDbTrack.includes(' - ') ? topDbTrack.split(' - ') : ["SNAP 107", topDbTrack];
-                document.getElementById('artist').innerText = artist.trim();
-                document.getElementById('title').innerText = song.trim();
-                handleMarquee(document.getElementById('artist'));
-                handleMarquee(document.getElementById('title'));
-                
-                const art = await getCover(artist.trim(), song.trim());
-                document.getElementById('album-art').src = art;
-            }
+        // Update Left Box (Always mirrors the TOP of the history)
+        const currentTop = data[0].track_title;
+        if (currentTop !== memory) {
+            memory = currentTop;
+            const [artist, song] = currentTop.includes(' - ') ? currentTop.split(' - ') : ["SNAP 107", currentTop];
+            document.getElementById('artist').innerText = artist.trim();
+            document.getElementById('title').innerText = song.trim();
+            handleMarquee(document.getElementById('artist'));
+            handleMarquee(document.getElementById('title'));
+            const art = await getCover(artist.trim(), song.trim());
+            document.getElementById('album-art').src = art;
         }
-    } catch (err) {
-        console.warn("UI Update failed, skipping to background check.");
-    }
-
-    // PHASE 2: Background Radio Check (THE DANGER ZONE)
-    // We wrap this separately so a radio crash CANNOT stop the UI update above.
-    try {
-        const radioUrl = 'http://sapircast.caster.fm:13044/status-json.xsl';
-        const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(radioUrl + '?cb=' + Date.now())}`);
-        const json = await res.json();
-        const stats = JSON.parse(json.contents);
-        const serverTitle = stats.icestats.source["display-title"];
-
-        if (serverTitle && serverTitle.trim() !== topDbTrack) {
-            // Check for recent duplicates to prevent spam
-            await supabaseClient.from('radio_history').insert([{ track_title: serverTitle.trim() }]);
-        }
-    } catch (e) {
-        console.warn("Radio server unreachable, UI is fine.");
-    }
+    } catch (e) { console.log("UI Refresh Skipped"); }
 }
 
-// Increased interval to 8 seconds to prevent proxy banning
-setInterval(updateAll, 8000);
-updateAll();
+// FUNCTION 2: Checks the RADIO (The background part)
+async function checkRadio() {
+    try {
+        const radioUrl = 'http://sapircast.caster.fm:13044/status-json.xsl';
+        // Switching to a different proxy to avoid the "AllOrigins" loop you were seeing
+        const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(radioUrl + '?cb=' + Date.now())}`);
+        const stats = await res.json();
+        const serverTitle = stats.icestats.source["display-title"];
+
+        if (serverTitle && serverTitle.trim() !== memory) {
+            await supabaseClient.from('radio_history').insert([{ track_title: serverTitle.trim() }]);
+            refreshUI(); // Update screen immediately if a new song is found
+        }
+    } catch (e) { console.warn("Background Radio Check Failed"); }
+}
+
+// UI refreshes every 5s from DB. Radio checks every 10s from server.
+setInterval(refreshUI, 5000);
+setInterval(checkRadio, 10000);
+refreshUI();
+checkRadio();
 </script>
 </body>
 </html>
