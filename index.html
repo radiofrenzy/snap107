@@ -56,9 +56,10 @@ body {
 #album-art {
     width: 220px;
     height: 220px;
-    object-fit: cover;
     border-radius: 12px;
     border: 2px solid #1a1a40;
+    object-fit: cover;
+    background-color: #050525;
 }
 
 #text-info {
@@ -153,7 +154,11 @@ body {
     border-bottom: 1px solid #080828;
     padding-bottom: 4px;
 }
-.history-time { color: #3a3a6a; min-width: 50px; }
+
+.history-time {
+    color: #3a3a6a;
+    min-width: 50px;
+}
 </style>
 </head>
 
@@ -166,7 +171,11 @@ body {
     </div>
 
     <div id="player-content">
-        <img id="album-art" src="https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107">
+        <img
+            id="album-art"
+            src="https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107"
+            onerror="this.src='https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107'"
+        >
         <div id="text-info">
             <div class="marquee-container"><div id="artist"></div></div>
             <div class="marquee-container"><div id="title"></div></div>
@@ -199,12 +208,10 @@ const PROXIES = [
 ];
 let proxyIndex = 0;
 
-/* 🔧 FIXED MARQUEE */
+/* 🔁 FIXED MARQUEE */
 function handleMarquee(el, text) {
     const container = el.parentElement;
-
     el.classList.remove('animate-scroll');
-    el.removeAttribute('data-original');
     el.innerText = text;
 
     requestAnimationFrame(() => {
@@ -215,15 +222,35 @@ function handleMarquee(el, text) {
     });
 }
 
+/* 🎨 BULLETPROOF ALBUM ART */
 async function getCover(artist, title) {
     try {
-        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist+' '+title)}&entity=song&limit=1`);
+        const cleanArtist = artist
+            .replace(/feat\.?|ft\.?/gi, '')
+            .split('&')[0]
+            .trim();
+
+        const cleanTitle = title
+            .split('(')[0]
+            .split('[')[0]
+            .trim();
+
+        const res = await fetch(
+            `https://itunes.apple.com/search?term=${encodeURIComponent(
+                cleanArtist + ' ' + cleanTitle
+            )}&entity=song&limit=1`
+        );
+
         const data = await res.json();
-        return data.results?.[0]?.artworkUrl100?.replace('100x100','600x600')
-            || "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
-    } catch {
-        return "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
+
+        if (data.results && data.results.length) {
+            return data.results[0].artworkUrl100.replace('100x100', '600x600');
+        }
+    } catch (e) {
+        console.warn("Album art lookup failed");
     }
+
+    return "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
 }
 
 async function updateDisplay() {
@@ -245,13 +272,16 @@ async function updateDisplay() {
     const topTrack = data[0].track_title.trim();
     if (topTrack !== currentSongInLog) {
         currentSongInLog = topTrack;
-        const [artist, title] = topTrack.split(/ - | – /);
 
-        handleMarquee(document.getElementById('artist'), artist || "SNAP 107");
-        handleMarquee(document.getElementById('title'), title || artist);
+        const parts = topTrack.split(/ - | – /);
+        const artist = parts[0] || "SNAP 107";
+        const title  = parts[1] || parts[0];
+
+        handleMarquee(document.getElementById('artist'), artist);
+        handleMarquee(document.getElementById('title'), title);
 
         document.getElementById('album-art').src =
-            await getCover(artist || "", title || "");
+            await getCover(artist, title);
     }
 }
 
