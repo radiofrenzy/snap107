@@ -28,28 +28,54 @@
             padding: 30px;
             box-shadow: 0 0 40px rgba(0,0,0,0.9);
             text-align: center;
+            position: relative;
         }
 
+        /* LIVE INDICATOR */
+        #status-bar {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #444488;
+        }
+        #status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #ff3333; /* Red when starting */
+            border-radius: 50%;
+            box-shadow: 0 0 5px #ff3333;
+        }
+        .live-glow {
+            background-color: #00ff66 !important;
+            box-shadow: 0 0 10px #00ff66 !important;
+            animation: blink 1.5s infinite;
+        }
+        @keyframes blink { 50% { opacity: 0.3; } }
+
+        /* ALBUM ART */
         #album-art {
-            width: 250px;
-            height: 250px;
+            width: 240px;
+            height: 240px;
             margin: 0 auto 20px auto;
             border: 3px solid #1a1a40;
             background-color: #000;
             display: block;
             object-fit: cover;
-            box-shadow: 0 0 20px rgba(120, 152, 251, 0.2);
-            transition: opacity 0.5s ease-in-out;
+            transition: opacity 0.5s;
         }
 
         #artist { font-size: 24px; opacity: 0.7; min-height: 30px; }
         #title { 
-            font-size: 44px; 
+            font-size: 42px; 
             color: #a0baff; 
             text-shadow: 0 0 10px rgba(120, 152, 251, 0.6);
             margin: 10px 0 20px 0;
             line-height: 1;
-            min-height: 90px;
+            min-height: 85px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -63,7 +89,7 @@
             border: 2px solid #7898FB;
             text-decoration: none;
             font-size: 22px;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
         .btn-request:hover { background: #7898FB; color: #050520; }
 
@@ -76,12 +102,14 @@
 <body>
 
 <div id="radio-container">
-    <img id="album-art" src="https://via.placeholder.com/300?text=SNAP+107" alt="Album Art">
+    <div id="status-bar"><div id="status-dot"></div> <span id="status-text">SYNCING</span></div>
     
-    <div id="artist">LOADING...</div>
-    <div id="title">SNAP 107</div>
+    <img id="album-art" src="https://via.placeholder.com/300?text=SNAP+107" alt="Art">
     
-    <a href="YOUR_FORM_LINK_HERE" target="_blank" class="btn-request">REQUEST SONG</a>
+    <div id="artist">STATION COLD</div>
+    <div id="title">WAITING FOR DATA</div>
+    
+    <a href="YOUR_GOOGLE_FORM_URL" target="_blank" class="btn-request">REQUEST SONG</a>
     
     <hr>
     <div class="history-label">RECENTLY PLAYED:</div>
@@ -91,29 +119,34 @@
 <script>
 let lastTrack = "";
 
-// Searches iTunes for the album cover
 async function getCover(artist, title) {
     try {
         const query = encodeURIComponent(`${artist} ${title}`);
         const res = await fetch(`https://itunes.apple.com/search?term=${query}&entity=song&limit=1`);
         const data = await res.json();
         if (data.results && data.results.length > 0) {
-            // Get high-res version
             return data.results[0].artworkUrl100.replace('100x100', '600x600');
         }
     } catch (e) { console.error("Art Error"); }
-    return "https://via.placeholder.com/300?text=SNAP+107"; // Fallback image
+    return "https://via.placeholder.com/300?text=SNAP+107";
 }
 
 async function updateRadio() {
     try {
-        const targetUrl = `http://sapircast.caster.fm:13044/status-json.xsl?t=${Date.now()}`;
-        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+        // Advanced Cache-Busting: Timestamp + Random ID
+        const cacheBust = new Date().getTime() + Math.floor(Math.random() * 1000);
+        const targetUrl = `http://sapircast.caster.fm:13044/status-json.xsl?cb=${cacheBust}`;
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
         
         const response = await fetch(proxyUrl);
-        const stats = await response.json();
+        const data = await response.json();
+        const stats = JSON.parse(data.contents);
         const fullTitle = stats.icestats.source["display-title"];
         
+        // Update Status Indicator
+        document.getElementById('status-dot').classList.add('live-glow');
+        document.getElementById('status-text').innerText = "LIVE";
+
         if (fullTitle !== lastTrack) {
             lastTrack = fullTitle;
             const parts = fullTitle.split(' - ');
@@ -123,15 +156,16 @@ async function updateRadio() {
             document.getElementById('artist').innerText = artistName;
             document.getElementById('title').innerText = songName;
 
-            // Update Album Art
+            // Album Art Update
             const artUrl = await getCover(artistName, songName);
-            document.getElementById('album-art').style.opacity = 0;
+            const artEl = document.getElementById('album-art');
+            artEl.style.opacity = 0;
             setTimeout(() => {
-                document.getElementById('album-art').src = artUrl;
-                document.getElementById('album-art').style.opacity = 1;
+                artEl.src = artUrl;
+                artEl.style.opacity = 1;
             }, 500);
 
-            // Update History
+            // History Update
             const tracks = stats.icestats.source.playlist.trackList;
             let historyHTML = "";
             tracks.slice(0, 3).forEach(track => {
@@ -139,10 +173,14 @@ async function updateRadio() {
             });
             document.getElementById('tracks-inner').innerHTML = historyHTML;
         }
-    } catch (e) { console.log("Updating..."); }
+    } catch (e) {
+        document.getElementById('status-dot').classList.remove('live-glow');
+        document.getElementById('status-text').innerText = "RETRIEVING";
+    }
 }
 
-setInterval(updateRadio, 10000);
+// Check every 7 seconds
+setInterval(updateRadio, 7000);
 updateRadio();
 </script>
 
