@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNAP 107 - BROADCAST CENTER</title>
+    <title>SNAP 107 - JVC PIXEL DASH</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -12,23 +12,24 @@
             color: #7898FB; 
             font-family: 'VT323', monospace; 
             display: flex; 
-            justify-content: center; 
+            justify-content: space-between; 
             align-items: center; 
             height: 100vh; 
             margin: 0; 
+            padding: 0 50px; 
             text-transform: uppercase; 
-            gap: 20px; 
+            overflow: hidden;
         }
 
-        /* --- PLAYER WIDGET (RECTANGLE) --- */
+        /* --- PLAYER WIDGET --- */
         #player-widget {
-            width: 600px; /* Wider for horizontal layout */
-            height: 350px;
+            width: 850px; 
+            height: 380px;
             background: linear-gradient(145deg, #050525, #0a0a35);
             border: 3px solid #1a1a40;
             border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 0 50px rgba(0,0,0,0.9);
+            padding: 30px;
+            box-shadow: 0 0 60px rgba(0,0,0,0.8);
             display: flex;
             flex-direction: column;
             position: relative;
@@ -36,63 +37,92 @@
 
         #player-content {
             display: flex;
-            gap: 25px;
+            gap: 35px;
             align-items: center;
             flex-grow: 1;
+            overflow: hidden;
         }
 
         #album-art { 
-            width: 220px; 
-            height: 220px; 
-            aspect-ratio: 1 / 1; /* Forces a perfect square */
-            object-fit: cover; /* Prevents stretching */
+            width: 260px; 
+            height: 260px; 
+            aspect-ratio: 1 / 1; 
+            object-fit: cover; 
             background-color: #000; 
-            border-radius: 8px; 
+            border-radius: 12px; 
             border: 2px solid #1a1a40; 
+            flex-shrink: 0;
         }
 
         #text-info {
             display: flex;
             flex-direction: column;
             justify-content: center;
-            text-align: left; /* Left-aligned like your 2nd image */
+            text-align: left;
             overflow: hidden;
             flex-grow: 1;
         }
 
-        #artist { font-size: 28px; opacity: 0.7; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        #title { font-size: 48px; color: #a0baff; text-shadow: 0 0 15px rgba(120, 152, 251, 0.7); line-height: 1.1; margin: 0; }
+        /* --- JVC PIXEL-STEP MARQUEE --- */
+        .marquee-container { 
+            overflow: hidden; 
+            white-space: nowrap; 
+            width: 100%; 
+        }
+        
+        #artist { 
+            font-size: 32px; 
+            opacity: 0.7; 
+            margin-bottom: 5px; 
+            display: inline-block;
+        }
+        
+        #title { 
+            font-size: 56px; 
+            color: #a0baff; 
+            text-shadow: 0 0 20px rgba(120, 152, 251, 0.6); 
+            line-height: 1; 
+            margin: 0;
+            display: inline-block;
+        }
 
-        /* Status & Button */
-        #status-bar { position: absolute; top: 15px; right: 20px; font-size: 16px; display: flex; align-items: center; gap: 8px; color: #444488; }
-        #status-dot { width: 10px; height: 10px; background-color: #ff3333; border-radius: 50%; }
-        .live-glow { background-color: #00ff66 !important; box-shadow: 0 0 12px #00ff66 !important; animation: pulse 2s infinite; }
-        @keyframes pulse { 50% { opacity: 0.4; } }
+        /* The magic: 'steps' makes it jump pixel-by-pixel 
+           Duration is set long (40s+) so each "step" feels like ~1.5s
+        */
+        .animate-scroll {
+            animation: jvc-step 60s steps(40, end) infinite;
+            padding-right: 100px;
+        }
 
-        .btn-request { margin-top: 15px; padding: 10px; border: 2px solid #7898FB; color: #7898FB; text-decoration: none; font-size: 22px; text-align: center; transition: 0.3s; width: fit-content; }
+        @keyframes jvc-step {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+
+        /* Status & UI */
+        #status-bar { position: absolute; top: 20px; right: 30px; font-size: 18px; display: flex; align-items: center; gap: 10px; color: #444488; }
+        #status-dot { width: 12px; height: 12px; background-color: #ff3333; border-radius: 50%; }
+        .live-glow { background-color: #00ff66 !important; box-shadow: 0 0 15px #00ff66 !important; animation: pulse 2s infinite; }
+
+        .btn-request { margin-top: 20px; padding: 12px 25px; border: 2px solid #7898FB; color: #7898FB; text-decoration: none; font-size: 24px; transition: 0.3s; width: fit-content; }
         .btn-request:hover { background: #7898FB; color: #020210; }
 
-        /* --- HISTORY WIDGET (SQUARE) --- */
+        /* --- HISTORY WIDGET --- */
         #history-widget {
-            width: 350px;
-            height: 350px;
+            width: 380px;
+            height: 380px;
             background: linear-gradient(145deg, #050525, #0a0a35);
             border: 3px solid #1a1a40;
             border-radius: 20px;
             padding: 25px;
-            box-shadow: 0 0 50px rgba(0,0,0,0.9);
             display: flex;
             flex-direction: column;
         }
 
-        .history-header { font-size: 24px; color: #a0baff; margin-bottom: 10px; border-bottom: 1px solid #1a1a40; padding-bottom: 5px; }
-        #tracks-inner { flex-grow: 1; overflow-y: auto; font-size: 18px; color: #444488; }
-        #tracks-inner::-webkit-scrollbar { width: 4px; }
-        #tracks-inner::-webkit-scrollbar-thumb { background: #1a1a40; border-radius: 10px; }
-        
-        .history-item { margin-bottom: 8px; display: flex; gap: 8px; }
-        .history-time { color: #3a3a6a; min-width: 55px; }
-        .history-track { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .history-header { font-size: 26px; color: #a0baff; margin-bottom: 12px; border-bottom: 1px solid #1a1a40; padding-bottom: 8px; }
+        #tracks-inner { flex-grow: 1; overflow-y: auto; font-size: 20px; color: #444488; }
+        .history-item { margin-bottom: 10px; display: flex; gap: 10px; border-bottom: 1px solid #080828; padding-bottom: 5px; }
+        .history-time { color: #3a3a6a; min-width: 60px; }
     </style>
 </head>
 <body>
@@ -102,16 +132,16 @@
         <div id="player-content">
             <img id="album-art" src="https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107" alt="Art">
             <div id="text-info">
-                <div id="artist">STATION IDLE</div>
-                <div id="title">SNAP 107</div>
+                <div class="marquee-container"><div id="artist">STATION IDLE</div></div>
+                <div class="marquee-container"><div id="title">SNAP 107</div></div>
                 <a href="YOUR_GOOGLE_FORM_URL" target="_blank" class="btn-request">REQUEST SONG</a>
             </div>
         </div>
     </div>
 
     <div id="history-widget">
-        <div class="history-header">7-DAY LOG</div>
-        <div id="tracks-inner">INITIALIZING...</div>
+        <div class="history-header">7-DAY RADIO LOG</div>
+        <div id="tracks-inner">CONNECTING...</div>
     </div>
 
 <script>
@@ -126,9 +156,18 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
 
 let lastTrack = "";
 
-function formatTime(isoString) {
-    const d = new Date(isoString);
-    return `[${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}]`;
+function handleMarquee(element) {
+    const container = element.parentElement;
+    // Clear previous clones to prevent infinite duplication
+    const originalText = element.getAttribute('data-original') || element.innerHTML;
+    element.innerHTML = originalText; 
+    element.setAttribute('data-original', originalText);
+    element.classList.remove('animate-scroll');
+
+    if (element.scrollWidth > container.offsetWidth) {
+        element.classList.add('animate-scroll');
+        element.innerHTML += ` &nbsp;&nbsp;&nbsp;&nbsp; ${originalText}`;
+    }
 }
 
 async function getCover(artist, title) {
@@ -136,36 +175,19 @@ async function getCover(artist, title) {
         const query = encodeURIComponent(`${artist} ${title}`);
         const res = await fetch(`https://itunes.apple.com/search?term=${query}&entity=song&limit=1`);
         const data = await res.json();
-        if (data.results && data.results.length > 0) {
-            return data.results[0].artworkUrl100.replace('100x100', '600x600'); 
-        }
-        return "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
+        return (data.results && data.results.length > 0) ? data.results[0].artworkUrl100.replace('100x100', '600x600') : "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
     } catch (e) { return "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107"; }
 }
 
 async function fetchGlobalHistory() {
-    try {
-        const { data, error } = await supabaseClient
-            .from('radio_history')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(40);
-        if (data && data.length > 0) {
-            document.getElementById('tracks-inner').innerHTML = data.map(item => `
-                <div class="history-item">
-                    <span class="history-time">${formatTime(item.created_at)}</span> 
-                    <span class="history-track">${item.track_title}</span>
-                </div>
-            `).join('');
-        }
-    } catch (e) { console.error(e); }
-}
-
-async function logToCloud(trackName) {
-    const { data } = await supabaseClient.from('radio_history').select('track_title').order('id', { ascending: false }).limit(1);
-    if (!data || data.length === 0 || data[0].track_title !== trackName) {
-        await supabaseClient.from('radio_history').insert([{ track_title: trackName }]);
-        fetchGlobalHistory();
+    const { data } = await supabaseClient.from('radio_history').select('*').order('created_at', { ascending: false }).limit(40);
+    if (data) {
+        document.getElementById('tracks-inner').innerHTML = data.map(item => `
+            <div class="history-item">
+                <span class="history-time">[${new Date(item.created_at).getHours()}:${String(new Date(item.created_at).getMinutes()).padStart(2, '0')}]</span> 
+                <span class="history-track">${item.track_title}</span>
+            </div>
+        `).join('');
     }
 }
 
@@ -175,32 +197,33 @@ async function updateRadio() {
         const stats = JSON.parse((await res.json()).contents);
         const fullTitle = stats.icestats.source["display-title"];
 
-        if (fullTitle) {
+        if (fullTitle && fullTitle !== lastTrack) {
+            lastTrack = fullTitle;
+            const [artistName, songName] = fullTitle.includes(' - ') ? fullTitle.split(' - ') : ["SNAP 107", fullTitle];
+            
+            const artistEl = document.getElementById('artist');
+            const titleEl = document.getElementById('title');
+            
+            artistEl.innerText = artistName;
+            titleEl.innerText = songName;
+            
+            setTimeout(() => {
+                handleMarquee(artistEl);
+                handleMarquee(titleEl);
+            }, 150);
+
+            document.getElementById('album-art').src = await getCover(artistName, songName);
             document.getElementById('status-dot').classList.add('live-glow');
             document.getElementById('status-text').innerText = "LIVE";
 
-            if (fullTitle !== lastTrack && fullTitle !== "SNAP 107") {
-                lastTrack = fullTitle;
-                const parts = fullTitle.split(' - ');
-                const artistName = parts[0] || "SNAP 107";
-                const songName = parts[1] || fullTitle;
-
-                document.getElementById('artist').innerText = artistName;
-                document.getElementById('title').innerText = songName;
-
-                const artUrl = await getCover(artistName, songName);
-                document.getElementById('album-art').src = artUrl;
-                logToCloud(fullTitle);
-            }
+            await supabaseClient.from('radio_history').insert([{ track_title: fullTitle }]);
+            fetchGlobalHistory();
         }
-    } catch (e) {
-        document.getElementById('status-dot').classList.remove('live-glow');
-        document.getElementById('status-text').innerText = "OFFLINE";
-    }
+    } catch (e) { document.getElementById('status-text').innerText = "OFFLINE"; }
 }
 
 fetchGlobalHistory();
-setInterval(updateRadio, 10000);
+setInterval(updateRadio, 15000);
 updateRadio();
 </script>
 </body>
