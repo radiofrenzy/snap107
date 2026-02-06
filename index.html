@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNAP 107 - REVERTED</title>
+    <title>SNAP 107 - TOTAL SYNC</title>
     <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -32,7 +32,7 @@
 <body>
 
     <div id="player-widget">
-        <div id="status-bar"><div id="status-dot"></div> LIVE</div>
+        <div id="status-bar"><div id="status-dot"></div> TOTAL SYNC</div>
         <div id="player-content">
             <img id="album-art" src="https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107" alt="Art">
             <div id="text-info">
@@ -45,7 +45,7 @@
 
     <div id="history-widget">
         <div class="history-header">7-DAY RADIO LOG</div>
-        <div id="tracks-inner">FETCHING...</div>
+        <div id="tracks-inner">CONNECTING...</div>
     </div>
 
 <script>
@@ -78,6 +78,41 @@ async function getCover(artist, title) {
 }
 
 async function updateAll() {
+    let topDbTrack = "";
+
+    // PHASE 1: Update UI from Supabase (THE STABLE PART)
+    try {
+        const { data, error } = await supabaseClient.from('radio_history').select('*').order('created_at', { ascending: false }).limit(35);
+        
+        if (data && data.length > 0) {
+            topDbTrack = data[0].track_title;
+
+            // 1. Refresh Right Box
+            document.getElementById('tracks-inner').innerHTML = data.map(item => `
+                <div class="history-item">
+                    <span class="history-time">[${new Date(item.created_at).getHours()}:${String(new Date(item.created_at).getMinutes()).padStart(2, '0')}]</span> 
+                    <span class="history-track">${item.track_title}</span>
+                </div>`).join('');
+
+            // 2. Mirror to Left Box
+            if (topDbTrack !== currentSong) {
+                currentSong = topDbTrack;
+                const [artist, song] = topDbTrack.includes(' - ') ? topDbTrack.split(' - ') : ["SNAP 107", topDbTrack];
+                document.getElementById('artist').innerText = artist.trim();
+                document.getElementById('title').innerText = song.trim();
+                handleMarquee(document.getElementById('artist'));
+                handleMarquee(document.getElementById('title'));
+                
+                const art = await getCover(artist.trim(), song.trim());
+                document.getElementById('album-art').src = art;
+            }
+        }
+    } catch (err) {
+        console.warn("UI Update failed, skipping to background check.");
+    }
+
+    // PHASE 2: Background Radio Check (THE DANGER ZONE)
+    // We wrap this separately so a radio crash CANNOT stop the UI update above.
     try {
         const radioUrl = 'http://sapircast.caster.fm:13044/status-json.xsl';
         const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(radioUrl + '?cb=' + Date.now())}`);
@@ -85,42 +120,17 @@ async function updateAll() {
         const stats = JSON.parse(json.contents);
         const serverTitle = stats.icestats.source["display-title"];
 
-        const { data } = await supabaseClient.from('radio_history').select('*').order('created_at', { ascending: false }).limit(35);
-        
-        if (data) {
-            const topDbSong = data[0]?.track_title || "";
-            
-            // 1. Update Log UI
-            document.getElementById('tracks-inner').innerHTML = data.map(item => `
-                <div class="history-item">
-                    <span class="history-time">[${new Date(item.created_at).getHours()}:${String(new Date(item.created_at).getMinutes()).padStart(2, '0')}]</span> 
-                    <span class="history-track">${item.track_title}</span>
-                </div>`).join('');
-
-            // 2. Add new song to DB if it changed on server
-            if (serverTitle && serverTitle.trim() !== topDbSong) {
-                const recent = data.slice(0, 3).some(h => h.track_title.trim() === serverTitle.trim());
-                if (!recent) {
-                    await supabaseClient.from('radio_history').insert([{ track_title: serverTitle.trim() }]);
-                }
-            }
-
-            // 3. Update Player (Left Box)
-            if (serverTitle && serverTitle !== currentSong) {
-                currentSong = serverTitle;
-                const [artist, song] = serverTitle.includes(' - ') ? serverTitle.split(' - ') : ["SNAP 107", serverTitle];
-                document.getElementById('artist').innerText = artist;
-                document.getElementById('title').innerText = song;
-                handleMarquee(document.getElementById('artist'));
-                handleMarquee(document.getElementById('title'));
-                const art = await getCover(artist, song);
-                document.getElementById('album-art').src = art;
-            }
+        if (serverTitle && serverTitle.trim() !== topDbTrack) {
+            // Check for recent duplicates to prevent spam
+            await supabaseClient.from('radio_history').insert([{ track_title: serverTitle.trim() }]);
         }
-    } catch (e) { console.log("Loop Error"); }
+    } catch (e) {
+        console.warn("Radio server unreachable, UI is fine.");
+    }
 }
 
-setInterval(updateAll, 5000);
+// Increased interval to 8 seconds to prevent proxy banning
+setInterval(updateAll, 8000);
 updateAll();
 </script>
 </body>
