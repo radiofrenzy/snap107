@@ -4,8 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SNAP 107 - GHOST SYNC</title>
+
 <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 body {
     background-color: #020210;
@@ -20,100 +22,261 @@ body {
     gap: 15px;
     overflow: hidden;
 }
+
 #player-widget, #history-widget {
-    flex: 1.22;
     height: 380px;
     background: linear-gradient(145deg, #050525, #0a0a35);
     border: 3px solid #1a1a40;
     border-radius: 20px;
-    padding: 20px 25px;
     box-shadow: 0 0 50px rgba(0,0,0,0.8);
+}
+
+#player-widget {
+    flex: 1.22;
+    padding: 20px 25px;
     display: flex;
     flex-direction: column;
-    min-width: 0;
     position: relative;
 }
-#history-widget { flex: 1; padding: 20px; }
-#player-content { display: flex; gap: 25px; align-items: center; flex-grow: 1; overflow: hidden; justify-content: center; }
-#tracks-inner { flex-grow: 1; overflow-y: auto; font-size: 14.5px; color: #444488; letter-spacing: 0.1px; }
-.history-item { margin-bottom: 6px; display: flex; gap: 10px; border-bottom: 1px solid #080828; padding-bottom: 4px; white-space: nowrap; }
-.history-time { color: #3a3a6a; min-width: 50px; flex-shrink: 0; }
-.history-track { flex-grow: 1; overflow: hidden; text-overflow: clip; }
-.history-header { font-size: 17px; color: #a0baff; margin-bottom: 12px; border-bottom: 1px solid #1a1a40; padding-bottom: 8px; text-transform: uppercase; }
-#status-bar { position: absolute; top: 15px; right: 20px; font-size: 10px; display: flex; align-items: center; gap: 6px; color: #444488; }
-#status-dot { width: 7px; height: 7px; background-color: #00ff66; border-radius: 50%; box-shadow: 0 0 10px #00ff66; }
+
+#history-widget {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+#player-content {
+    display: flex;
+    gap: 25px;
+    align-items: center;
+    flex-grow: 1;
+}
+
+#album-art {
+    width: 220px;
+    height: 220px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 2px solid #1a1a40;
+}
+
+#text-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.marquee-container {
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+#artist {
+    font-size: 17px;
+    opacity: 0.8;
+    margin-bottom: 4px;
+}
+
+#title {
+    font-size: 38px;
+    color: #a0baff;
+    text-shadow: 0 0 15px rgba(120,152,251,.5);
+    line-height: 1.1;
+}
+
+.animate-scroll {
+    animation: jvc-step 40s steps(60,end) infinite;
+}
+
+@keyframes jvc-step {
+    from { transform: translateX(0); }
+    to { transform: translateX(-100%); }
+}
+
+#status-bar {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #444488;
+}
+
+#status-dot {
+    width: 7px;
+    height: 7px;
+    background-color: #00ff66;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #00ff66;
+}
+
+.btn-request {
+    margin-top: 15px;
+    padding: 8px 16px;
+    border: 2px solid #7898FB;
+    color: #7898FB;
+    text-decoration: none;
+    font-size: 15px;
+    width: fit-content;
+    text-transform: uppercase;
+}
+
+.btn-request:hover {
+    background: #7898FB;
+    color: #020210;
+}
+
+.history-header {
+    font-size: 17px;
+    color: #a0baff;
+    margin-bottom: 12px;
+    border-bottom: 1px solid #1a1a40;
+    padding-bottom: 8px;
+}
+
+#tracks-inner {
+    flex-grow: 1;
+    overflow-y: auto;
+    font-size: 14.5px;
+    color: #444488;
+}
+
+.history-item {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid #080828;
+    padding-bottom: 4px;
+}
+.history-time { color: #3a3a6a; min-width: 50px; }
 </style>
 </head>
+
 <body>
 
-<!-- LEFT BOX: CASTER.FM EMBED PLAYER -->
 <div id="player-widget">
+    <div id="status-bar">
+        <div id="status-dot"></div>
+        <span id="status-text">GHOST SYNC ACTIVE</span>
+    </div>
+
     <div id="player-content">
-        <div data-type="newStreamPlayer" 
-             data-publicToken="68bebccc-3f3d-406f-84e0-10e7cfe152d5" 
-             data-theme="light" 
-             data-color="e81e4d" 
-             data-channelId="" 
-             data-rendered="false" 
-             class="cstrEmbed">
-            <a href="https://www.caster.fm">Shoutcast Hosting</a>
-            <a href="https://www.caster.fm">Stream Hosting</a>
-            <a href="https://www.caster.fm">Radio Server Hosting</a>
+        <img id="album-art" src="https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107">
+        <div id="text-info">
+            <div class="marquee-container"><div id="artist"></div></div>
+            <div class="marquee-container"><div id="title"></div></div>
+            <a href="#" class="btn-request">REQUEST SONG</a>
         </div>
     </div>
 </div>
 
-<!-- RIGHT BOX: 7-DAY RADIO LOG -->
 <div id="history-widget">
     <div class="history-header">7-DAY RADIO LOG</div>
     <div id="tracks-inner">INITIALIZING...</div>
 </div>
 
-<script src="//cdn.cloud.caster.fm/widgets/embed.js"></script>
 <script>
 const SUPABASE_URL = 'https://jjevapkfrxepdfyymtpa.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_fu_ULJb3PP0bde3uNFNEYA_rKglhlaw';
 const STATION_KEY  = 'SNAP107_SECRET';
 
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-    global: { headers: { 'x-station-key': STATION_KEY } }
-});
+const supabaseClient = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY,
+    { global: { headers: { 'x-station-key': STATION_KEY } } }
+);
 
-// Function to update the right 7-day log
-async function updateHistoryLog() {
+let currentSongInLog = "";
+
+const PROXIES = [
+    url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+    url => `https://thingproxy.freeboard.io/fetch/${url}`
+];
+let proxyIndex = 0;
+
+/* 🔧 FIXED MARQUEE */
+function handleMarquee(el, text) {
+    const container = el.parentElement;
+
+    el.classList.remove('animate-scroll');
+    el.removeAttribute('data-original');
+    el.innerText = text;
+
+    requestAnimationFrame(() => {
+        if (el.scrollWidth > container.offsetWidth) {
+            el.classList.add('animate-scroll');
+            el.innerHTML = `${text}&nbsp;&nbsp;&nbsp;&nbsp;${text}`;
+        }
+    });
+}
+
+async function getCover(artist, title) {
     try {
-        const { data, error } = await supabaseClient
-            .from('radio_history')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(30);
-
-        if (error) {
-            console.error("Supabase fetch error:", error);
-            document.getElementById('tracks-inner').innerText = "FAILED TO LOAD LOG";
-            return;
-        }
-
-        if (!data || data.length === 0) {
-            document.getElementById('tracks-inner').innerText = "NO TRACKS FOUND";
-            return;
-        }
-
-        document.getElementById('tracks-inner').innerHTML = data.map(item => `
-            <div class="history-item">
-                <span class="history-time">[${new Date(item.created_at).getHours()}:${String(new Date(item.created_at).getMinutes()).padStart(2,'0')}]</span>
-                <span class="history-track">${item.track_title}</span>
-            </div>
-        `).join('');
-    } catch (err) {
-        console.error("Unexpected error:", err);
-        document.getElementById('tracks-inner').innerText = "FAILED TO LOAD LOG";
+        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist+' '+title)}&entity=song&limit=1`);
+        const data = await res.json();
+        return data.results?.[0]?.artworkUrl100?.replace('100x100','600x600')
+            || "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
+    } catch {
+        return "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
     }
 }
 
-// Update every 5 seconds
-setInterval(updateHistoryLog, 5000);
-updateHistoryLog();
+async function updateDisplay() {
+    const { data } = await supabaseClient
+        .from('radio_history')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(30);
+
+    if (!data?.length) return;
+
+    document.getElementById('tracks-inner').innerHTML = data.map(d =>
+        `<div class="history-item">
+            <span class="history-time">[${new Date(d.created_at).getHours()}:${String(new Date(d.created_at).getMinutes()).padStart(2,'0')}]</span>
+            <span>${d.track_title}</span>
+        </div>`
+    ).join('');
+
+    const topTrack = data[0].track_title.trim();
+    if (topTrack !== currentSongInLog) {
+        currentSongInLog = topTrack;
+        const [artist, title] = topTrack.split(/ - | – /);
+
+        handleMarquee(document.getElementById('artist'), artist || "SNAP 107");
+        handleMarquee(document.getElementById('title'), title || artist);
+
+        document.getElementById('album-art').src =
+            await getCover(artist || "", title || "");
+    }
+}
+
+async function checkRadioServer() {
+    try {
+        const res = await fetch(PROXIES[proxyIndex](
+            `http://sapircast.caster.fm:13044/status-json.xsl?cb=${Date.now()}`
+        ));
+        const json = await res.json();
+        const data = json.contents ? JSON.parse(json.contents) : json;
+        const now = data.icestats.source["display-title"]?.trim();
+
+        if (now && now !== currentSongInLog) {
+            await supabaseClient.from('radio_history').insert([{ track_title: now }]);
+        }
+    } catch {
+        proxyIndex = (proxyIndex + 1) % PROXIES.length;
+    }
+}
+
+setInterval(updateDisplay, 5000);
+setInterval(checkRadioServer, 15000);
+updateDisplay();
+checkRadioServer();
 </script>
+
 </body>
 </html>
