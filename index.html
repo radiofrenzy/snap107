@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNAP 107 - SILENT TRUTH</title>
+    <title>SNAP 107 - TOTAL LOCK</title>
     <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -32,7 +32,7 @@
 <body>
 
     <div id="player-widget">
-        <div id="status-bar"><div id="status-dot"></div> <span id="status-text">LOG SYNC</span></div>
+        <div id="status-bar"><div id="status-dot"></div> <span id="status-text">TOTAL SYNC</span></div>
         <div id="player-content">
             <img id="album-art" src="https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107" alt="Art">
             <div id="text-info">
@@ -54,7 +54,8 @@ const SUPABASE_KEY = 'sb_publishable_fu_ULJb3PP0bde3uNFNEYA_rKglhlaw';
 const STATION_KEY  = 'SNAP107_SECRET'; 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { global: { headers: { 'x-station-key': STATION_KEY } } });
 
-let currentGlobalTitle = "";
+let lastLoggedTitle = ""; 
+let currentDisplayedInPlayer = "";
 
 function handleMarquee(element) {
     const container = element.parentElement;
@@ -78,46 +79,55 @@ async function getCover(artist, title) {
     } catch (e) { return fallback; }
 }
 
-async function syncTruth() {
+async function masterLoop() {
     try {
-        // 1. FETCH ONLY THE LOG. NO SERVER FETCH.
-        const { data, error } = await supabaseClient.from('radio_history').select('*').order('created_at', { ascending: false }).limit(40);
+        // 1. UPDATE THE LOG (The Right Box's Job)
+        // Fetch from radio server
+        const sRes = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('http://sapircast.caster.fm:13044/status-json.xsl?cb=' + Date.now())}`);
+        const serverTitle = JSON.parse((await sRes.json()).contents).icestats.source["display-title"];
+
+        // Fetch current DB state
+        const { data } = await supabaseClient.from('radio_history').select('*').order('created_at', { ascending: false }).limit(30);
         
         if (data && data.length > 0) {
-            const latest = data[0].track_title;
+            const topOfLog = data[0].track_title;
 
-            // 2. Update the Right Box (History)
+            // Render Right Box
             document.getElementById('tracks-inner').innerHTML = data.map(item => `
                 <div class="history-item">
                     <span class="history-time">[${String(new Date(item.created_at).getHours()).padStart(2, '0')}:${String(new Date(item.created_at).getMinutes()).padStart(2, '0')}]</span> 
                     <span class="history-track">${item.track_title}</span>
                 </div>`).join('');
 
-            // 3. THE FORCE SYNC: If the Player name doesn't match the Log name exactly, fix it.
-            if (latest !== currentGlobalTitle) {
-                currentGlobalTitle = latest;
+            // If server has NEW song, add to Log
+            if (serverTitle && serverTitle.trim() !== topOfLog) {
+                const isRecent = data.slice(0, 3).some(h => h.track_title.trim() === serverTitle.trim());
+                if (!isRecent) {
+                    await supabaseClient.from('radio_history').insert([{ track_title: serverTitle.trim() }]);
+                }
+            }
+
+            // 2. THE PLAYER COPY (The Left Box's Job)
+            // It ONLY looks at 'topOfLog'. It doesn't care what the server said.
+            if (topOfLog !== currentDisplayedInPlayer) {
+                currentDisplayedInPlayer = topOfLog;
                 
-                const [artist, song] = latest.includes(' - ') ? latest.split(' - ') : ["SNAP 107", latest];
+                const [artist, song] = topOfLog.includes(' - ') ? topOfLog.split(' - ') : ["SNAP 107", topOfLog];
                 
-                // Update Player Text
                 document.getElementById('artist').innerText = artist.trim();
                 document.getElementById('title').innerText = song.trim();
-
-                // Restart Marquee
                 handleMarquee(document.getElementById('artist'));
                 handleMarquee(document.getElementById('title'));
 
-                // Update Art
                 const art = await getCover(artist, song);
                 document.getElementById('album-art').src = art;
             }
         }
-    } catch (e) { console.error("Sync Error"); }
+    } catch (e) { console.log("Loop error"); }
 }
 
-// 4. Run every 4 seconds.
-setInterval(syncTruth, 4000);
-syncTruth();
+setInterval(masterLoop, 4000);
+masterLoop();
 </script>
 </body>
 </html>
