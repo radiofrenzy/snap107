@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #050520; /* Deep JVC Blue */
+            color: #7898FB; /* LCD Light Blue */
+            font-family: 'VT323', monospace;
+            text-align: center;
+            text-transform: uppercase;
+            padding: 20px;
+        }
+        #radio-container {
+            border: 5px solid #1a1a40;
+            display: inline-block;
+            padding: 40px;
+            border-radius: 10px;
+            background: linear-gradient(145deg, #050525, #0a0a35);
+        }
+        #artist { font-size: 32px; opacity: 0.8; }
+        #title { font-size: 64px; margin: 10px 0; color: #a0baff; text-shadow: 0 0 10px #7898FB; }
+        
+        hr { border: 1px solid #1a1a40; margin: 30px 0; }
+        
+        #playlist-label { font-size: 20px; color: #5555aa; margin-bottom: 10px; }
+        .history-item { font-size: 24px; color: #444488; margin: 5px 0; }
+    </style>
+</head>
+<body>
+
+<div id="radio-container">
+    <div id="artist">LOADING...</div>
+    <div id="title">SNAP 107</div>
+    
+    <hr>
+    
+    <div id="playlist-label">RECENT TRACKS</div>
+    <div id="history-list"></div>
+</div>
+
+<script>
+async function updateRadio() {
+    try {
+        // Using a proxy to avoid CORS errors when testing locally
+        const url = 'https://api.allorigins.win/get?url=' + encodeURIComponent('http://sapircast.caster.fm:13044/status-json.xsl');
+        const response = await fetch(url);
+        const data = await response.json();
+        const stats = JSON.parse(data.contents);
+        
+        // 1. Update Current Track
+        const fullTitle = stats.icestats.source["display-title"];
+        const parts = fullTitle.split(' - ');
+        document.getElementById('artist').innerText = parts[0] || "Unknown Artist";
+        document.getElementById('title').innerText = parts[1] || fullTitle;
+
+        // 2. Update History/Playlist
+        const tracks = stats.icestats.source.playlist.trackList;
+        let historyHTML = "";
+        // Show the last 3 tracks (excluding the current one)
+        tracks.slice(0, 3).forEach(track => {
+            historyHTML += `<div class="history-item">${track.title}</div>`;
+        });
+        document.getElementById('history-list').innerHTML = historyHTML;
+
+    } catch (e) {
+        console.log("Waiting for data...");
+    }
+}
+
+// Refresh every 10 seconds for that 'Live' feel
+setInterval(updateRadio, 10000);
+updateRadio();
+</script>
+
+</body>
+</html>
