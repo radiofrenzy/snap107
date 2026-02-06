@@ -17,69 +17,101 @@
             height: 100vh; 
             margin: 0; 
             text-transform: uppercase; 
-            gap: 20px; /* Space between widgets */
+            gap: 20px; 
         }
 
-        /* Shared Widget Style */
-        .widget {
-            width: 400px;
-            height: 600px;
+        /* --- PLAYER WIDGET (RECTANGLE) --- */
+        #player-widget {
+            width: 600px; /* Wider for horizontal layout */
+            height: 350px;
             background: linear-gradient(145deg, #050525, #0a0a35);
             border: 3px solid #1a1a40;
             border-radius: 20px;
-            padding: 30px;
+            padding: 25px;
             box-shadow: 0 0 50px rgba(0,0,0,0.9);
-            position: relative;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
 
-        /* --- PLAYER STYLES --- */
-        #status-bar { position: absolute; top: 20px; right: 25px; font-size: 16px; display: flex; align-items: center; gap: 8px; color: #444488; }
+        #player-content {
+            display: flex;
+            gap: 25px;
+            align-items: center;
+            flex-grow: 1;
+        }
+
+        #album-art { 
+            width: 220px; 
+            height: 220px; 
+            aspect-ratio: 1 / 1; /* Forces a perfect square */
+            object-fit: cover; /* Prevents stretching */
+            background-color: #000; 
+            border-radius: 8px; 
+            border: 2px solid #1a1a40; 
+        }
+
+        #text-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: left; /* Left-aligned like your 2nd image */
+            overflow: hidden;
+            flex-grow: 1;
+        }
+
+        #artist { font-size: 28px; opacity: 0.7; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        #title { font-size: 48px; color: #a0baff; text-shadow: 0 0 15px rgba(120, 152, 251, 0.7); line-height: 1.1; margin: 0; }
+
+        /* Status & Button */
+        #status-bar { position: absolute; top: 15px; right: 20px; font-size: 16px; display: flex; align-items: center; gap: 8px; color: #444488; }
         #status-dot { width: 10px; height: 10px; background-color: #ff3333; border-radius: 50%; }
         .live-glow { background-color: #00ff66 !important; box-shadow: 0 0 12px #00ff66 !important; animation: pulse 2s infinite; }
         @keyframes pulse { 50% { opacity: 0.4; } }
 
-        #album-art { width: 100%; height: 260px; background-color: #000; object-fit: cover; border-radius: 8px; border: 2px solid #1a1a40; margin-bottom: 20px; }
-        #artist { font-size: 26px; opacity: 0.7; height: 32px; overflow: hidden; }
-        #title { font-size: 44px; color: #a0baff; text-shadow: 0 0 15px rgba(120, 152, 251, 0.7); margin: 5px 0 30px 0; line-height: 1; flex-grow: 1; display: flex; align-items: center; justify-content: center; text-align: center; }
-        
-        .btn-request { padding: 12px; border: 2px solid #7898FB; color: #7898FB; text-decoration: none; font-size: 24px; text-align: center; transition: 0.3s; }
+        .btn-request { margin-top: 15px; padding: 10px; border: 2px solid #7898FB; color: #7898FB; text-decoration: none; font-size: 22px; text-align: center; transition: 0.3s; width: fit-content; }
         .btn-request:hover { background: #7898FB; color: #020210; }
 
-        /* --- HISTORY STYLES --- */
-        .history-header { font-size: 28px; color: #a0baff; margin-bottom: 15px; border-bottom: 1px solid #1a1a40; padding-bottom: 10px; }
-        #tracks-inner { 
-            flex-grow: 1; 
-            overflow-y: auto; 
-            font-size: 20px; 
-            color: #444488; 
-            padding-right: 10px;
+        /* --- HISTORY WIDGET (SQUARE) --- */
+        #history-widget {
+            width: 350px;
+            height: 350px;
+            background: linear-gradient(145deg, #050525, #0a0a35);
+            border: 3px solid #1a1a40;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
         }
-        /* Custom Scrollbar */
-        #tracks-inner::-webkit-scrollbar { width: 6px; }
+
+        .history-header { font-size: 24px; color: #a0baff; margin-bottom: 10px; border-bottom: 1px solid #1a1a40; padding-bottom: 5px; }
+        #tracks-inner { flex-grow: 1; overflow-y: auto; font-size: 18px; color: #444488; }
+        #tracks-inner::-webkit-scrollbar { width: 4px; }
         #tracks-inner::-webkit-scrollbar-thumb { background: #1a1a40; border-radius: 10px; }
         
-        .history-item { margin-bottom: 10px; display: flex; gap: 10px; border-bottom: 1px solid #0a0a35; padding-bottom: 5px; }
-        .history-time { color: #3a3a6a; min-width: 65px; }
+        .history-item { margin-bottom: 8px; display: flex; gap: 8px; }
+        .history-time { color: #3a3a6a; min-width: 55px; }
         .history-track { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     </style>
 </head>
 <body>
 
-    <div class="widget" id="player-widget">
+    <div id="player-widget">
         <div id="status-bar"><div id="status-dot"></div> <span id="status-text">SYNC</span></div>
-        <img id="album-art" src="https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107" alt="Art">
-        <div id="artist">STATION IDLE</div>
-        <div id="title">SNAP 107</div>
-        <a href="YOUR_GOOGLE_FORM_URL" target="_blank" class="btn-request">REQUEST SONG</a>
+        <div id="player-content">
+            <img id="album-art" src="https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107" alt="Art">
+            <div id="text-info">
+                <div id="artist">STATION IDLE</div>
+                <div id="title">SNAP 107</div>
+                <a href="YOUR_GOOGLE_FORM_URL" target="_blank" class="btn-request">REQUEST SONG</a>
+            </div>
+        </div>
     </div>
 
-    <div class="widget" id="history-widget">
-        <div class="history-header">GLOBAL HISTORY (7D)</div>
-        <div id="tracks-inner">
-            <div style="opacity: 0.5;">INITIALIZING LOGS...</div>
-        </div>
+    <div id="history-widget">
+        <div class="history-header">7-DAY LOG</div>
+        <div id="tracks-inner">INITIALIZING...</div>
     </div>
 
 <script>
@@ -117,9 +149,7 @@ async function fetchGlobalHistory() {
             .from('radio_history')
             .select('*')
             .order('created_at', { ascending: false })
-            .limit(50); // Increased limit since it has its own widget now
-
-        if (error) throw error;
+            .limit(40);
         if (data && data.length > 0) {
             document.getElementById('tracks-inner').innerHTML = data.map(item => `
                 <div class="history-item">
@@ -128,7 +158,7 @@ async function fetchGlobalHistory() {
                 </div>
             `).join('');
         }
-    } catch (e) { console.error("History sync issue:", e.message); }
+    } catch (e) { console.error(e); }
 }
 
 async function logToCloud(trackName) {
@@ -160,7 +190,6 @@ async function updateRadio() {
 
                 const artUrl = await getCover(artistName, songName);
                 document.getElementById('album-art').src = artUrl;
-                
                 logToCloud(fullTitle);
             }
         }
