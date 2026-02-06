@@ -34,18 +34,8 @@ body {
     position: relative;
 }
 #history-widget { flex: 1; padding: 20px; }
-#player-content { display: flex; gap: 25px; align-items: center; flex-grow: 1; overflow: hidden; }
-#album-art { width: 220px; height: 220px; object-fit: cover; border-radius: 12px; border: 2px solid #1a1a40; flex-shrink: 0; }
-#text-info { display: flex; flex-direction: column; justify-content: center; overflow: hidden; flex-grow: 1; }
-.marquee-container { overflow: hidden; white-space: nowrap; width: 100%; }
-#artist { font-size: 17px; opacity: 0.8; margin-bottom: 4px; display: inline-block; }
-#title { font-size: 38px; color: #a0baff; text-shadow: 0 0 15px rgba(120, 152, 251, 0.5); line-height: 1.1; margin: 0; display: inline-block; }
-.animate-scroll { animation: jvc-step 40s steps(60, end) infinite; padding-right: 150px; }
-@keyframes jvc-step { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
-#status-bar { position: absolute; top: 15px; right: 20px; font-size: 10px; display: flex; align-items: center; gap: 6px; color: #444488; }
-#status-dot { width: 7px; height: 7px; background-color: #00ff66; border-radius: 50%; box-shadow: 0 0 10px #00ff66; }
-.btn-request { margin-top: 15px; padding: 8px 16px; border: 2px solid #7898FB; color: #7898FB; text-decoration: none; font-size: 15px; transition: 0.3s; width: fit-content; text-transform: uppercase; }
-.btn-request:hover { background: #7898FB; color: #020210; }
+#player-widget .cstrEmbed { flex-grow: 1; width: 100%; height: 100%; }
+#player-widget .cstrEmbed iframe { width: 100%; height: 100%; border-radius: 12px; }
 .history-header { font-size: 17px; color: #a0baff; margin-bottom: 12px; border-bottom: 1px solid #1a1a40; padding-bottom: 8px; text-transform: uppercase; }
 #tracks-inner { flex-grow: 1; overflow-y: auto; font-size: 14.5px; color: #444488; letter-spacing: 0.1px; }
 .history-item { margin-bottom: 6px; display: flex; gap: 10px; border-bottom: 1px solid #080828; padding-bottom: 4px; white-space: nowrap; }
@@ -55,18 +45,23 @@ body {
 </head>
 <body>
 
+<!-- LEFT BOX: Caster.fm Embed Player -->
 <div id="player-widget">
-    <div id="status-bar"><div id="status-dot"></div> <span id="status-text">GHOST SYNC ACTIVE</span></div>
-    <div id="player-content">
-        <img id="album-art" src="fallback.png" onerror="this.src='fallback.png'" alt="Album Art">
-        <div id="text-info">
-            <div class="marquee-container"><div id="artist">STATION</div></div>
-            <div class="marquee-container"><div id="title">SNAP 107</div></div>
-            <a href="#" class="btn-request">REQUEST SONG</a>
-        </div>
+    <div data-type="newStreamPlayer"
+         data-publicToken="68bebccc-3f3d-406f-84e0-10e7cfe152d5"
+         data-theme="light"
+         data-color="e81e4d"
+         data-channelId=""
+         data-rendered="false"
+         class="cstrEmbed">
+        <a href="https://www.caster.fm">Shoutcast Hosting</a>
+        <a href="https://www.caster.fm">Stream Hosting</a>
+        <a href="https://www.caster.fm">Radio Server Hosting</a>
     </div>
+    <script src="//cdn.cloud.caster.fm/widgets/embed.js"></script>
 </div>
 
+<!-- RIGHT BOX: 7-DAY RADIO LOG -->
 <div id="history-widget">
     <div class="history-header">7-DAY RADIO LOG</div>
     <div id="tracks-inner">INITIALIZING...</div>
@@ -80,123 +75,28 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     global: { headers: { 'x-station-key': STATION_KEY } }
 });
 
-let currentSongInLog = "";
-const PROXIES = [
-    (url) => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-    (url) => `https://thingproxy.freeboard.io/fetch/${url}`
-];
-let proxyIndex = 0;
-
-// Marquee helper
-function handleMarquee(element) {
-    const container = element.parentElement;
-    const originalText = element.getAttribute('data-original') || element.innerHTML;
-    element.innerHTML = originalText;
-    element.setAttribute('data-original', originalText);
-    element.classList.remove('animate-scroll');
-    if (element.scrollWidth > container.offsetWidth) {
-        element.classList.add('animate-scroll');
-        element.innerHTML += ` &nbsp;&nbsp;&nbsp;&nbsp; ${originalText}`;
-    }
-}
-
-// JSONP-based iTunes getCover (CORS-safe)
-function getCover(artist, title) {
-    return new Promise((resolve) => {
-        const cleanArtist = artist.replace(/feat\.?|ft\.?/gi, '').split('&')[0].trim();
-        const cleanTitle = title.split('(')[0].split('[')[0].trim();
-        const callbackName = `itunes_cb_${Date.now()}`;
-
-        window[callbackName] = (data) => {
-            try {
-                if (data.results && data.results.length > 0) {
-                    const art = data.results[0].artworkUrl100.replace('100x100','600x600');
-                    resolve(art);
-                } else {
-                    resolve('fallback.png');
-                }
-            } catch {
-                resolve('fallback.png');
-            }
-            delete window[callbackName];
-            script.remove();
-        };
-
-        const script = document.createElement('script');
-        script.src = `https://itunes.apple.com/search?term=${encodeURIComponent(cleanArtist + ' ' + cleanTitle)}&entity=song&limit=1&callback=${callbackName}`;
-        script.onerror = () => {
-            resolve('fallback.png');
-            delete window[callbackName];
-            script.remove();
-        };
-        document.body.appendChild(script);
-    });
-}
-
-// Update player display
-async function updateDisplay() {
+// Update the right-hand 7-day log
+async function updateHistoryLog() {
     try {
         const { data } = await supabaseClient.from('radio_history').select('*').order('created_at', { ascending: false }).limit(30);
         if (!data || data.length === 0) return;
 
-        // Update Right Box (history log)
         document.getElementById('tracks-inner').innerHTML = data.map(item => `
             <div class="history-item">
                 <span class="history-time">[${new Date(item.created_at).getHours()}:${String(new Date(item.created_at).getMinutes()).padStart(2,'0')}]</span>
                 <span class="history-track">${item.track_title}</span>
             </div>
         `).join('');
-
-        // Grab top track
-        const topTrack = data[0].track_title;
-        const parts = topTrack.split(/ - | – /);
-        const artist = parts.length > 1 ? parts[0] : "SNAP 107";
-        const song = parts.length > 1 ? parts[1] : parts[0];
-
-        // Always update left box text
-        document.getElementById('artist').innerText = artist.trim();
-        document.getElementById('title').innerText = song.trim();
-        handleMarquee(document.getElementById('artist'));
-        handleMarquee(document.getElementById('title'));
-
-        // Only update album art if the song actually changed
-        if (topTrack !== currentSongInLog) {
-            currentSongInLog = topTrack;
-            const art = await getCover(artist.trim(), song.trim());
-            document.getElementById('album-art').src = art;
-        }
-
-        document.getElementById('status-text').innerText = "GHOST SYNC ACTIVE";
-        document.getElementById('status-dot').style.backgroundColor = "#00ff66";
     } catch (err) {
-        document.getElementById('status-text').innerText = "SYNC LAGGING...";
-        document.getElementById('status-dot').style.backgroundColor = "#ff3300";
+        document.getElementById('tracks-inner').innerText = "FAILED TO LOAD LOG";
+        console.error(err);
     }
 }
 
-// Check radio server
-async function checkRadioServer() {
-    const radioUrl = `http://sapircast.caster.fm:13044/status-json.xsl?cb=${Date.now()}`;
-    try {
-        const res = await fetch(PROXIES[proxyIndex](radioUrl));
-        const json = await res.json();
-        const content = json.contents ? JSON.parse(json.contents) : json;
-        const serverTitle = content.icestats.source["display-title"];
-
-        if (serverTitle && serverTitle.trim() !== currentSongInLog) {
-            await supabaseClient.from('radio_history').insert([{ track_title: serverTitle.trim() }]);
-            updateDisplay();
-        }
-    } catch (e) {
-        proxyIndex = (proxyIndex + 1) % PROXIES.length;
-        console.warn("Proxy rotated due to error.");
-    }
-}
-
-setInterval(updateDisplay, 5000);
-setInterval(checkRadioServer, 15000);
-updateDisplay();
-checkRadioServer();
+// Keep log updated every 5 seconds
+setInterval(updateHistoryLog, 5000);
+updateHistoryLog();
 </script>
+
 </body>
 </html>
