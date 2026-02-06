@@ -13,10 +13,10 @@
         #status-dot { width: 10px; height: 10px; background-color: #ff3333; border-radius: 50%; }
         .live-glow { background-color: #00ff66 !important; box-shadow: 0 0 12px #00ff66 !important; animation: pulse 2s infinite; }
         @keyframes pulse { 50% { opacity: 0.4; } }
-        #album-art { width: 260px; height: 260px; margin: 0 auto 20px auto; border: 2px solid #1a1a40; background-color: #000; display: block; object-fit: cover; }
-        #artist { font-size: 26px; opacity: 0.7; min-height: 32px; }
+        #album-art { width: 260px; height: 260px; margin: 0 auto 20px auto; border: 2px solid #1a1a40; background-color: #000; display: block; object-fit: cover; border-radius: 8px; }
+        #artist { font-size: 26px; opacity: 0.7; min-height: 32px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
         #title { font-size: 44px; color: #a0baff; text-shadow: 0 0 15px rgba(120, 152, 251, 0.7); margin: 5px 0 20px 0; line-height: 1; min-height: 90px; display: flex; align-items: center; justify-content: center; }
-        .btn-request { display: inline-block; padding: 10px 25px; border: 2px solid #7898FB; color: #7898FB; text-decoration: none; font-size: 22px; transition: 0.3s; margin-bottom: 10px; }
+        .btn-request { display: inline-block; padding: 10px 25px; border: 2px solid #7898FB; color: #7898FB; text-decoration: none; font-size: 22px; transition: 0.3s; margin-bottom: 10px; cursor: pointer; }
         .btn-request:hover { background: #7898FB; color: #020210; }
         hr { border: 0; border-top: 1px solid #1a1a40; margin: 15px 0; }
         .history-label { color: #5555aa; font-size: 18px; margin-bottom: 10px; text-align: left; }
@@ -31,20 +31,20 @@
 
 <div id="radio-container">
     <div id="status-bar"><div id="status-dot"></div> <span id="status-text">SYNC</span></div>
-    <img id="album-art" src="https://via.placeholder.com/400x400/000/7898FB?text=SNAP+107" alt="Art">
+    <img id="album-art" src="https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107" alt="Art">
     <div id="artist">STATION IDLE</div>
     <div id="title">SNAP 107</div>
     <a href="YOUR_GOOGLE_FORM_URL" target="_blank" class="btn-request">REQUEST SONG</a>
     <hr>
     <div class="history-label">GLOBAL HISTORY (7 DAYS):</div>
-    <div id="tracks-inner">WAITING FOR FIRST LOG...</div>
+    <div id="tracks-inner">WAITING FOR DATA...</div>
 </div>
 
 <script>
 // --- CONFIGURATION ---
 const SUPABASE_URL = 'https://jjevapkfrxepdfyymtpa.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_fu_ULJb3PP0bde3uNFNEYA_rKglhlaw';
-const STATION_KEY  = 'SNAP107_SECRET'; // Ensure this matches SQL exactly
+const STATION_KEY  = 'SNAP107_SECRET'; 
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     global: { headers: { 'x-station-key': STATION_KEY } }
@@ -57,29 +57,43 @@ function formatTime(isoString) {
     return `[${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}]`;
 }
 
+// --- UPDATED ALBUM ART LOGIC ---
+async function getCover(artist, title) {
+    try {
+        const query = encodeURIComponent(`${artist} ${title}`);
+        const res = await fetch(`https://itunes.apple.com/search?term=${query}&entity=song&limit=1`);
+        const data = await res.json();
+        
+        if (data.results && data.results.length > 0) {
+            let art = data.results[0].artworkUrl100;
+            // Force High-Res 600x600
+            return art.replace('100x100', '600x600'); 
+        }
+        return "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
+    } catch (e) {
+        return "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
+    }
+}
+
 async function fetchGlobalHistory() {
     try {
         const { data, error } = await supabaseClient
             .from('radio_history')
             .select('*')
             .order('created_at', { ascending: false })
-            .limit(40);
+            .limit(30);
 
         if (error) throw error;
-
         if (data && data.length > 0) {
             document.getElementById('tracks-inner').innerHTML = data.map(item => 
                 `<div class="history-item"><span class="history-time">${formatTime(item.created_at)}</span> ${item.track_title}</div>`
             ).join('');
         }
-    } catch (e) {
-        console.error("Fetch Error:", e.message);
-    }
+    } catch (e) { console.error("History sync issue:", e.message); }
 }
 
 async function logToCloud(trackName) {
     const { data } = await supabaseClient.from('radio_history').select('track_title').order('id', { ascending: false }).limit(1);
-    
     if (!data || data.length === 0 || data[0].track_title !== trackName) {
         await supabaseClient.from('radio_history').insert([{ track_title: trackName }]);
         fetchGlobalHistory();
@@ -92,19 +106,28 @@ async function updateRadio() {
         const stats = JSON.parse((await res.json()).contents);
         const fullTitle = stats.icestats.source["display-title"];
 
-        document.getElementById('status-dot').classList.add('live-glow');
-        document.getElementById('status-text').innerText = "LIVE";
+        if (fullTitle) {
+            document.getElementById('status-dot').classList.add('live-glow');
+            document.getElementById('status-text').innerText = "LIVE";
 
-        if (fullTitle !== lastTrack && fullTitle !== "SNAP 107") {
-            lastTrack = fullTitle;
-            const parts = fullTitle.split(' - ');
-            document.getElementById('artist').innerText = parts[0] || "SNAP 107";
-            document.getElementById('title').innerText = parts[1] || fullTitle;
-            logToCloud(fullTitle);
+            if (fullTitle !== lastTrack && fullTitle !== "SNAP 107") {
+                lastTrack = fullTitle;
+                const parts = fullTitle.split(' - ');
+                const artistName = parts[0] || "SNAP 107";
+                const songName = parts[1] || fullTitle;
+
+                document.getElementById('artist').innerText = artistName;
+                document.getElementById('title').innerText = songName;
+
+                const artUrl = await getCover(artistName, songName);
+                document.getElementById('album-art').src = artUrl;
+                
+                logToCloud(fullTitle);
+            }
         }
     } catch (e) {
         document.getElementById('status-dot').classList.remove('live-glow');
-        document.getElementById('status-text').innerText = "SYNCING";
+        document.getElementById('status-text').innerText = "OFFLINE";
     }
 }
 
