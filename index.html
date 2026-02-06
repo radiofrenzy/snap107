@@ -166,7 +166,8 @@ body {
     </div>
 
     <div id="player-content">
-        <img id="album-art" src="https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107">
+        <!-- 🔧 DEFAULT SRC SET TO FALLBACK -->
+        <img id="album-art" src="fallback.png">
         <div id="text-info">
             <div class="marquee-container"><div id="artist"></div></div>
             <div class="marquee-container"><div id="title"></div></div>
@@ -193,6 +194,9 @@ const supabaseClient = supabase.createClient(
 
 let currentSongInLog = "";
 
+/* 🔧 FALLBACK IMAGE */
+const FALLBACK_COVER = 'fallback.png';
+
 const PROXIES = [
     url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
     url => `https://thingproxy.freeboard.io/fetch/${url}`
@@ -217,14 +221,27 @@ function handleMarquee(el, text) {
 
 async function getCover(artist, title) {
     try {
-        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist+' '+title)}&entity=song&limit=1`);
+        const res = await fetch(
+            `https://itunes.apple.com/search?term=${encodeURIComponent(artist + ' ' + title)}&entity=song&limit=1`
+        );
         const data = await res.json();
-        return data.results?.[0]?.artworkUrl100?.replace('100x100','600x600')
-            || "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
+
+        const art = data?.results?.[0]?.artworkUrl100;
+        if (!art) return FALLBACK_COVER;
+
+        return art.replace('100x100','600x600');
     } catch {
-        return "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
+        return FALLBACK_COVER;
     }
 }
+
+/* 🔧 IMAGE LOAD FAILSAFE */
+const albumArtEl = document.getElementById('album-art');
+albumArtEl.onerror = () => {
+    if (!albumArtEl.src.includes('fallback.png')) {
+        albumArtEl.src = FALLBACK_COVER;
+    }
+};
 
 async function updateDisplay() {
     const { data } = await supabaseClient
@@ -250,8 +267,7 @@ async function updateDisplay() {
         handleMarquee(document.getElementById('artist'), artist || "SNAP 107");
         handleMarquee(document.getElementById('title'), title || artist);
 
-        document.getElementById('album-art').src =
-            await getCover(artist || "", title || "");
+        albumArtEl.src = await getCover(artist || "", title || "");
     }
 }
 
