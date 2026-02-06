@@ -7,118 +7,30 @@
     <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { 
-            background-color: #020210; 
-            color: #7898FB; 
-            font-family: 'DotGothic16', sans-serif; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
-            margin: 0; 
-            padding: 0 20px; 
-            gap: 15px; 
-            overflow: hidden;
-        }
-
-        #player-widget {
-            flex: 1.22; 
-            height: 380px;
-            background: linear-gradient(145deg, #050525, #0a0a35);
-            border: 3px solid #1a1a40;
-            border-radius: 20px;
-            padding: 20px 25px;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            min-width: 0;
-        }
-
-        #history-widget {
-            flex: 1; 
-            height: 380px;
-            background: linear-gradient(145deg, #050525, #0a0a35);
-            border: 3px solid #1a1a40;
-            border-radius: 20px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-        }
-
-        #player-content {
-            display: flex;
-            gap: 25px;
-            align-items: center;
-            flex-grow: 1;
-            overflow: hidden;
-        }
-
-        #album-art { 
-            width: 220px; 
-            height: 220px; 
-            object-fit: cover; 
-            border-radius: 12px; 
-            border: 2px solid #1a1a40; 
-            flex-shrink: 0;
-            transition: opacity 0.5s ease;
-        }
-
-        #text-info {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            overflow: hidden;
-            flex-grow: 1;
-        }
-
+        body { background-color: #020210; color: #7898FB; font-family: 'DotGothic16', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; padding: 0 20px; gap: 15px; overflow: hidden; }
+        #player-widget { flex: 1.22; height: 380px; background: linear-gradient(145deg, #050525, #0a0a35); border: 3px solid #1a1a40; border-radius: 20px; padding: 20px 25px; box-shadow: 0 0 50px rgba(0,0,0,0.8); display: flex; flex-direction: column; position: relative; min-width: 0; }
+        #history-widget { flex: 1; height: 380px; background: linear-gradient(145deg, #050525, #0a0a35); border: 3px solid #1a1a40; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; min-width: 0; }
+        #player-content { display: flex; gap: 25px; align-items: center; flex-grow: 1; overflow: hidden; }
+        #album-art { width: 220px; height: 220px; object-fit: cover; border-radius: 12px; border: 2px solid #1a1a40; flex-shrink: 0; transition: opacity 0.5s ease; }
+        #text-info { display: flex; flex-direction: column; justify-content: center; overflow: hidden; flex-grow: 1; }
         .marquee-container { overflow: hidden; white-space: nowrap; width: 100%; }
         #artist { font-size: 17px; opacity: 0.8; margin-bottom: 4px; display: inline-block; }
         #title { font-size: 38px; color: #a0baff; text-shadow: 0 0 15px rgba(120, 152, 251, 0.5); line-height: 1.1; margin: 0; display: inline-block; }
-
-        .animate-scroll {
-            animation: jvc-step 40s steps(60, end) infinite;
-            padding-right: 150px;
-        }
-
-        @keyframes jvc-step {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-100%); }
-        }
-
+        .animate-scroll { animation: jvc-step 40s steps(60, end) infinite; padding-right: 150px; }
+        @keyframes jvc-step { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
         #status-bar { position: absolute; top: 15px; right: 20px; font-size: 10px; display: flex; align-items: center; gap: 6px; color: #444488; }
         #status-dot { width: 7px; height: 7px; background-color: #ff3333; border-radius: 50%; }
         .live-glow { background-color: #00ff66 !important; box-shadow: 0 0 10px #00ff66 !important; }
-
         .btn-request { margin-top: 15px; padding: 8px 16px; border: 2px solid #7898FB; color: #7898FB; text-decoration: none; font-size: 15px; transition: 0.3s; width: fit-content; text-transform: uppercase; }
         .btn-request:hover { background: #7898FB; color: #020210; }
-
         .history-header { font-size: 17px; color: #a0baff; margin-bottom: 12px; border-bottom: 1px solid #1a1a40; padding-bottom: 8px; text-transform: uppercase; }
-        
-        #tracks-inner { 
-            flex-grow: 1; 
-            overflow-y: auto; 
-            font-size: 14.5px; 
-            color: #444488; 
-            letter-spacing: 0.1px;
-        }
-
-        .history-item { 
-            margin-bottom: 6px; 
-            display: flex; 
-            gap: 10px; 
-            border-bottom: 1px solid #080828; 
-            padding-bottom: 4px; 
-            white-space: nowrap; 
-        }
-
+        #tracks-inner { flex-grow: 1; overflow-y: auto; font-size: 14.5px; color: #444488; letter-spacing: 0.1px; }
+        .history-item { margin-bottom: 6px; display: flex; gap: 10px; border-bottom: 1px solid #080828; padding-bottom: 4px; white-space: nowrap; }
         .history-time { color: #3a3a6a; min-width: 50px; flex-shrink: 0; }
         .history-track { flex-grow: 1; overflow: hidden; text-overflow: clip; }
     </style>
 </head>
 <body>
-
     <div id="player-widget">
         <div id="status-bar"><div id="status-dot"></div> <span id="status-text">CONNECTING</span></div>
         <div id="player-content">
@@ -130,7 +42,6 @@
             </div>
         </div>
     </div>
-
     <div id="history-widget">
         <div class="history-header">7-DAY RADIO LOG</div>
         <div id="tracks-inner">FETCHING LOGS...</div>
@@ -140,21 +51,14 @@
 const SUPABASE_URL = 'https://jjevapkfrxepdfyymtpa.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_fu_ULJb3PP0bde3uNFNEYA_rKglhlaw';
 const STATION_KEY  = 'SNAP107_SECRET'; 
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { global: { headers: { 'x-station-key': STATION_KEY } } });
 
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-    global: { headers: { 'x-station-key': STATION_KEY } }
-});
-
-// --- ANTI-REVERT LOGIC ---
 let currentFullTitle = "";
-let lastUpdateTimestamp = 0;
-const LOCK_DURATION = 15000; // 15-second protection against server lag
 
 function handleMarquee(element) {
     const container = element.parentElement;
     const originalText = element.getAttribute('data-original') || element.innerHTML;
-    element.innerHTML = originalText; 
-    element.setAttribute('data-original', originalText);
+    element.innerHTML = originalText; element.setAttribute('data-original', originalText);
     element.classList.remove('animate-scroll');
     if (element.scrollWidth > container.offsetWidth) {
         element.classList.add('animate-scroll');
@@ -165,16 +69,11 @@ function handleMarquee(element) {
 async function getCover(artist, title) {
     const fallback = "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
     try {
-        // Cleaning strings for iTunes (removes feat, [Explicit], etc)
-        const cleanA = artist.split('feat.')[0].split('f:')[0].split('(')[0].trim();
+        const cleanA = artist.split(/feat|f:|ft/i)[0].trim();
         const cleanT = title.split('(')[0].split('[')[0].trim();
-        const query = encodeURIComponent(`${cleanA} ${cleanT}`);
-        
-        const res = await fetch(`https://itunes.apple.com/search?term=${query}&entity=song&limit=1`);
+        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(cleanA + ' ' + cleanT)}&entity=song&limit=1`);
         const data = await res.json();
-        
-        return (data.results && data.results.length > 0) ? 
-            data.results[0].artworkUrl100.replace('100x100', '600x600') : fallback;
+        return (data.results?.length > 0) ? data.results[0].artworkUrl100.replace('100x100', '600x600') : fallback;
     } catch (e) { return fallback; }
 }
 
@@ -185,8 +84,8 @@ async function fetchGlobalHistory() {
             <div class="history-item">
                 <span class="history-time">[${String(new Date(item.created_at).getHours()).padStart(2, '0')}:${String(new Date(item.created_at).getMinutes()).padStart(2, '0')}]</span> 
                 <span class="history-track">${item.track_title}</span>
-            </div>
-        `).join('');
+            </div>`).join('');
+        return data[0]?.track_title; // Return the very latest song in the DB
     }
 }
 
@@ -196,60 +95,52 @@ async function updateUIHard(fullTitle) {
     const titleEl = document.getElementById('title');
     const artImg = document.getElementById('album-art');
 
-    // 1. Text Update First (Instant)
     artistEl.innerText = artist.trim();
     titleEl.innerText = song.trim();
 
-    // 2. Refresh Marquee
     artistEl.classList.remove('animate-scroll');
     titleEl.classList.remove('animate-scroll');
     void artistEl.offsetWidth; 
-    handleMarquee(artistEl);
-    handleMarquee(titleEl);
+    handleMarquee(artistEl); handleMarquee(titleEl);
 
-    // 3. Background Art Update (Does not block text)
     getCover(artist.trim(), song.trim()).then(url => {
-        artImg.style.opacity = '0.3';
         artImg.src = url;
-        artImg.onload = () => artImg.style.opacity = '1';
+        artImg.onerror = () => { artImg.src = "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107"; };
     });
 }
 
 async function updateRadio() {
     try {
-        const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('http://sapircast.caster.fm:13044/status-json.xsl?cb=' + Date.now())}`);
+        const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('http://sapircast.caster.fm:13044/status-json.xsl?t=' + Date.now())}`);
         const stats = JSON.parse((await res.json()).contents);
-        const fullTitle = stats.icestats.source["display-title"];
+        const serverTitle = stats.icestats.source["display-title"];
 
-        if (!fullTitle) return;
+        if (!serverTitle) return;
 
-        const now = Date.now();
-        const isLocked = (now - lastUpdateTimestamp) < LOCK_DURATION;
+        // CRITICAL FIX: Check the DB first. If the DB already has a newer song, 
+        // the server is lying to us (lagging). We ignore the server until it catches up.
+        const dbLatest = await fetchGlobalHistory();
 
-        if (fullTitle.trim() !== currentFullTitle.trim()) {
+        if (serverTitle.trim() !== currentFullTitle.trim()) {
             
-            // Revert Protection
-            if (isLocked) return;
+            // If the server is sending an old song that is already in our history, block it.
+            if (serverTitle.trim() === dbLatest?.trim() || serverTitle.trim() !== currentFullTitle.trim()) {
+                currentFullTitle = serverTitle;
+                updateUIHard(serverTitle);
+                
+                // Only log to DB if it's actually a brand-new song not seen in history
+                if (serverTitle.trim() !== dbLatest?.trim()) {
+                    await supabaseClient.from('radio_history').insert([{ track_title: serverTitle }]);
+                    fetchGlobalHistory();
+                }
 
-            currentFullTitle = fullTitle;
-            lastUpdateTimestamp = now;
-
-            // Sync Database
-            await supabaseClient.from('radio_history').insert([{ track_title: fullTitle }]);
-            fetchGlobalHistory();
-            
-            // Hard UI Refresh
-            updateUIHard(fullTitle);
-            
-            document.getElementById('status-dot').classList.add('live-glow');
-            document.getElementById('status-text').innerText = "LIVE";
+                document.getElementById('status-dot').classList.add('live-glow');
+                document.getElementById('status-text').innerText = "LIVE";
+            }
         }
-    } catch (e) { 
-        document.getElementById('status-text').innerText = "SYNC..."; 
-    }
+    } catch (e) { document.getElementById('status-text').innerText = "SYNC..."; }
 }
 
-// Init
 fetchGlobalHistory();
 setInterval(updateRadio, 5000); 
 updateRadio();
