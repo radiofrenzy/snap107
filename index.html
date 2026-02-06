@@ -34,31 +34,33 @@ body {
     position: relative;
 }
 #history-widget { flex: 1; padding: 20px; }
-#player-widget .cstrEmbed { flex-grow: 1; width: 100%; height: 100%; }
-#player-widget .cstrEmbed iframe { width: 100%; height: 100%; border-radius: 12px; }
-.history-header { font-size: 17px; color: #a0baff; margin-bottom: 12px; border-bottom: 1px solid #1a1a40; padding-bottom: 8px; text-transform: uppercase; }
+#player-content { display: flex; gap: 25px; align-items: center; flex-grow: 1; overflow: hidden; justify-content: center; }
 #tracks-inner { flex-grow: 1; overflow-y: auto; font-size: 14.5px; color: #444488; letter-spacing: 0.1px; }
 .history-item { margin-bottom: 6px; display: flex; gap: 10px; border-bottom: 1px solid #080828; padding-bottom: 4px; white-space: nowrap; }
 .history-time { color: #3a3a6a; min-width: 50px; flex-shrink: 0; }
 .history-track { flex-grow: 1; overflow: hidden; text-overflow: clip; }
+.history-header { font-size: 17px; color: #a0baff; margin-bottom: 12px; border-bottom: 1px solid #1a1a40; padding-bottom: 8px; text-transform: uppercase; }
+#status-bar { position: absolute; top: 15px; right: 20px; font-size: 10px; display: flex; align-items: center; gap: 6px; color: #444488; }
+#status-dot { width: 7px; height: 7px; background-color: #00ff66; border-radius: 50%; box-shadow: 0 0 10px #00ff66; }
 </style>
 </head>
 <body>
 
-<!-- LEFT BOX: Caster.fm Embed Player -->
+<!-- LEFT BOX: CASTER.FM EMBED PLAYER -->
 <div id="player-widget">
-    <div data-type="newStreamPlayer"
-         data-publicToken="68bebccc-3f3d-406f-84e0-10e7cfe152d5"
-         data-theme="light"
-         data-color="e81e4d"
-         data-channelId=""
-         data-rendered="false"
-         class="cstrEmbed">
-        <a href="https://www.caster.fm">Shoutcast Hosting</a>
-        <a href="https://www.caster.fm">Stream Hosting</a>
-        <a href="https://www.caster.fm">Radio Server Hosting</a>
+    <div id="player-content">
+        <div data-type="newStreamPlayer" 
+             data-publicToken="68bebccc-3f3d-406f-84e0-10e7cfe152d5" 
+             data-theme="light" 
+             data-color="e81e4d" 
+             data-channelId="" 
+             data-rendered="false" 
+             class="cstrEmbed">
+            <a href="https://www.caster.fm">Shoutcast Hosting</a>
+            <a href="https://www.caster.fm">Stream Hosting</a>
+            <a href="https://www.caster.fm">Radio Server Hosting</a>
+        </div>
     </div>
-    <script src="//cdn.cloud.caster.fm/widgets/embed.js"></script>
 </div>
 
 <!-- RIGHT BOX: 7-DAY RADIO LOG -->
@@ -67,19 +69,35 @@ body {
     <div id="tracks-inner">INITIALIZING...</div>
 </div>
 
+<script src="//cdn.cloud.caster.fm/widgets/embed.js"></script>
 <script>
 const SUPABASE_URL = 'https://jjevapkfrxepdfyymtpa.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_fu_ULJb3PP0bde3uNFNEYA_rKglhlaw';
 const STATION_KEY  = 'SNAP107_SECRET';
+
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     global: { headers: { 'x-station-key': STATION_KEY } }
 });
 
-// Update the right-hand 7-day log
+// Function to update the right 7-day log
 async function updateHistoryLog() {
     try {
-        const { data } = await supabaseClient.from('radio_history').select('*').order('created_at', { ascending: false }).limit(30);
-        if (!data || data.length === 0) return;
+        const { data, error } = await supabaseClient
+            .from('radio_history')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(30);
+
+        if (error) {
+            console.error("Supabase fetch error:", error);
+            document.getElementById('tracks-inner').innerText = "FAILED TO LOAD LOG";
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            document.getElementById('tracks-inner').innerText = "NO TRACKS FOUND";
+            return;
+        }
 
         document.getElementById('tracks-inner').innerHTML = data.map(item => `
             <div class="history-item">
@@ -88,15 +106,14 @@ async function updateHistoryLog() {
             </div>
         `).join('');
     } catch (err) {
+        console.error("Unexpected error:", err);
         document.getElementById('tracks-inner').innerText = "FAILED TO LOAD LOG";
-        console.error(err);
     }
 }
 
-// Keep log updated every 5 seconds
+// Update every 5 seconds
 setInterval(updateHistoryLog, 5000);
 updateHistoryLog();
 </script>
-
 </body>
 </html>
