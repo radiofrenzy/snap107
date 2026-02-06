@@ -7,112 +7,25 @@
     <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { 
-            background-color: #020210; 
-            color: #7898FB; 
-            font-family: 'DotGothic16', sans-serif; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
-            margin: 0; 
-            padding: 0 20px; 
-            gap: 15px; 
-            overflow: hidden;
-        }
-
-        #player-widget {
-            flex: 1.22; 
-            height: 380px;
-            background: linear-gradient(145deg, #050525, #0a0a35);
-            border: 3px solid #1a1a40;
-            border-radius: 20px;
-            padding: 20px 25px;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            min-width: 0;
-        }
-
-        #history-widget {
-            flex: 1; 
-            height: 380px;
-            background: linear-gradient(145deg, #050525, #0a0a35);
-            border: 3px solid #1a1a40;
-            border-radius: 20px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-        }
-
-        #player-content {
-            display: flex;
-            gap: 25px;
-            align-items: center;
-            flex-grow: 1;
-            overflow: hidden;
-        }
-
-        #album-art { 
-            width: 220px; 
-            height: 220px; 
-            object-fit: cover; 
-            border-radius: 12px; 
-            border: 2px solid #1a1a40; 
-            flex-shrink: 0;
-            transition: opacity 0.4s ease;
-        }
-
-        #text-info {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            overflow: hidden;
-            flex-grow: 1;
-        }
-
+        body { background-color: #020210; color: #7898FB; font-family: 'DotGothic16', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; padding: 0 20px; gap: 15px; overflow: hidden; }
+        #player-widget { flex: 1.22; height: 380px; background: linear-gradient(145deg, #050525, #0a0a35); border: 3px solid #1a1a40; border-radius: 20px; padding: 20px 25px; box-shadow: 0 0 50px rgba(0,0,0,0.8); display: flex; flex-direction: column; position: relative; min-width: 0; }
+        #history-widget { flex: 1; height: 380px; background: linear-gradient(145deg, #050525, #0a0a35); border: 3px solid #1a1a40; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; min-width: 0; }
+        #player-content { display: flex; gap: 25px; align-items: center; flex-grow: 1; overflow: hidden; }
+        #album-art { width: 220px; height: 220px; object-fit: cover; border-radius: 12px; border: 2px solid #1a1a40; flex-shrink: 0; transition: opacity 0.4s ease; }
+        #text-info { display: flex; flex-direction: column; justify-content: center; overflow: hidden; flex-grow: 1; }
         .marquee-container { overflow: hidden; white-space: nowrap; width: 100%; }
         #artist { font-size: 17px; opacity: 0.8; margin-bottom: 4px; display: inline-block; }
         #title { font-size: 38px; color: #a0baff; text-shadow: 0 0 15px rgba(120, 152, 251, 0.5); line-height: 1.1; margin: 0; display: inline-block; }
-
-        .animate-scroll {
-            animation: jvc-step 40s steps(60, end) infinite;
-            padding-right: 150px;
-        }
-
-        @keyframes jvc-step {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-100%); }
-        }
-
+        .animate-scroll { animation: jvc-step 40s steps(60, end) infinite; padding-right: 150px; }
+        @keyframes jvc-step { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
         #status-bar { position: absolute; top: 15px; right: 20px; font-size: 10px; display: flex; align-items: center; gap: 6px; color: #444488; }
         #status-dot { width: 7px; height: 7px; background-color: #ff3333; border-radius: 50%; }
         .live-glow { background-color: #00ff66 !important; box-shadow: 0 0 10px #00ff66 !important; }
-
         .btn-request { margin-top: 15px; padding: 8px 16px; border: 2px solid #7898FB; color: #7898FB; text-decoration: none; font-size: 15px; transition: 0.3s; width: fit-content; text-transform: uppercase; }
         .btn-request:hover { background: #7898FB; color: #020210; }
-
         .history-header { font-size: 17px; color: #a0baff; margin-bottom: 12px; border-bottom: 1px solid #1a1a40; padding-bottom: 8px; text-transform: uppercase; }
-        
-        #tracks-inner { 
-            flex-grow: 1; 
-            overflow-y: auto; 
-            font-size: 14.5px; 
-            color: #444488; 
-            letter-spacing: 0.1px;
-        }
-
-        .history-item { 
-            margin-bottom: 6px; 
-            display: flex; 
-            gap: 10px; 
-            border-bottom: 1px solid #080828; 
-            padding-bottom: 4px; 
-            white-space: nowrap; 
-        }
-
+        #tracks-inner { flex-grow: 1; overflow-y: auto; font-size: 14.5px; color: #444488; letter-spacing: 0.1px; }
+        .history-item { margin-bottom: 6px; display: flex; gap: 10px; border-bottom: 1px solid #080828; padding-bottom: 4px; white-space: nowrap; }
         .history-time { color: #3a3a6a; min-width: 50px; flex-shrink: 0; }
         .history-track { flex-grow: 1; overflow: hidden; text-overflow: clip; }
     </style>
@@ -120,11 +33,11 @@
 <body>
 
     <div id="player-widget">
-        <div id="status-bar"><div id="status-dot"></div> <span id="status-text">CONNECTING</span></div>
+        <div id="status-bar"><div id="status-dot"></div> <span id="status-text">LIVE</span></div>
         <div id="player-content">
             <img id="album-art" src="https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107" alt="Art">
             <div id="text-info">
-                <div class="marquee-container"><div id="artist">SYNCING...</div></div>
+                <div class="marquee-container"><div id="artist">STATION</div></div>
                 <div class="marquee-container"><div id="title">SNAP 107</div></div>
                 <a href="#" class="btn-request">REQUEST SONG</a>
             </div>
@@ -133,7 +46,7 @@
 
     <div id="history-widget">
         <div class="history-header">7-DAY RADIO LOG</div>
-        <div id="tracks-inner">FETCHING LOGS...</div>
+        <div id="tracks-inner">CONNECTING TO LOG...</div>
     </div>
 
 <script>
@@ -142,13 +55,12 @@ const SUPABASE_KEY = 'sb_publishable_fu_ULJb3PP0bde3uNFNEYA_rKglhlaw';
 const STATION_KEY  = 'SNAP107_SECRET'; 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { global: { headers: { 'x-station-key': STATION_KEY } } });
 
-let lastDisplayedTitle = "";
+let currentSongInPlayer = "";
 
 function handleMarquee(element) {
     const container = element.parentElement;
     const originalText = element.getAttribute('data-original') || element.innerHTML;
-    element.innerHTML = originalText; 
-    element.setAttribute('data-original', originalText);
+    element.innerHTML = originalText; element.setAttribute('data-original', originalText);
     element.classList.remove('animate-scroll');
     if (element.scrollWidth > container.offsetWidth) {
         element.classList.add('animate-scroll');
@@ -169,70 +81,55 @@ async function getCover(artist, title) {
 
 async function updatePlayerUI(fullTitle) {
     const [artist, song] = fullTitle.includes(' - ') ? fullTitle.split(' - ') : ["SNAP 107", fullTitle];
-    const artistEl = document.getElementById('artist');
-    const titleEl = document.getElementById('title');
-    const artImg = document.getElementById('album-art');
+    document.getElementById('artist').innerText = artist.trim();
+    document.getElementById('title').innerText = song.trim();
 
-    artistEl.innerText = artist.trim();
-    titleEl.innerText = song.trim();
+    handleMarquee(document.getElementById('artist'));
+    handleMarquee(document.getElementById('title'));
 
-    artistEl.classList.remove('animate-scroll');
-    titleEl.classList.remove('animate-scroll');
-    void artistEl.offsetWidth; 
-    handleMarquee(artistEl);
-    handleMarquee(titleEl);
-
-    const coverUrl = await getCover(artist.trim(), song.trim());
-    artImg.src = coverUrl;
+    const url = await getCover(artist.trim(), song.trim());
+    document.getElementById('album-art').src = url;
 }
 
-async function masterSync() {
+async function syncLoop() {
     try {
-        // 1. Check Server (Caster) for NEW data
+        // 1. Get the Raw Server Title
         const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('http://sapircast.caster.fm:13044/status-json.xsl?cb=' + Date.now())}`);
-        const stats = JSON.parse((await res.json()).contents);
-        const serverTitle = stats.icestats.source["display-title"];
+        const serverTitle = JSON.parse((await res.json()).contents).icestats.source["display-title"];
 
-        // 2. Fetch History (The Log)
+        // 2. Get the Log Truth
         const { data } = await supabaseClient.from('radio_history').select('*').order('created_at', { ascending: false }).limit(40);
         
         if (data && data.length > 0) {
             const latestInLog = data[0].track_title;
 
-            // Refresh Right Box (Log)
+            // 3. Update Log Box
             document.getElementById('tracks-inner').innerHTML = data.map(item => `
                 <div class="history-item">
                     <span class="history-time">[${String(new Date(item.created_at).getHours()).padStart(2, '0')}:${String(new Date(item.created_at).getMinutes()).padStart(2, '0')}]</span> 
                     <span class="history-track">${item.track_title}</span>
                 </div>`).join('');
 
-            // 3. Logic: Should we add what Caster says to the Log?
+            // 4. Update Database ONLY if server has a brand new song
             if (serverTitle && serverTitle.trim() !== latestInLog.trim()) {
-                // PROTECTION: Check if the server's "new" song is actually just one of the last 3 songs
-                // This stops the "Snap Back" bug
-                const isRecent = data.slice(0, 3).some(h => h.track_title.trim() === serverTitle.trim());
+                const isRecent = data.slice(0, 5).some(h => h.track_title.trim() === serverTitle.trim());
                 if (!isRecent) {
                     await supabaseClient.from('radio_history').insert([{ track_title: serverTitle.trim() }]);
-                    // Loop will catch the update in next 5s
                 }
             }
 
-            // 4. MIRROR: Left box ALWAYS copies the first line of the Right box
-            if (latestInLog !== lastDisplayedTitle) {
-                lastDisplayedTitle = latestInLog;
+            // 5. THE FIX: The Player ONLY follows the Log. It ignores the server.
+            if (latestInLog !== currentSongInPlayer) {
+                currentSongInPlayer = latestInLog;
                 updatePlayerUI(latestInLog);
                 document.getElementById('status-dot').classList.add('live-glow');
-                document.getElementById('status-text').innerText = "LIVE";
             }
         }
-    } catch (e) {
-        document.getElementById('status-text').innerText = "SYNC...";
-    }
+    } catch (e) { console.error("Sync Error", e); }
 }
 
-// Initial Run
-setInterval(masterSync, 5000); 
-masterSync();
+setInterval(syncLoop, 3000); // Faster 3s check
+syncLoop();
 </script>
 </body>
 </html>
