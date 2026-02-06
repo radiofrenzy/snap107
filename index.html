@@ -2,74 +2,146 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNAP 107 - JVC DASHBOARD</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
         body {
-            background-color: #050520; /* Deep JVC Blue */
-            color: #7898FB; /* LCD Light Blue */
+            background-color: #05051a;
+            color: #7898FB;
             font-family: 'VT323', monospace;
-            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
             text-transform: uppercase;
-            padding: 20px;
+            overflow: hidden;
         }
+
         #radio-container {
-            border: 5px solid #1a1a40;
-            display: inline-block;
-            padding: 40px;
-            border-radius: 10px;
+            width: 90%;
+            max-width: 450px;
             background: linear-gradient(145deg, #050525, #0a0a35);
+            border: 4px solid #1a1a40;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.9);
+            text-align: center;
         }
-        #artist { font-size: 32px; opacity: 0.8; }
-        #title { font-size: 64px; margin: 10px 0; color: #a0baff; text-shadow: 0 0 10px #7898FB; }
-        
-        hr { border: 1px solid #1a1a40; margin: 30px 0; }
-        
-        #playlist-label { font-size: 20px; color: #5555aa; margin-bottom: 10px; }
-        .history-item { font-size: 24px; color: #444488; margin: 5px 0; }
+
+        #album-art {
+            width: 250px;
+            height: 250px;
+            margin: 0 auto 20px auto;
+            border: 3px solid #1a1a40;
+            background-color: #000;
+            display: block;
+            object-fit: cover;
+            box-shadow: 0 0 20px rgba(120, 152, 251, 0.2);
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        #artist { font-size: 24px; opacity: 0.7; min-height: 30px; }
+        #title { 
+            font-size: 44px; 
+            color: #a0baff; 
+            text-shadow: 0 0 10px rgba(120, 152, 251, 0.6);
+            margin: 10px 0 20px 0;
+            line-height: 1;
+            min-height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-request {
+            display: inline-block;
+            padding: 10px 25px;
+            background: #1a1a40;
+            color: #7898FB;
+            border: 2px solid #7898FB;
+            text-decoration: none;
+            font-size: 22px;
+            margin-bottom: 20px;
+        }
+        .btn-request:hover { background: #7898FB; color: #050520; }
+
+        hr { border: 0; border-top: 1px solid #1a1a40; margin: 15px 0; }
+        .history-label { color: #5555aa; font-size: 18px; margin-bottom: 8px; text-align: left; }
+        #tracks-inner { font-size: 18px; color: #444488; text-align: left; }
+        .history-item { margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     </style>
 </head>
 <body>
 
 <div id="radio-container">
+    <img id="album-art" src="https://via.placeholder.com/300?text=SNAP+107" alt="Album Art">
+    
     <div id="artist">LOADING...</div>
     <div id="title">SNAP 107</div>
     
-    <hr>
+    <a href="YOUR_FORM_LINK_HERE" target="_blank" class="btn-request">REQUEST SONG</a>
     
-    <div id="playlist-label">RECENT TRACKS</div>
-    <div id="history-list"></div>
+    <hr>
+    <div class="history-label">RECENTLY PLAYED:</div>
+    <div id="tracks-inner"></div>
 </div>
 
 <script>
-async function updateRadio() {
+let lastTrack = "";
+
+// Searches iTunes for the album cover
+async function getCover(artist, title) {
     try {
-        // Using a proxy to avoid CORS errors when testing locally
-        const url = 'https://api.allorigins.win/get?url=' + encodeURIComponent('http://sapircast.caster.fm:13044/status-json.xsl');
-        const response = await fetch(url);
-        const data = await response.json();
-        const stats = JSON.parse(data.contents);
-        
-        // 1. Update Current Track
-        const fullTitle = stats.icestats.source["display-title"];
-        const parts = fullTitle.split(' - ');
-        document.getElementById('artist').innerText = parts[0] || "Unknown Artist";
-        document.getElementById('title').innerText = parts[1] || fullTitle;
-
-        // 2. Update History/Playlist
-        const tracks = stats.icestats.source.playlist.trackList;
-        let historyHTML = "";
-        // Show the last 3 tracks (excluding the current one)
-        tracks.slice(0, 3).forEach(track => {
-            historyHTML += `<div class="history-item">${track.title}</div>`;
-        });
-        document.getElementById('history-list').innerHTML = historyHTML;
-
-    } catch (e) {
-        console.log("Waiting for data...");
-    }
+        const query = encodeURIComponent(`${artist} ${title}`);
+        const res = await fetch(`https://itunes.apple.com/search?term=${query}&entity=song&limit=1`);
+        const data = await res.json();
+        if (data.results && data.results.length > 0) {
+            // Get high-res version
+            return data.results[0].artworkUrl100.replace('100x100', '600x600');
+        }
+    } catch (e) { console.error("Art Error"); }
+    return "https://via.placeholder.com/300?text=SNAP+107"; // Fallback image
 }
 
-// Refresh every 10 seconds for that 'Live' feel
+async function updateRadio() {
+    try {
+        const targetUrl = `http://sapircast.caster.fm:13044/status-json.xsl?t=${Date.now()}`;
+        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+        
+        const response = await fetch(proxyUrl);
+        const stats = await response.json();
+        const fullTitle = stats.icestats.source["display-title"];
+        
+        if (fullTitle !== lastTrack) {
+            lastTrack = fullTitle;
+            const parts = fullTitle.split(' - ');
+            const artistName = parts[0] || "Unknown Artist";
+            const songName = parts[1] || fullTitle;
+
+            document.getElementById('artist').innerText = artistName;
+            document.getElementById('title').innerText = songName;
+
+            // Update Album Art
+            const artUrl = await getCover(artistName, songName);
+            document.getElementById('album-art').style.opacity = 0;
+            setTimeout(() => {
+                document.getElementById('album-art').src = artUrl;
+                document.getElementById('album-art').style.opacity = 1;
+            }, 500);
+
+            // Update History
+            const tracks = stats.icestats.source.playlist.trackList;
+            let historyHTML = "";
+            tracks.slice(0, 3).forEach(track => {
+                historyHTML += `<div class="history-item">> ${track.title}</div>`;
+            });
+            document.getElementById('tracks-inner').innerHTML = historyHTML;
+        }
+    } catch (e) { console.log("Updating..."); }
+}
+
 setInterval(updateRadio, 10000);
 updateRadio();
 </script>
