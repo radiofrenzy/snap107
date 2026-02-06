@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNAP 107 - BALANCED FIT</title>
+    <title>SNAP 107 - 55/45 RATIO</title>
     <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -21,14 +21,14 @@
             overflow: hidden;
         }
 
-        /* --- PLAYER WIDGET (60% WIDTH) --- */
+        /* --- PLAYER WIDGET (55% WIDTH) --- */
         #player-widget {
-            flex: 1.5; /* Slightly larger than the right */
-            height: 400px;
+            flex: 1.22; /* Calculated for a 55% total share */
+            height: 380px;
             background: linear-gradient(145deg, #050525, #0a0a35);
             border: 3px solid #1a1a40;
-            border-radius: 25px;
-            padding: 20px 30px;
+            border-radius: 20px;
+            padding: 20px 25px;
             box-shadow: 0 0 50px rgba(0,0,0,0.8);
             display: flex;
             flex-direction: column;
@@ -36,14 +36,14 @@
             min-width: 0;
         }
 
-        /* --- HISTORY WIDGET (40% WIDTH) --- */
+        /* --- HISTORY WIDGET (45% WIDTH) --- */
         #history-widget {
-            flex: 1; /* The baseline "smaller" box */
-            height: 400px;
+            flex: 1; /* Calculated for a 45% total share */
+            height: 380px;
             background: linear-gradient(145deg, #050525, #0a0a35);
             border: 3px solid #1a1a40;
-            border-radius: 25px;
-            padding: 20px 20px;
+            border-radius: 20px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             min-width: 0;
@@ -51,17 +51,17 @@
 
         #player-content {
             display: flex;
-            gap: 30px;
+            gap: 25px;
             align-items: center;
             flex-grow: 1;
             overflow: hidden;
         }
 
         #album-art { 
-            width: 240px; 
-            height: 240px; 
+            width: 220px; 
+            height: 220px; 
             object-fit: cover; 
-            border-radius: 15px; 
+            border-radius: 12px; 
             border: 2px solid #1a1a40; 
             flex-shrink: 0;
         }
@@ -75,11 +75,11 @@
         }
 
         .marquee-container { overflow: hidden; white-space: nowrap; width: 100%; }
-        #artist { font-size: 18px; opacity: 0.8; margin-bottom: 5px; display: inline-block; }
-        #title { font-size: 40px; color: #a0baff; text-shadow: 0 0 15px rgba(120, 152, 251, 0.5); line-height: 1.1; margin: 0; display: inline-block; }
+        #artist { font-size: 17px; opacity: 0.8; margin-bottom: 4px; display: inline-block; }
+        #title { font-size: 38px; color: #a0baff; text-shadow: 0 0 15px rgba(120, 152, 251, 0.5); line-height: 1.1; margin: 0; display: inline-block; }
 
         .animate-scroll {
-            animation: jvc-step 45s steps(60, end) infinite;
+            animation: jvc-step 40s steps(60, end) infinite;
             padding-right: 150px;
         }
 
@@ -88,19 +88,19 @@
             100% { transform: translateX(-100%); }
         }
 
-        #status-bar { position: absolute; top: 15px; right: 25px; font-size: 11px; display: flex; align-items: center; gap: 6px; color: #444488; }
-        #status-dot { width: 8px; height: 8px; background-color: #ff3333; border-radius: 50%; }
+        #status-bar { position: absolute; top: 15px; right: 20px; font-size: 10px; display: flex; align-items: center; gap: 6px; color: #444488; }
+        #status-dot { width: 7px; height: 7px; background-color: #ff3333; border-radius: 50%; }
         .live-glow { background-color: #00ff66 !important; box-shadow: 0 0 10px #00ff66 !important; }
 
-        .btn-request { margin-top: 15px; padding: 8px 18px; border: 2px solid #7898FB; color: #7898FB; text-decoration: none; font-size: 16px; transition: 0.3s; width: fit-content; text-transform: uppercase; }
+        .btn-request { margin-top: 15px; padding: 8px 16px; border: 2px solid #7898FB; color: #7898FB; text-decoration: none; font-size: 15px; transition: 0.3s; width: fit-content; text-transform: uppercase; }
         .btn-request:hover { background: #7898FB; color: #020210; }
 
-        .history-header { font-size: 18px; color: #a0baff; margin-bottom: 10px; border-bottom: 1px solid #1a1a40; padding-bottom: 8px; text-transform: uppercase; }
+        .history-header { font-size: 17px; color: #a0baff; margin-bottom: 12px; border-bottom: 1px solid #1a1a40; padding-bottom: 8px; text-transform: uppercase; }
         
         #tracks-inner { 
             flex-grow: 1; 
             overflow-y: auto; 
-            font-size: 15px; /* Tuned to "hug" the 40% width box edge */
+            font-size: 14.5px; 
             color: #444488; 
             letter-spacing: 0.1px;
         }
@@ -111,13 +111,13 @@
         .history-item { 
             margin-bottom: 6px; 
             display: flex; 
-            gap: 12px; 
+            gap: 10px; 
             border-bottom: 1px solid #080828; 
             padding-bottom: 4px; 
             white-space: nowrap; 
         }
 
-        .history-time { color: #3a3a6a; min-width: 55px; flex-shrink: 0; }
+        .history-time { color: #3a3a6a; min-width: 50px; flex-shrink: 0; }
         .history-track { 
             flex-grow: 1; 
             overflow: hidden; 
@@ -145,7 +145,7 @@
     </div>
 
 <script>
-// Logic remains identical for data syncing
+// Keep existing script logic for data handling
 const SUPABASE_URL = 'https://jjevapkfrxepdfyymtpa.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_fu_ULJb3PP0bde3uNFNEYA_rKglhlaw';
 const STATION_KEY  = 'SNAP107_SECRET'; 
