@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNAP 107 - BALANCED & SYNCED</title>
+    <title>SNAP 107 - TOTAL SYNC</title>
     <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -21,7 +21,6 @@
             overflow: hidden;
         }
 
-        /* --- PLAYER WIDGET (55% WIDTH) --- */
         #player-widget {
             flex: 1.22; 
             height: 380px;
@@ -36,7 +35,6 @@
             min-width: 0;
         }
 
-        /* --- HISTORY WIDGET (45% WIDTH) --- */
         #history-widget {
             flex: 1; 
             height: 380px;
@@ -64,6 +62,7 @@
             border-radius: 12px; 
             border: 2px solid #1a1a40; 
             flex-shrink: 0;
+            transition: opacity 0.5s ease;
         }
 
         #text-info {
@@ -105,9 +104,6 @@
             letter-spacing: 0.1px;
         }
 
-        #tracks-inner::-webkit-scrollbar { width: 3px; }
-        #tracks-inner::-webkit-scrollbar-thumb { background: #1a1a40; border-radius: 10px; }
-        
         .history-item { 
             margin-bottom: 6px; 
             display: flex; 
@@ -118,17 +114,13 @@
         }
 
         .history-time { color: #3a3a6a; min-width: 50px; flex-shrink: 0; }
-        .history-track { 
-            flex-grow: 1; 
-            overflow: hidden; 
-            text-overflow: clip; 
-        }
+        .history-track { flex-grow: 1; overflow: hidden; text-overflow: clip; }
     </style>
 </head>
 <body>
 
     <div id="player-widget">
-        <div id="status-bar"><div id="status-dot"></div> <span id="status-text">SYNC</span></div>
+        <div id="status-bar"><div id="status-dot"></div> <span id="status-text">CONNECTING</span></div>
         <div id="player-content">
             <img id="album-art" src="https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107" alt="Art">
             <div id="text-info">
@@ -141,7 +133,7 @@
 
     <div id="history-widget">
         <div class="history-header">7-DAY RADIO LOG</div>
-        <div id="tracks-inner">CONNECTING...</div>
+        <div id="tracks-inner">FETCHING LOGS...</div>
     </div>
 
 <script>
@@ -153,12 +145,15 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     global: { headers: { 'x-station-key': STATION_KEY } }
 });
 
-let currentLocalTrack = "";
+// CRITICAL: Local cache to prevent flickering/reverting
+let currentFullTitle = "";
+let isUpdating = false;
 
 // --- MARQUEE HANDLER ---
 function handleMarquee(element) {
     const container = element.parentElement;
     const originalText = element.getAttribute('data-original') || element.innerHTML;
+    
     element.innerHTML = originalText; 
     element.setAttribute('data-original', originalText);
     element.classList.remove('animate-scroll');
@@ -175,14 +170,16 @@ async function getCover(artist, title) {
         const query = encodeURIComponent(`${artist} ${title}`);
         const res = await fetch(`https://itunes.apple.com/search?term=${query}&entity=song&limit=1`);
         const data = await res.json();
-        return (data.results && data.results.length > 0) ? data.results[0].artworkUrl100.replace('100x100', '600x600') : "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
+        return (data.results && data.results.length > 0) ? 
+            data.results[0].artworkUrl100.replace('100x100', '600x600') : 
+            "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
     } catch (e) { return "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107"; }
 }
 
 // --- GLOBAL DEDUPLICATION LOGIC ---
 async function logToHistoryGlobally(fullTitle) {
     try {
-        // Step 1: Query database for the absolute latest entry
+        // Query DB for the absolute latest entry to double-check
         const { data } = await supabaseClient
             .from('radio_history')
             .select('track_title')
@@ -191,19 +188,27 @@ async function logToHistoryGlobally(fullTitle) {
 
         const lastTrackInDb = data?.[0]?.track_title;
 
-        // Step 2: Only insert if the DB hasn't already been updated by someone else
-        if (fullTitle !== lastTrackInDb) {
+        // Strict comparison: No logging if DB already has it
+        if (fullTitle.trim() !== lastTrackInDb?.trim()) {
             await supabaseClient.from('radio_history').insert([{ track_title: fullTitle }]);
             fetchGlobalHistory(); 
         }
-    } catch (err) { console.error("Deduplication error:", err); }
+    } catch (err) { console.error("Sync Log Error:", err); }
 }
 
 // --- LIVE HISTORY FETCH ---
 async function fetchGlobalHistory() {
-    const { data } = await supabaseClient.from('radio_history').select('*').order('created_at', { ascending: false }).limit(50);
+    const { data } = await supabaseClient
+        .from('radio_history')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(40);
+        
     if (data) {
-        document.getElementById('tracks-inner').innerHTML = data.map(item => `
+        // Local cleanup: Filter out any duplicates that might have snuck in
+        const uniqueData = data.filter((v,i,a)=>a.findIndex(t=>(t.track_title === v.track_title))===i);
+        
+        document.getElementById('tracks-inner').innerHTML = uniqueData.map(item => `
             <div class="history-item">
                 <span class="history-time">[${String(new Date(item.created_at).getHours()).padStart(2, '0')}:${String(new Date(item.created_at).getMinutes()).padStart(2, '0')}]</span> 
                 <span class="history-track">${item.track_title}</span>
@@ -212,62 +217,69 @@ async function fetchGlobalHistory() {
     }
 }
 
-// --- LIVE UI UPDATER (FIXES NO-REFRESH BUG) ---
-function updatePlayerUI(artist, title) {
+// --- THE BOSS UI UPDATER (Stops Reverting) ---
+async function forceUpdateUI(fullTitle) {
+    if (isUpdating) return;
+    isUpdating = true;
+
+    const [artistName, songName] = fullTitle.includes(' - ') 
+        ? fullTitle.split(' - ') 
+        : ["SNAP 107", fullTitle];
+
     const artistEl = document.getElementById('artist');
     const titleEl = document.getElementById('title');
-    
-    if (artistEl.innerText !== artist || titleEl.innerText !== title) {
-        artistEl.innerText = artist;
-        titleEl.innerText = title;
-        
-        // Reset marquee state to force re-calculation
-        artistEl.classList.remove('animate-scroll');
-        titleEl.classList.remove('animate-scroll');
-        
-        // Trigger browser reflow to restart animation instantly
-        void artistEl.offsetWidth; 
-        
-        setTimeout(() => {
-            handleMarquee(artistEl);
-            handleMarquee(titleEl);
-        }, 50);
-    }
+
+    // 1. Immediate Text Change
+    artistEl.innerText = artistName.trim();
+    titleEl.innerText = songName.trim();
+
+    // 2. Fetch & Apply Art
+    const artUrl = await getCover(artistName, songName);
+    const artImg = document.getElementById('album-art');
+    artImg.style.opacity = '0.3';
+    artImg.src = artUrl;
+    artImg.onload = () => artImg.style.opacity = '1';
+
+    // 3. Reset Marquee Animations
+    artistEl.classList.remove('animate-scroll');
+    titleEl.classList.remove('animate-scroll');
+    void artistEl.offsetWidth; // Force Reflow
+
+    setTimeout(() => {
+        handleMarquee(artistEl);
+        handleMarquee(titleEl);
+        isUpdating = false;
+    }, 100);
 }
 
 // --- MAIN SYNC LOOP ---
 async function updateRadio() {
     try {
+        // Cache-buster cb= ensures fresh data
         const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('http://sapircast.caster.fm:13044/status-json.xsl?cb=' + Date.now())}`);
         const stats = JSON.parse((await res.json()).contents);
         const fullTitle = stats.icestats.source["display-title"];
 
-        if (fullTitle && fullTitle !== currentLocalTrack) {
-            currentLocalTrack = fullTitle;
+        if (fullTitle && fullTitle.trim() !== currentFullTitle.trim()) {
+            currentFullTitle = fullTitle;
             
-            const [artistName, songName] = fullTitle.includes(' - ') 
-                ? fullTitle.split(' - ') 
-                : ["SNAP 107", fullTitle];
-            
-            // Updates UI Text without refresh
-            updatePlayerUI(artistName, songName);
+            // 1. Update the display text immediately (No more reverting!)
+            await forceUpdateUI(fullTitle);
 
-            // Updates Album Art
-            const artUrl = await getCover(artistName, songName);
-            document.getElementById('album-art').src = artUrl;
-
-            // Global log check
+            // 2. Log to DB (Global deduplication happens here)
             await logToHistoryGlobally(fullTitle);
             
             document.getElementById('status-dot').classList.add('live-glow');
             document.getElementById('status-text').innerText = "LIVE";
         }
-    } catch (e) { document.getElementById('status-text').innerText = "SYNC ERR"; }
+    } catch (e) { 
+        document.getElementById('status-text').innerText = "SYNC..."; 
+    }
 }
 
 // Start
 fetchGlobalHistory();
-setInterval(updateRadio, 10000); 
+setInterval(updateRadio, 8000); // 8 second intervals for better response
 updateRadio();
 </script>
 </body>
