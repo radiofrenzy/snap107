@@ -100,7 +100,7 @@ function handleMarquee(element) {
     }
 }
 
-// JSONP-based iTunes getCover (CORS-safe)
+// JSONP-based iTunes getCover fallback
 function getCover(artist, title) {
     return new Promise((resolve) => {
         const cleanArtist = artist.replace(/feat\.?|ft\.?/gi, '').split('&')[0].trim();
@@ -133,12 +133,13 @@ function getCover(artist, title) {
     });
 }
 
-// Update player display
+// Update player display (fixed left text update + async art)
 async function updateDisplay() {
     try {
         const { data } = await supabaseClient.from('radio_history').select('*').order('created_at', { ascending: false }).limit(30);
         if (!data || data.length === 0) return;
 
+        // Update right log
         document.getElementById('tracks-inner').innerHTML = data.map(item => `
             <div class="history-item">
                 <span class="history-time">[${new Date(item.created_at).getHours()}:${String(new Date(item.created_at).getMinutes()).padStart(2,'0')}]</span>
@@ -153,7 +154,7 @@ async function updateDisplay() {
             const artist = parts.length > 1 ? parts[0] : "SNAP 107";
             const song = parts.length > 1 ? parts[1] : parts[0];
 
-            // --- IMMEDIATE TEXT UPDATE ---
+            // --- FIXED: immediate text update ---
             const artistEl = document.getElementById('artist');
             const titleEl = document.getElementById('title');
             artistEl.innerText = artist.trim();
@@ -161,11 +162,12 @@ async function updateDisplay() {
             handleMarquee(artistEl);
             handleMarquee(titleEl);
 
-            // --- ASYNC ALBUM ART UPDATE ---
+            // --- Async album art ---
             getCover(artist.trim(), song.trim()).then(art => {
                 document.getElementById('album-art').src = art;
             });
         }
+
         document.getElementById('status-text').innerText = "GHOST SYNC ACTIVE";
         document.getElementById('status-dot').style.backgroundColor = "#00ff66";
     } catch (err) {
