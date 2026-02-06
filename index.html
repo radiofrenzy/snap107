@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
         body {
-            background-color: #05051a;
+            background-color: #020210;
             color: #7898FB;
             font-family: 'VT323', monospace;
             display: flex;
@@ -16,66 +16,62 @@
             height: 100vh;
             margin: 0;
             text-transform: uppercase;
-            overflow: hidden;
         }
 
         #radio-container {
             width: 90%;
             max-width: 450px;
             background: linear-gradient(145deg, #050525, #0a0a35);
-            border: 4px solid #1a1a40;
-            border-radius: 15px;
+            border: 3px solid #1a1a40;
+            border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 0 40px rgba(0,0,0,0.9);
+            box-shadow: 0 0 50px rgba(0,0,0,0.9);
             text-align: center;
             position: relative;
         }
 
-        /* LIVE INDICATOR */
         #status-bar {
             position: absolute;
-            top: 15px;
-            right: 20px;
+            top: 20px;
+            right: 25px;
             font-size: 16px;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
             color: #444488;
         }
         #status-dot {
-            width: 8px;
-            height: 8px;
-            background-color: #ff3333; /* Red when starting */
+            width: 10px;
+            height: 10px;
+            background-color: #ff3333;
             border-radius: 50%;
-            box-shadow: 0 0 5px #ff3333;
         }
         .live-glow {
             background-color: #00ff66 !important;
-            box-shadow: 0 0 10px #00ff66 !important;
-            animation: blink 1.5s infinite;
+            box-shadow: 0 0 12px #00ff66 !important;
+            animation: pulse 2s infinite;
         }
-        @keyframes blink { 50% { opacity: 0.3; } }
+        @keyframes pulse { 50% { opacity: 0.4; } }
 
-        /* ALBUM ART */
         #album-art {
-            width: 240px;
-            height: 240px;
+            width: 260px;
+            height: 260px;
             margin: 0 auto 20px auto;
-            border: 3px solid #1a1a40;
+            border: 2px solid #1a1a40;
             background-color: #000;
             display: block;
             object-fit: cover;
-            transition: opacity 0.5s;
+            transition: opacity 0.6s;
         }
 
-        #artist { font-size: 24px; opacity: 0.7; min-height: 30px; }
+        #artist { font-size: 26px; opacity: 0.7; min-height: 32px; }
         #title { 
-            font-size: 42px; 
+            font-size: 46px; 
             color: #a0baff; 
-            text-shadow: 0 0 10px rgba(120, 152, 251, 0.6);
-            margin: 10px 0 20px 0;
+            text-shadow: 0 0 15px rgba(120, 152, 251, 0.7);
+            margin: 10px 0 25px 0;
             line-height: 1;
-            min-height: 85px;
+            min-height: 100px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -83,31 +79,31 @@
 
         .btn-request {
             display: inline-block;
-            padding: 10px 25px;
-            background: #1a1a40;
+            padding: 12px 30px;
+            background: transparent;
             color: #7898FB;
             border: 2px solid #7898FB;
             text-decoration: none;
-            font-size: 22px;
-            margin-bottom: 10px;
+            font-size: 24px;
+            transition: 0.3s;
         }
-        .btn-request:hover { background: #7898FB; color: #050520; }
+        .btn-request:hover { background: #7898FB; color: #020210; box-shadow: 0 0 15px #7898FB; }
 
-        hr { border: 0; border-top: 1px solid #1a1a40; margin: 15px 0; }
-        .history-label { color: #5555aa; font-size: 18px; margin-bottom: 8px; text-align: left; }
-        #tracks-inner { font-size: 18px; color: #444488; text-align: left; }
-        .history-item { margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        hr { border: 0; border-top: 1px solid #1a1a40; margin: 20px 0; }
+        .history-label { color: #5555aa; font-size: 18px; margin-bottom: 10px; text-align: left; }
+        #tracks-inner { font-size: 19px; color: #444488; text-align: left; }
+        .history-item { margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.8; }
     </style>
 </head>
 <body>
 
 <div id="radio-container">
-    <div id="status-bar"><div id="status-dot"></div> <span id="status-text">SYNCING</span></div>
+    <div id="status-bar"><div id="status-dot"></div> <span id="status-text">SYNC</span></div>
     
-    <img id="album-art" src="https://via.placeholder.com/300?text=SNAP+107" alt="Art">
+    <img id="album-art" src="https://via.placeholder.com/400x400/000/7898FB?text=SNAP+107" alt="Art">
     
-    <div id="artist">STATION COLD</div>
-    <div id="title">WAITING FOR DATA</div>
+    <div id="artist">STATION IDLE</div>
+    <div id="title">SNAP 107</div>
     
     <a href="YOUR_GOOGLE_FORM_URL" target="_blank" class="btn-request">REQUEST SONG</a>
     
@@ -117,7 +113,9 @@
 </div>
 
 <script>
+// --- GLOBAL STATE ---
 let lastTrack = "";
+let localHistory = []; // We manage this manually to bypass server lag
 
 async function getCover(artist, title) {
     try {
@@ -127,15 +125,21 @@ async function getCover(artist, title) {
         if (data.results && data.results.length > 0) {
             return data.results[0].artworkUrl100.replace('100x100', '600x600');
         }
-    } catch (e) { console.error("Art Error"); }
-    return "https://via.placeholder.com/300?text=SNAP+107";
+    } catch (e) { }
+    return "https://via.placeholder.com/400x400/000/7898FB?text=SNAP+107";
+}
+
+function updateHistoryUI() {
+    let historyHTML = "";
+    localHistory.forEach(track => {
+        historyHTML += `<div class="history-item">> ${track}</div>`;
+    });
+    document.getElementById('tracks-inner').innerHTML = historyHTML;
 }
 
 async function updateRadio() {
     try {
-        // Advanced Cache-Busting: Timestamp + Random ID
-        const cacheBust = new Date().getTime() + Math.floor(Math.random() * 1000);
-        const targetUrl = `http://sapircast.caster.fm:13044/status-json.xsl?cb=${cacheBust}`;
+        const targetUrl = `http://sapircast.caster.fm:13044/status-json.xsl?cb=${Date.now()}`;
         const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
         
         const response = await fetch(proxyUrl);
@@ -143,43 +147,44 @@ async function updateRadio() {
         const stats = JSON.parse(data.contents);
         const fullTitle = stats.icestats.source["display-title"];
         
-        // Update Status Indicator
         document.getElementById('status-dot').classList.add('live-glow');
         document.getElementById('status-text').innerText = "LIVE";
 
+        // ONLY update if the song name has changed on the server
         if (fullTitle !== lastTrack) {
+            
+            // 1. Move the PREVIOUS song to history before updating the current one
+            if (lastTrack !== "" && lastTrack !== "SNAP 107") {
+                localHistory.unshift(lastTrack); // Add old song to top of list
+                if (localHistory.length > 3) localHistory.pop(); // Keep only last 3
+                updateHistoryUI();
+            }
+
+            // 2. Update Current Track
             lastTrack = fullTitle;
             const parts = fullTitle.split(' - ');
-            const artistName = parts[0] || "Unknown Artist";
+            const artistName = parts[0] || "SNAP 107";
             const songName = parts[1] || fullTitle;
 
             document.getElementById('artist').innerText = artistName;
             document.getElementById('title').innerText = songName;
 
-            // Album Art Update
+            // 3. Update Art
             const artUrl = await getCover(artistName, songName);
             const artEl = document.getElementById('album-art');
             artEl.style.opacity = 0;
             setTimeout(() => {
                 artEl.src = artUrl;
                 artEl.style.opacity = 1;
-            }, 500);
-
-            // History Update
-            const tracks = stats.icestats.source.playlist.trackList;
-            let historyHTML = "";
-            tracks.slice(0, 3).forEach(track => {
-                historyHTML += `<div class="history-item">> ${track.title}</div>`;
-            });
-            document.getElementById('tracks-inner').innerHTML = historyHTML;
+            }, 600);
         }
     } catch (e) {
         document.getElementById('status-dot').classList.remove('live-glow');
-        document.getElementById('status-text').innerText = "RETRIEVING";
+        document.getElementById('status-text').innerText = "OFFLINE";
     }
 }
 
-// Check every 7 seconds
+// Update every 7 seconds for accuracy
 setInterval(updateRadio, 7000);
 updateRadio();
 </script>
