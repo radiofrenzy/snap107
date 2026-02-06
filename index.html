@@ -153,13 +153,18 @@ async function updateDisplay() {
             const artist = parts.length > 1 ? parts[0] : "SNAP 107";
             const song = parts.length > 1 ? parts[1] : parts[0];
 
-            document.getElementById('artist').innerText = artist.trim();
-            document.getElementById('title').innerText = song.trim();
-            handleMarquee(document.getElementById('artist'));
-            handleMarquee(document.getElementById('title'));
+            // --- IMMEDIATE TEXT UPDATE ---
+            const artistEl = document.getElementById('artist');
+            const titleEl = document.getElementById('title');
+            artistEl.innerText = artist.trim();
+            titleEl.innerText = song.trim();
+            handleMarquee(artistEl);
+            handleMarquee(titleEl);
 
-            const art = await getCover(artist.trim(), song.trim());
-            document.getElementById('album-art').src = art;
+            // --- ASYNC ALBUM ART UPDATE ---
+            getCover(artist.trim(), song.trim()).then(art => {
+                document.getElementById('album-art').src = art;
+            });
         }
         document.getElementById('status-text').innerText = "GHOST SYNC ACTIVE";
         document.getElementById('status-dot').style.backgroundColor = "#00ff66";
