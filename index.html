@@ -30,7 +30,7 @@
 <body>
 
     <div id="player-widget">
-        <div id="status-bar"><div id="status-dot"></div> <span id="status-text">SYSTEM ACTIVE</span></div>
+        <div id="status-bar"><div id="status-dot"></div> <span id="status-text">TOTAL SYNC</span></div>
         <div id="player-content">
             <img id="album-art" src="https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107" alt="Art">
             <div id="text-info">
@@ -75,61 +75,62 @@ async function getCover(artist, title) {
     } catch (e) { return "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107"; }
 }
 
-async function masterLoop() {
-    try {
-        // 1. FETCH FROM RADIO (The "Ear") using a more stable proxy
-        const radioUrl = 'http://sapircast.caster.fm:13044/status-json.xsl';
-        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(radioUrl + '?cb=' + Date.now())}`;
-        
-        const response = await fetch(proxyUrl);
-        const json = await response.json();
-        const serverTitle = JSON.parse(json.contents).icestats.source["display-title"];
+async function refreshUI() {
+    // This function only talks to Supabase (Safe from CORS/Proxy issues)
+    const { data } = await supabaseClient.from('radio_history').select('*').order('created_at', { ascending: false }).limit(30);
+    if (!data || data.length === 0) return;
 
-        // 2. FETCH FROM DB (The Log)
-        const { data } = await supabaseClient.from('radio_history').select('*').order('created_at', { ascending: false }).limit(30);
-        
-        if (data && data.length > 0) {
-            const lastInDb = data[0].track_title;
+    // Update Right Box
+    document.getElementById('tracks-inner').innerHTML = data.map(item => `
+        <div class="history-item">
+            <span style="color:#3a3a6a">[${new Date(item.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}]</span> 
+            <span>${item.track_title}</span>
+        </div>`).join('');
 
-            // 3. IF RADIO HAS NEW SONG -> UPDATE DB
-            if (serverTitle && serverTitle.trim() !== lastInDb.trim()) {
-                // Double check it's not a duplicate from 2 minutes ago
-                const isDuplicate = data.slice(0, 5).some(row => row.track_title === serverTitle.trim());
-                if (!isDuplicate) {
-                    await supabaseClient.from('radio_history').insert([{ track_title: serverTitle.trim() }]);
-                    return; // Let the next loop iteration handle the UI update
-                }
-            }
-
-            // 4. RENDER RIGHT BOX
-            document.getElementById('tracks-inner').innerHTML = data.map(item => `
-                <div class="history-item">
-                    <span style="color:#3a3a6a">[${new Date(item.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}]</span> 
-                    <span>${item.track_title}</span>
-                </div>`).join('');
-
-            // 5. MIRROR LEFT BOX TO TOP OF RIGHT BOX
-            if (lastInDb !== playerMemory) {
-                playerMemory = lastInDb;
-                const [artist, song] = lastInDb.includes(' - ') ? lastInDb.split(' - ') : ["SNAP 107", lastInDb];
-                
-                document.getElementById('artist').innerText = artist.trim();
-                document.getElementById('title').innerText = song.trim();
-                handleMarquee(document.getElementById('artist'));
-                handleMarquee(document.getElementById('title'));
-                
-                const art = await getCover(artist, song);
-                document.getElementById('album-art').src = art;
-            }
-        }
-    } catch (err) {
-        console.error("Sync Error:", err);
+    // Update Left Box from Log Top
+    const topTrack = data[0].track_title;
+    if (topTrack !== playerMemory) {
+        playerMemory = topTrack;
+        const [artist, song] = topTrack.includes(' - ') ? topTrack.split(' - ') : ["SNAP 107", topTrack];
+        document.getElementById('artist').innerText = artist.trim();
+        document.getElementById('title').innerText = song.trim();
+        handleMarquee(document.getElementById('artist'));
+        handleMarquee(document.getElementById('title'));
+        const art = await getCover(artist, song);
+        document.getElementById('album-art').src = art;
     }
 }
 
-// Run every 6 seconds to stay under proxy rate limits
-setInterval(masterLoop, 6000);
-masterLoop();
+async function checkRadioServer() {
+    // This runs in the background. If it fails, the UI doesn't care.
+    try {
+        const radioUrl = 'http://sapircast.caster.fm:13044/status-json.xsl';
+        // Trying a different proxy (Corsproxy.io) because AllOrigins is failing in your logs
+        const response = await fetch(`https://corsproxy.io/?${encodeURIComponent(radioUrl + '?cb=' + Date.now())}`);
+        const json = await response.json();
+        const serverTitle = json.icestats.source["display-title"];
+
+        if (serverTitle) {
+            const { data } = await supabaseClient.from('radio_history').select('track_title').order('created_at', { ascending: false }).limit(1);
+            if (data && data[0].track_title !== serverTitle.trim()) {
+                await supabaseClient.from('radio_history').insert([{ track_title: serverTitle.trim() }]);
+                refreshUI(); // Update UI immediately after successful insert
+            }
+        }
+    } catch (err) {
+        console.warn("Background Radio Check Failed (Proxy/CORS Issue)");
+    }
+}
+
+// UI Refresh Loop (Every 5 seconds - talks to Supabase)
+setInterval(refreshUI, 5000);
+
+// Radio Check Loop (Every 10 seconds - background only)
+setInterval(checkRadioServer, 10000);
+
+// Start everything
+refreshUI();
+checkRadioServer();
 </script>
 </body>
 </html>
