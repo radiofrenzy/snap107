@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNAP 107 - FINAL TIGHT FIT</title>
+    <title>SNAP 107 - MAX TEXT FIT</title>
     <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -21,9 +21,9 @@
             overflow: hidden;
         }
 
-        /* --- PLAYER WIDGET (REDUCED SLIGHTLY) --- */
+        /* --- PLAYER WIDGET (LEFT) --- */
         #player-widget {
-            flex: 1.2; /* Was 1.4, now 1.2 to give right side more room */
+            flex: 1.15; /* Tiny shave to give the right side that final boost */
             height: 400px;
             background: linear-gradient(145deg, #050525, #0a0a35);
             border: 3px solid #1a1a40;
@@ -47,7 +47,6 @@
         #album-art { 
             width: 250px; 
             height: 250px; 
-            aspect-ratio: 1 / 1; 
             object-fit: cover; 
             border-radius: 15px; 
             border: 2px solid #1a1a40; 
@@ -64,14 +63,7 @@
 
         .marquee-container { overflow: hidden; white-space: nowrap; width: 100%; }
         #artist { font-size: 18px; opacity: 0.8; margin-bottom: 5px; display: inline-block; }
-        #title { 
-            font-size: 38px; 
-            color: #a0baff; 
-            text-shadow: 0 0 15px rgba(120, 152, 251, 0.5); 
-            line-height: 1.1; 
-            margin: 0;
-            display: inline-block;
-        }
+        #title { font-size: 38px; color: #a0baff; text-shadow: 0 0 15px rgba(120, 152, 251, 0.5); line-height: 1.1; margin: 0; display: inline-block; }
 
         .animate-scroll {
             animation: jvc-step 45s steps(60, end) infinite;
@@ -90,14 +82,14 @@
         .btn-request { margin-top: 15px; padding: 8px 18px; border: 2px solid #7898FB; color: #7898FB; text-decoration: none; font-size: 16px; transition: 0.3s; width: fit-content; text-transform: uppercase; }
         .btn-request:hover { background: #7898FB; color: #020210; }
 
-        /* --- PLAYLIST WIDGET (INCREASED WIDTH) --- */
+        /* --- PLAYLIST WIDGET (RIGHT) --- */
         #history-widget {
-            flex: 1.1; /* Increased to allow full text display */
+            flex: 1.25; /* Pushed wide to catch the full song string */
             height: 400px;
             background: linear-gradient(145deg, #050525, #0a0a35);
             border: 3px solid #1a1a40;
             border-radius: 25px;
-            padding: 20px;
+            padding: 20px 25px;
             display: flex;
             flex-direction: column;
             min-width: 0;
@@ -108,8 +100,9 @@
         #tracks-inner { 
             flex-grow: 1; 
             overflow-y: auto; 
-            font-size: 14px; /* Slightly smaller to guarantee the single line fit */
+            font-size: 15.5px; /* Increased to "hug" the box edges */
             color: #444488; 
+            letter-spacing: 0.2px;
         }
 
         #tracks-inner::-webkit-scrollbar { width: 3px; }
@@ -118,17 +111,17 @@
         .history-item { 
             margin-bottom: 6px; 
             display: flex; 
-            gap: 10px; 
+            gap: 12px; 
             border-bottom: 1px solid #080828; 
             padding-bottom: 4px; 
-            white-space: nowrap; /* Strictly enforced single line */
+            white-space: nowrap; 
         }
 
-        .history-time { color: #3a3a6a; min-width: 50px; flex-shrink: 0; }
+        .history-time { color: #3a3a6a; min-width: 55px; flex-shrink: 0; }
         .history-track { 
             flex-grow: 1; 
             overflow: hidden; 
-            text-overflow: clip; /* Clip instead of ellipsis to keep it looking like a digital readout */
+            text-overflow: clip; /* Clean cut if it ever hits the absolute limit */
         }
     </style>
 </head>
@@ -152,6 +145,7 @@
     </div>
 
 <script>
+// (Logic remains consistent with your previous Supabase/API setup)
 const SUPABASE_URL = 'https://jjevapkfrxepdfyymtpa.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_fu_ULJb3PP0bde3uNFNEYA_rKglhlaw';
 const STATION_KEY  = 'SNAP107_SECRET'; 
