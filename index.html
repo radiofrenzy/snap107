@@ -21,7 +21,6 @@
             overflow: hidden;
         }
 
-        /* --- 55/45 PRECISION SPLIT --- */
         #player-widget {
             flex: 1.22; 
             height: 380px;
@@ -146,9 +145,10 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     global: { headers: { 'x-station-key': STATION_KEY } }
 });
 
-// MEMORY LOCKS
+// --- ANTI-REVERT LOGIC ---
 let currentFullTitle = "";
-let isProcessing = false;
+let lastUpdateTimestamp = 0;
+const LOCK_DURATION = 15000; // 15-second protection against server lag
 
 function handleMarquee(element) {
     const container = element.parentElement;
@@ -163,14 +163,19 @@ function handleMarquee(element) {
 }
 
 async function getCover(artist, title) {
+    const fallback = "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
     try {
-        const query = encodeURIComponent(`${artist} ${title}`);
+        // Cleaning strings for iTunes (removes feat, [Explicit], etc)
+        const cleanA = artist.split('feat.')[0].split('f:')[0].split('(')[0].trim();
+        const cleanT = title.split('(')[0].split('[')[0].trim();
+        const query = encodeURIComponent(`${cleanA} ${cleanT}`);
+        
         const res = await fetch(`https://itunes.apple.com/search?term=${query}&entity=song&limit=1`);
         const data = await res.json();
+        
         return (data.results && data.results.length > 0) ? 
-            data.results[0].artworkUrl100.replace('100x100', '600x600') : 
-            "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
-    } catch (e) { return "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107"; }
+            data.results[0].artworkUrl100.replace('100x100', '600x600') : fallback;
+    } catch (e) { return fallback; }
 }
 
 async function fetchGlobalHistory() {
@@ -185,59 +190,66 @@ async function fetchGlobalHistory() {
     }
 }
 
-// FIX: This function forces the UI to lock on the new song so it can't "revert"
 async function updateUIHard(fullTitle) {
-    if (isProcessing) return;
-    isProcessing = true;
-
     const [artist, song] = fullTitle.includes(' - ') ? fullTitle.split(' - ') : ["SNAP 107", fullTitle];
     const artistEl = document.getElementById('artist');
     const titleEl = document.getElementById('title');
+    const artImg = document.getElementById('album-art');
 
-    // Update text immediately
+    // 1. Text Update First (Instant)
     artistEl.innerText = artist.trim();
     titleEl.innerText = song.trim();
 
-    // Trigger animations
+    // 2. Refresh Marquee
     artistEl.classList.remove('animate-scroll');
     titleEl.classList.remove('animate-scroll');
     void artistEl.offsetWidth; 
+    handleMarquee(artistEl);
+    handleMarquee(titleEl);
 
-    // Swap Art
-    const artUrl = await getCover(artist, song);
-    document.getElementById('album-art').src = artUrl;
-
-    setTimeout(() => {
-        handleMarquee(artistEl);
-        handleMarquee(titleEl);
-        isProcessing = false;
-    }, 150);
+    // 3. Background Art Update (Does not block text)
+    getCover(artist.trim(), song.trim()).then(url => {
+        artImg.style.opacity = '0.3';
+        artImg.src = url;
+        artImg.onload = () => artImg.style.opacity = '1';
+    });
 }
 
 async function updateRadio() {
     try {
-        // Cache-buster: Ensures we get the REAL current song, not a saved one
-        const cb = Math.random().toString(36).substring(7);
-        const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('http://sapircast.caster.fm:13044/status-json.xsl?cb=' + cb)}`);
+        const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('http://sapircast.caster.fm:13044/status-json.xsl?cb=' + Date.now())}`);
         const stats = JSON.parse((await res.json()).contents);
         const fullTitle = stats.icestats.source["display-title"];
 
-        if (fullTitle && fullTitle.trim() !== currentFullTitle.trim()) {
-            currentFullTitle = fullTitle;
-            
-            // 1. Force UI update (No more flashing back)
-            await updateUIHard(fullTitle);
+        if (!fullTitle) return;
 
-            // 2. Log to DB
+        const now = Date.now();
+        const isLocked = (now - lastUpdateTimestamp) < LOCK_DURATION;
+
+        if (fullTitle.trim() !== currentFullTitle.trim()) {
+            
+            // Revert Protection
+            if (isLocked) return;
+
+            currentFullTitle = fullTitle;
+            lastUpdateTimestamp = now;
+
+            // Sync Database
             await supabaseClient.from('radio_history').insert([{ track_title: fullTitle }]);
             fetchGlobalHistory();
+            
+            // Hard UI Refresh
+            updateUIHard(fullTitle);
             
             document.getElementById('status-dot').classList.add('live-glow');
             document.getElementById('status-text').innerText = "LIVE";
         }
-    } catch (e) { document.getElementById('status-text').innerText = "SYNC..."; }
+    } catch (e) { 
+        document.getElementById('status-text').innerText = "SYNC..."; 
+    }
 }
 
+// Init
 fetchGlobalHistory();
 setInterval(updateRadio, 5000); 
 updateRadio();
