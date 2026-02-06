@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNAP 107 - 50/50 PERFECT FIT</title>
+    <title>SNAP 107 - BALANCED FIT</title>
     <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -17,18 +17,18 @@
             height: 100vh; 
             margin: 0; 
             padding: 0 20px; 
-            gap: 20px; /* Clean gap between the two halves */
+            gap: 15px; 
             overflow: hidden;
         }
 
-        /* --- SHARED HALF-SCREEN STYLE --- */
-        .half-box {
-            flex: 1; /* This forces the literal 50/50 split */
-            height: 420px;
+        /* --- PLAYER WIDGET (60% WIDTH) --- */
+        #player-widget {
+            flex: 1.5; /* Slightly larger than the right */
+            height: 400px;
             background: linear-gradient(145deg, #050525, #0a0a35);
             border: 3px solid #1a1a40;
             border-radius: 25px;
-            padding: 25px;
+            padding: 20px 30px;
             box-shadow: 0 0 50px rgba(0,0,0,0.8);
             display: flex;
             flex-direction: column;
@@ -36,18 +36,30 @@
             min-width: 0;
         }
 
-        /* --- LEFT SIDE (PLAYER) --- */
+        /* --- HISTORY WIDGET (40% WIDTH) --- */
+        #history-widget {
+            flex: 1; /* The baseline "smaller" box */
+            height: 400px;
+            background: linear-gradient(145deg, #050525, #0a0a35);
+            border: 3px solid #1a1a40;
+            border-radius: 25px;
+            padding: 20px 20px;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
         #player-content {
             display: flex;
-            gap: 25px;
+            gap: 30px;
             align-items: center;
             flex-grow: 1;
             overflow: hidden;
         }
 
         #album-art { 
-            width: 220px; 
-            height: 220px; 
+            width: 240px; 
+            height: 240px; 
             object-fit: cover; 
             border-radius: 15px; 
             border: 2px solid #1a1a40; 
@@ -64,7 +76,7 @@
 
         .marquee-container { overflow: hidden; white-space: nowrap; width: 100%; }
         #artist { font-size: 18px; opacity: 0.8; margin-bottom: 5px; display: inline-block; }
-        #title { font-size: 36px; color: #a0baff; text-shadow: 0 0 15px rgba(120, 152, 251, 0.5); line-height: 1.1; margin: 0; display: inline-block; }
+        #title { font-size: 40px; color: #a0baff; text-shadow: 0 0 15px rgba(120, 152, 251, 0.5); line-height: 1.1; margin: 0; display: inline-block; }
 
         .animate-scroll {
             animation: jvc-step 45s steps(60, end) infinite;
@@ -83,30 +95,29 @@
         .btn-request { margin-top: 15px; padding: 8px 18px; border: 2px solid #7898FB; color: #7898FB; text-decoration: none; font-size: 16px; transition: 0.3s; width: fit-content; text-transform: uppercase; }
         .btn-request:hover { background: #7898FB; color: #020210; }
 
-        /* --- RIGHT SIDE (HISTORY) --- */
-        .history-header { font-size: 18px; color: #a0baff; margin-bottom: 12px; border-bottom: 1px solid #1a1a40; padding-bottom: 8px; text-transform: uppercase; }
+        .history-header { font-size: 18px; color: #a0baff; margin-bottom: 10px; border-bottom: 1px solid #1a1a40; padding-bottom: 8px; text-transform: uppercase; }
         
         #tracks-inner { 
             flex-grow: 1; 
             overflow-y: auto; 
-            /* FLUID FONT: Scales with the box to ensure long titles hug the edge */
-            font-size: clamp(13px, 1.1vw, 15px); 
+            font-size: 15px; /* Tuned to "hug" the 40% width box edge */
             color: #444488; 
+            letter-spacing: 0.1px;
         }
 
         #tracks-inner::-webkit-scrollbar { width: 3px; }
         #tracks-inner::-webkit-scrollbar-thumb { background: #1a1a40; border-radius: 10px; }
         
         .history-item { 
-            margin-bottom: 8px; 
+            margin-bottom: 6px; 
             display: flex; 
-            gap: 10px; 
+            gap: 12px; 
             border-bottom: 1px solid #080828; 
-            padding-bottom: 5px; 
+            padding-bottom: 4px; 
             white-space: nowrap; 
         }
 
-        .history-time { color: #3a3a6a; min-width: 50px; flex-shrink: 0; }
+        .history-time { color: #3a3a6a; min-width: 55px; flex-shrink: 0; }
         .history-track { 
             flex-grow: 1; 
             overflow: hidden; 
@@ -116,24 +127,25 @@
 </head>
 <body>
 
-    <div id="player-widget" class="half-box">
+    <div id="player-widget">
         <div id="status-bar"><div id="status-dot"></div> <span id="status-text">SYNC</span></div>
         <div id="player-content">
             <img id="album-art" src="https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107" alt="Art">
             <div id="text-info">
                 <div class="marquee-container"><div id="artist">STATION IDLE</div></div>
                 <div class="marquee-container"><div id="title">SNAP 107</div></div>
-                <a href="#" class="btn-request">REQUEST SONG</a>
+                <a href="YOUR_GOOGLE_FORM_URL" target="_blank" class="btn-request">REQUEST SONG</a>
             </div>
         </div>
     </div>
 
-    <div id="history-widget" class="half-box">
+    <div id="history-widget">
         <div class="history-header">7-DAY RADIO LOG</div>
         <div id="tracks-inner">CONNECTING...</div>
     </div>
 
 <script>
+// Logic remains identical for data syncing
 const SUPABASE_URL = 'https://jjevapkfrxepdfyymtpa.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_fu_ULJb3PP0bde3uNFNEYA_rKglhlaw';
 const STATION_KEY  = 'SNAP107_SECRET'; 
