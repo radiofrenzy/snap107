@@ -55,7 +55,7 @@ const SUPABASE_KEY = 'sb_publishable_fu_ULJb3PP0bde3uNFNEYA_rKglhlaw';
 const STATION_KEY  = 'SNAP107_SECRET'; 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { global: { headers: { 'x-station-key': STATION_KEY } } });
 
-let lastLoggedTitle = "";
+let lastPlayerTitle = "";
 
 function handleMarquee(element) {
     const container = element.parentElement;
@@ -79,63 +79,56 @@ async function getCover(artist, title) {
     } catch (e) { return fallback; }
 }
 
-async function updateUIFromLog(fullTitle) {
+async function updatePlayerUI(fullTitle) {
     const [artist, song] = fullTitle.includes(' - ') ? fullTitle.split(' - ') : ["SNAP 107", fullTitle];
     const artistEl = document.getElementById('artist');
     const titleEl = document.getElementById('title');
     const artImg = document.getElementById('album-art');
 
-    // 1. Update text immediately
     artistEl.innerText = artist.trim();
     titleEl.innerText = song.trim();
 
-    // 2. Restart animation
     artistEl.classList.remove('animate-scroll');
     titleEl.classList.remove('animate-scroll');
     void artistEl.offsetWidth; 
     handleMarquee(artistEl);
     handleMarquee(titleEl);
 
-    // 3. Fetch album art
     getCover(artist.trim(), song.trim()).then(url => {
         artImg.src = url;
-        artImg.onerror = () => { artImg.src = "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107"; };
     });
 }
 
-async function syncEngine() {
+async function masterSync() {
     try {
-        // STEP 1: Always check the Server first to see if a NEW song has started
+        // 1. Fetch the server's data just to keep the Log updated
         const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('http://sapircast.caster.fm:13044/status-json.xsl?cb=' + Date.now())}`);
         const stats = JSON.parse((await res.json()).contents);
         const serverTitle = stats.icestats.source["display-title"];
 
-        // STEP 2: Fetch the Log (The Truth)
+        // 2. Fetch the Log from Supabase (The Source of Truth)
         const { data } = await supabaseClient.from('radio_history').select('*').order('created_at', { ascending: false }).limit(40);
         
         if (data && data.length > 0) {
             const latestInLog = data[0].track_title;
 
-            // Update the Log Box
+            // Update the Right Box (The Log)
             document.getElementById('tracks-inner').innerHTML = data.map(item => `
                 <div class="history-item">
                     <span class="history-time">[${String(new Date(item.created_at).getHours()).padStart(2, '0')}:${String(new Date(item.created_at).getMinutes()).padStart(2, '0')}]</span> 
                     <span class="history-track">${item.track_title}</span>
                 </div>`).join('');
 
-            // STEP 3: LOGIC CHECK
-            // If the server has a DIFFERENT song than our log, add it to the log
-            if (serverTitle && serverTitle !== latestInLog) {
+            // Update the Log if the server has something new
+            if (serverTitle && serverTitle.trim() !== latestInLog.trim()) {
                 await supabaseClient.from('radio_history').insert([{ track_title: serverTitle }]);
-                // We don't update UI here yet; we let the next loop grab the fresh log
+                // We don't update player UI here; we let the next loop grab the fresh log
             }
 
-            // STEP 4: MIRROR
-            // The Player ALWAYS shows the top item of the Log. 
-            // It doesn't matter what the server says anymore.
-            if (latestInLog !== lastLoggedTitle) {
-                lastLoggedTitle = latestInLog;
-                updateUIFromLog(latestInLog);
+            // MIRROR LOGIC: Always make the Player (Left) show the top of the Log (Right)
+            if (latestInLog !== lastPlayerTitle) {
+                lastPlayerTitle = latestInLog;
+                updatePlayerUI(latestInLog);
                 document.getElementById('status-dot').classList.add('live-glow');
                 document.getElementById('status-text').innerText = "LIVE";
             }
@@ -145,9 +138,8 @@ async function syncEngine() {
     }
 }
 
-// Start the engine
-setInterval(syncEngine, 5000); 
-syncEngine();
+setInterval(masterSync, 5000); 
+masterSync();
 </script>
 </body>
 </html>
