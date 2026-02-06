@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNAP 107 - MAX TEXT FIT</title>
+    <title>SNAP 107 - SNUG FIT DASH</title>
     <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -16,19 +16,19 @@
             align-items: center; 
             height: 100vh; 
             margin: 0; 
-            padding: 0 10px; 
+            padding: 0 15px; 
             gap: 12px; 
             overflow: hidden;
         }
 
-        /* --- PLAYER WIDGET (LEFT) --- */
+        /* --- PLAYER WIDGET (LEFT - NOW WIDER) --- */
         #player-widget {
-            flex: 1.15; /* Tiny shave to give the right side that final boost */
+            flex: 2.5; /* Takes up much more of the screen */
             height: 400px;
             background: linear-gradient(145deg, #050525, #0a0a35);
             border: 3px solid #1a1a40;
             border-radius: 25px;
-            padding: 20px 30px;
+            padding: 20px 40px;
             box-shadow: 0 0 50px rgba(0,0,0,0.8);
             display: flex;
             flex-direction: column;
@@ -38,15 +38,15 @@
 
         #player-content {
             display: flex;
-            gap: 30px;
+            gap: 40px;
             align-items: center;
             flex-grow: 1;
             overflow: hidden;
         }
 
         #album-art { 
-            width: 250px; 
-            height: 250px; 
+            width: 260px; 
+            height: 260px; 
             object-fit: cover; 
             border-radius: 15px; 
             border: 2px solid #1a1a40; 
@@ -62,12 +62,12 @@
         }
 
         .marquee-container { overflow: hidden; white-space: nowrap; width: 100%; }
-        #artist { font-size: 18px; opacity: 0.8; margin-bottom: 5px; display: inline-block; }
-        #title { font-size: 38px; color: #a0baff; text-shadow: 0 0 15px rgba(120, 152, 251, 0.5); line-height: 1.1; margin: 0; display: inline-block; }
+        #artist { font-size: 20px; opacity: 0.8; margin-bottom: 5px; display: inline-block; }
+        #title { font-size: 44px; color: #a0baff; text-shadow: 0 0 15px rgba(120, 152, 251, 0.5); line-height: 1.1; margin: 0; display: inline-block; }
 
         .animate-scroll {
             animation: jvc-step 45s steps(60, end) infinite;
-            padding-right: 150px;
+            padding-right: 200px;
         }
 
         @keyframes jvc-step {
@@ -75,16 +75,16 @@
             100% { transform: translateX(-100%); }
         }
 
-        #status-bar { position: absolute; top: 15px; right: 25px; font-size: 11px; display: flex; align-items: center; gap: 6px; color: #444488; }
+        #status-bar { position: absolute; top: 20px; right: 30px; font-size: 11px; display: flex; align-items: center; gap: 6px; color: #444488; }
         #status-dot { width: 8px; height: 8px; background-color: #ff3333; border-radius: 50%; }
         .live-glow { background-color: #00ff66 !important; box-shadow: 0 0 10px #00ff66 !important; }
 
-        .btn-request { margin-top: 15px; padding: 8px 18px; border: 2px solid #7898FB; color: #7898FB; text-decoration: none; font-size: 16px; transition: 0.3s; width: fit-content; text-transform: uppercase; }
+        .btn-request { margin-top: 20px; padding: 10px 22px; border: 2px solid #7898FB; color: #7898FB; text-decoration: none; font-size: 18px; transition: 0.3s; width: fit-content; text-transform: uppercase; }
         .btn-request:hover { background: #7898FB; color: #020210; }
 
-        /* --- PLAYLIST WIDGET (RIGHT) --- */
+        /* --- PLAYLIST WIDGET (RIGHT - NOW SMALLER/SNUGGER) --- */
         #history-widget {
-            flex: 1.25; /* Pushed wide to catch the full song string */
+            flex: 1.3; /* Smaller than the left, just enough for text */
             height: 400px;
             background: linear-gradient(145deg, #050525, #0a0a35);
             border: 3px solid #1a1a40;
@@ -100,9 +100,9 @@
         #tracks-inner { 
             flex-grow: 1; 
             overflow-y: auto; 
-            font-size: 15.5px; /* Increased to "hug" the box edges */
+            font-size: 15.8px; /* Slightly larger to hug the ends of the smaller box */
             color: #444488; 
-            letter-spacing: 0.2px;
+            letter-spacing: 0.1px;
         }
 
         #tracks-inner::-webkit-scrollbar { width: 3px; }
@@ -121,7 +121,7 @@
         .history-track { 
             flex-grow: 1; 
             overflow: hidden; 
-            text-overflow: clip; /* Clean cut if it ever hits the absolute limit */
+            text-overflow: clip; 
         }
     </style>
 </head>
@@ -145,7 +145,7 @@
     </div>
 
 <script>
-// (Logic remains consistent with your previous Supabase/API setup)
+// Logic remains identical to previous version for data syncing
 const SUPABASE_URL = 'https://jjevapkfrxepdfyymtpa.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_fu_ULJb3PP0bde3uNFNEYA_rKglhlaw';
 const STATION_KEY  = 'SNAP107_SECRET'; 
