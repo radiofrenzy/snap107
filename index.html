@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNAP 107 - BRUTE FORCE SYNC</title>
+    <title>SNAP 107 - GHOST SYNC</title>
     <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -32,7 +32,7 @@
 <body>
 
     <div id="player-widget">
-        <div id="status-bar"><div id="status-dot"></div> ACTIVE SYNC</div>
+        <div id="status-bar"><div id="status-dot"></div> <span id="status-text">GHOST SYNC ACTIVE</span></div>
         <div id="player-content">
             <img id="album-art" src="https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107" alt="Art">
             <div id="text-info">
@@ -45,7 +45,7 @@
 
     <div id="history-widget">
         <div class="history-header">7-DAY RADIO LOG</div>
-        <div id="tracks-inner">FETCHING DATA...</div>
+        <div id="tracks-inner">INITIALIZING...</div>
     </div>
 
 <script>
@@ -54,7 +54,14 @@ const SUPABASE_KEY = 'sb_publishable_fu_ULJb3PP0bde3uNFNEYA_rKglhlaw';
 const STATION_KEY  = 'SNAP107_SECRET'; 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { global: { headers: { 'x-station-key': STATION_KEY } } });
 
-let currentArtSong = ""; // Only used to track image changes to prevent flashing
+let currentSongInLog = "";
+
+// PROXY ROTATION: If one fails, we use the other
+const PROXIES = [
+    (url) => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+    (url) => `https://thingproxy.freeboard.io/fetch/${url}`
+];
+let proxyIndex = 0;
 
 function handleMarquee(element) {
     const container = element.parentElement;
@@ -77,67 +84,69 @@ async function getCover(artist, title) {
     } catch (e) { return "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107"; }
 }
 
-// THE HAMMER: Forces UI to match Database every 5 seconds
-async function forceSyncUI() {
+async function updateDisplay() {
     try {
-        const { data } = await supabaseClient.from('radio_history').select('*').order('created_at', { ascending: false }).limit(35);
+        // 1. Pull the real log from Supabase
+        const { data } = await supabaseClient.from('radio_history').select('*').order('created_at', { ascending: false }).limit(30);
         if (!data || data.length === 0) return;
 
-        const topTrack = data[0].track_title;
-        const [artist, song] = topTrack.includes(' - ') ? topTrack.split(' - ') : ["SNAP 107", topTrack];
-
-        // Force text update (Right Box)
+        // 2. Update the Right Box (Log)
         document.getElementById('tracks-inner').innerHTML = data.map(item => `
             <div class="history-item">
                 <span class="history-time">[${new Date(item.created_at).getHours()}:${String(new Date(item.created_at).getMinutes()).padStart(2, '0')}]</span> 
                 <span class="history-track">${item.track_title}</span>
             </div>`).join('');
 
-        // Force text update (Left Box)
-        // We write the text regardless to ensure it's never "stuck"
-        const titleEl = document.getElementById('title');
-        const artistEl = document.getElementById('artist');
-        
-        if (titleEl.innerText !== song.trim()) {
-            artistEl.innerText = artist.trim();
-            titleEl.innerText = song.trim();
-            handleMarquee(artistEl);
-            handleMarquee(titleEl);
-        }
+        // 3. Mirror Top of Log to Left Box (Player)
+        const topTrack = data[0].track_title;
+        if (topTrack !== currentSongInLog) {
+            currentSongInLog = topTrack;
+            const parts = topTrack.split(/ - | – /);
+            const artist = parts.length > 1 ? parts[0] : "SNAP 107";
+            const song = parts.length > 1 ? parts[1] : parts[0];
 
-        // Only swap the image if the song changed to prevent flickering
-        if (topTrack !== currentArtSong) {
-            currentArtSong = topTrack;
+            document.getElementById('artist').innerText = artist.trim();
+            document.getElementById('title').innerText = song.trim();
+            handleMarquee(document.getElementById('artist'));
+            handleMarquee(document.getElementById('title'));
+            
             const art = await getCover(artist.trim(), song.trim());
             document.getElementById('album-art').src = art;
         }
-    } catch (e) { console.log("UI Force Sync Error"); }
+        document.getElementById('status-text').innerText = "GHOST SYNC ACTIVE";
+        document.getElementById('status-dot').style.backgroundColor = "#00ff66";
+    } catch (err) {
+        document.getElementById('status-text').innerText = "SYNC LAGGING...";
+        document.getElementById('status-dot').style.backgroundColor = "#ff3300";
+    }
 }
 
-// THE EAR: Background check to update Supabase
-async function backgroundRadioCheck() {
+async function checkRadioServer() {
+    const radioUrl = `http://sapircast.caster.fm:13044/status-json.xsl?cb=${Date.now()}`;
+    
     try {
-        const radioUrl = 'http://sapircast.caster.fm:13044/status-json.xsl';
-        // Switched to corsproxy.io as it is currently more stable than AllOrigins
-        const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(radioUrl + '?cb=' + Date.now())}`);
-        const stats = await res.json();
-        const serverTitle = stats.icestats.source["display-title"];
+        const res = await fetch(PROXIES[proxyIndex](radioUrl));
+        const json = await res.json();
+        // Handle AllOrigins vs ThingProxy response structures
+        const content = json.contents ? JSON.parse(json.contents) : json;
+        const serverTitle = content.icestats.source["display-title"];
 
-        if (serverTitle && serverTitle.trim() !== currentArtSong) {
-            // Log to database
+        if (serverTitle && serverTitle.trim() !== currentSongInLog) {
             await supabaseClient.from('radio_history').insert([{ track_title: serverTitle.trim() }]);
-            forceSyncUI(); // Immediate UI update after database insertion
+            updateDisplay();
         }
-    } catch (e) { console.warn("Background Radio Check Failed"); }
+    } catch (e) {
+        // Switch proxy on error to bypass 403 blocks
+        proxyIndex = (proxyIndex + 1) % PROXIES.length;
+        console.warn("Proxy rotated due to error.");
+    }
 }
 
-// Timers
-setInterval(forceSyncUI, 5000);        // Force UI to match DB every 5 seconds
-setInterval(backgroundRadioCheck, 12000); // Check radio every 12 seconds
-
-// Initial kick-off
-forceSyncUI();
-backgroundRadioCheck();
+// UI stays snappy (5s), Radio check stays stealthy (15s)
+setInterval(updateDisplay, 5000);
+setInterval(checkRadioServer, 15000);
+updateDisplay();
+checkRadioServer();
 </script>
 </body>
 </html>
