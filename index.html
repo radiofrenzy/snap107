@@ -5,162 +5,130 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SNAP 107 - JVC DASHBOARD</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body {
-            background-color: #020210;
-            color: #7898FB;
-            font-family: 'VT323', monospace;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            text-transform: uppercase;
-        }
-
-        #radio-container {
-            width: 90%;
-            max-width: 450px;
-            background: linear-gradient(145deg, #050525, #0a0a35);
-            border: 3px solid #1a1a40;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 0 50px rgba(0,0,0,0.9);
-            text-align: center;
-            position: relative;
-        }
-
-        #status-bar {
-            position: absolute;
-            top: 20px;
-            right: 25px;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #444488;
-        }
-        #status-dot {
-            width: 10px;
-            height: 10px;
-            background-color: #ff3333;
-            border-radius: 50%;
-        }
-        .live-glow {
-            background-color: #00ff66 !important;
-            box-shadow: 0 0 12px #00ff66 !important;
-            animation: pulse 2s infinite;
-        }
+        body { background-color: #020210; color: #7898FB; font-family: 'VT323', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-transform: uppercase; overflow: hidden; }
+        #radio-container { width: 90%; max-width: 450px; background: linear-gradient(145deg, #050525, #0a0a35); border: 3px solid #1a1a40; border-radius: 20px; padding: 30px; box-shadow: 0 0 50px rgba(0,0,0,0.9); text-align: center; position: relative; }
+        #status-bar { position: absolute; top: 20px; right: 25px; font-size: 16px; display: flex; align-items: center; gap: 8px; color: #444488; }
+        #status-dot { width: 10px; height: 10px; background-color: #ff3333; border-radius: 50%; }
+        .live-glow { background-color: #00ff66 !important; box-shadow: 0 0 12px #00ff66 !important; animation: pulse 2s infinite; }
         @keyframes pulse { 50% { opacity: 0.4; } }
-
-        #album-art {
-            width: 260px;
-            height: 260px;
-            margin: 0 auto 20px auto;
-            border: 2px solid #1a1a40;
-            background-color: #000;
-            display: block;
-            object-fit: cover;
-            transition: opacity 0.6s;
-        }
-
+        #album-art { width: 260px; height: 260px; margin: 0 auto 20px auto; border: 2px solid #1a1a40; background-color: #000; display: block; object-fit: cover; transition: opacity 0.6s; }
         #artist { font-size: 26px; opacity: 0.7; min-height: 32px; }
-        #title { 
-            font-size: 46px; 
-            color: #a0baff; 
-            text-shadow: 0 0 15px rgba(120, 152, 251, 0.7);
-            margin: 10px 0 25px 0;
-            line-height: 1;
-            min-height: 100px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .btn-request {
-            display: inline-block;
-            padding: 12px 30px;
-            background: transparent;
-            color: #7898FB;
-            border: 2px solid #7898FB;
-            text-decoration: none;
-            font-size: 24px;
-            transition: 0.3s;
-        }
-        .btn-request:hover { background: #7898FB; color: #020210; box-shadow: 0 0 15px #7898FB; }
-
-        hr { border: 0; border-top: 1px solid #1a1a40; margin: 20px 0; }
+        #title { font-size: 44px; color: #a0baff; text-shadow: 0 0 15px rgba(120, 152, 251, 0.7); margin: 5px 0 20px 0; line-height: 1; min-height: 90px; display: flex; align-items: center; justify-content: center; }
+        .btn-request { display: inline-block; padding: 10px 25px; border: 2px solid #7898FB; color: #7898FB; text-decoration: none; font-size: 22px; transition: 0.3s; margin-bottom: 10px; cursor: pointer; }
+        .btn-request:hover { background: #7898FB; color: #020210; }
+        hr { border: 0; border-top: 1px solid #1a1a40; margin: 15px 0; }
         .history-label { color: #5555aa; font-size: 18px; margin-bottom: 10px; text-align: left; }
-        #tracks-inner { font-size: 19px; color: #444488; text-align: left; }
-        .history-item { margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.8; }
+        #tracks-inner { font-size: 19px; color: #444488; text-align: left; max-height: 150px; overflow-y: auto; padding-right: 5px; }
+        #tracks-inner::-webkit-scrollbar { width: 4px; }
+        #tracks-inner::-webkit-scrollbar-thumb { background: #1a1a40; border-radius: 10px; }
+        .history-item { margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.7; }
+        .history-time { color: #3a3a6a; margin-right: 8px; font-size: 16px; }
     </style>
 </head>
 <body>
 
 <div id="radio-container">
     <div id="status-bar"><div id="status-dot"></div> <span id="status-text">SYNC</span></div>
-    
     <img id="album-art" src="https://via.placeholder.com/400x400/000/7898FB?text=SNAP+107" alt="Art">
-    
     <div id="artist">STATION IDLE</div>
     <div id="title">SNAP 107</div>
-    
     <a href="YOUR_GOOGLE_FORM_URL" target="_blank" class="btn-request">REQUEST SONG</a>
-    
     <hr>
-    <div class="history-label">RECENTLY PLAYED:</div>
+    <div class="history-label">GLOBAL HISTORY (7 DAYS):</div>
     <div id="tracks-inner"></div>
 </div>
 
 <script>
-// --- GLOBAL STATE ---
-let lastTrack = "";
-let localHistory = []; // We manage this manually to bypass server lag
+// --- 1. CONFIGURATION (UPDATE THESE) ---
+const SUPABASE_URL = 'PASTE_YOUR_PROJECT_URL_HERE';
+const SUPABASE_KEY = 'PASTE_YOUR_ANON_KEY_HERE';
+const STATION_KEY  = 'SNAP107_SECRET'; // Must match the SQL policy
 
+// Initialize Supabase with the security header
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    global: { headers: { 'x-station-key': STATION_KEY } }
+});
+
+let lastTrack = "";
+
+// --- 2. FORMAT TIME AS [12:00] ---
+function formatTime(isoString) {
+    const d = new Date(isoString);
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    return `[${hh}:${mm}]`;
+}
+
+// --- 3. FETCH GLOBAL LOG FROM SUPABASE ---
+async function fetchGlobalHistory() {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    
+    const { data, error } = await supabaseClient
+        .from('radio_history')
+        .select('*')
+        .gt('created_at', sevenDaysAgo)
+        .order('created_at', { ascending: false })
+        .limit(40);
+
+    if (error) {
+        console.error("Fetch Error:", error.message);
+        return;
+    }
+
+    if (data) {
+        document.getElementById('tracks-inner').innerHTML = data.map(item => 
+            `<div class="history-item"><span class="history-time">${formatTime(item.created_at)}</span> ${item.track_title}</div>`
+        ).join('');
+    }
+}
+
+// --- 4. LOG NEW SONG TO CLOUD (WITH SECURITY) ---
+async function logToCloud(trackName) {
+    // Check most recent entry to prevent double-logging
+    const { data } = await supabaseClient.from('radio_history').select('track_title').order('id', { ascending: false }).limit(1);
+    
+    if (!data || data.length === 0 || data[0].track_title !== trackName) {
+        const { error } = await supabaseClient
+            .from('radio_history')
+            .insert([{ track_title: trackName }]);
+            
+        if (error) {
+            console.error("Insert Denied: Check your STATION_KEY and SQL policy.");
+        } else {
+            fetchGlobalHistory(); // Refresh list immediately
+        }
+    }
+}
+
+// --- 5. GET ALBUM ART ---
 async function getCover(artist, title) {
     try {
         const query = encodeURIComponent(`${artist} ${title}`);
         const res = await fetch(`https://itunes.apple.com/search?term=${query}&entity=song&limit=1`);
         const data = await res.json();
-        if (data.results && data.results.length > 0) {
-            return data.results[0].artworkUrl100.replace('100x100', '600x600');
-        }
-    } catch (e) { }
-    return "https://via.placeholder.com/400x400/000/7898FB?text=SNAP+107";
+        return data.results?.[0]?.artworkUrl100.replace('100x100', '600x600') || "https://via.placeholder.com/400x400/000/7898FB?text=SNAP+107";
+    } catch (e) { 
+        return "https://via.placeholder.com/400x400/000/7898FB?text=SNAP+107"; 
+    }
 }
 
-function updateHistoryUI() {
-    let historyHTML = "";
-    localHistory.forEach(track => {
-        historyHTML += `<div class="history-item">> ${track}</div>`;
-    });
-    document.getElementById('tracks-inner').innerHTML = historyHTML;
-}
-
+// --- 6. CORE UPDATE LOOP ---
 async function updateRadio() {
     try {
         const targetUrl = `http://sapircast.caster.fm:13044/status-json.xsl?cb=${Date.now()}`;
         const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
         
         const response = await fetch(proxyUrl);
-        const data = await response.json();
-        const stats = JSON.parse(data.contents);
+        const json = await response.json();
+        const stats = JSON.parse(json.contents);
         const fullTitle = stats.icestats.source["display-title"];
-        
+
         document.getElementById('status-dot').classList.add('live-glow');
         document.getElementById('status-text').innerText = "LIVE";
 
-        // ONLY update if the song name has changed on the server
-        if (fullTitle !== lastTrack) {
-            
-            // 1. Move the PREVIOUS song to history before updating the current one
-            if (lastTrack !== "" && lastTrack !== "SNAP 107") {
-                localHistory.unshift(lastTrack); // Add old song to top of list
-                if (localHistory.length > 3) localHistory.pop(); // Keep only last 3
-                updateHistoryUI();
-            }
-
-            // 2. Update Current Track
+        if (fullTitle !== lastTrack && fullTitle !== "SNAP 107") {
             lastTrack = fullTitle;
             const parts = fullTitle.split(' - ');
             const artistName = parts[0] || "SNAP 107";
@@ -169,23 +137,21 @@ async function updateRadio() {
             document.getElementById('artist').innerText = artistName;
             document.getElementById('title').innerText = songName;
 
-            // 3. Update Art
             const artUrl = await getCover(artistName, songName);
-            const artEl = document.getElementById('album-art');
-            artEl.style.opacity = 0;
-            setTimeout(() => {
-                artEl.src = artUrl;
-                artEl.style.opacity = 1;
-            }, 600);
+            document.getElementById('album-art').src = artUrl;
+            
+            // Record to the Global Database
+            logToCloud(fullTitle);
         }
     } catch (e) {
         document.getElementById('status-dot').classList.remove('live-glow');
-        document.getElementById('status-text').innerText = "OFFLINE";
+        document.getElementById('status-text').innerText = "SYNCING";
     }
 }
 
-// Update every 7 seconds for accuracy
-setInterval(updateRadio, 7000);
+// Run on load
+fetchGlobalHistory();
+setInterval(updateRadio, 8000);
 updateRadio();
 </script>
 
