@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNAP 107 - CENTER DASH</title>
+    <title>SNAP 107 - FULL SCREEN DASH</title>
     <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -12,43 +12,45 @@
             color: #7898FB; 
             font-family: 'DotGothic16', sans-serif; 
             display: flex; 
-            justify-content: center; /* Pushes boxes to the center */
+            justify-content: center; 
             align-items: center; 
             height: 100vh; 
             margin: 0; 
-            gap: 20px; /* Small gap to make them 'hug' */
+            padding: 0 1%; /* Tiny margin at screen edges */
+            gap: 15px; /* Minimal gap between boxes */
             overflow: hidden;
         }
 
-        /* --- PLAYER WIDGET (WIDER / SMALLER TEXT) --- */
+        /* --- PLAYER WIDGET (LEFT - EXTRA WIDE) --- */
         #player-widget {
-            width: 850px; /* Increased width to prevent cutoff */
-            height: 400px;
+            flex: 1.4; /* Takes up 60% of available space */
+            height: 420px;
             background: linear-gradient(145deg, #050525, #0a0a35);
             border: 3px solid #1a1a40;
-            border-radius: 20px;
-            padding: 25px;
+            border-radius: 25px;
+            padding: 25px 35px;
             box-shadow: 0 0 50px rgba(0,0,0,0.8);
             display: flex;
             flex-direction: column;
             position: relative;
+            min-width: 0; /* Prevents flexbox blowout */
         }
 
         #player-content {
             display: flex;
-            gap: 25px;
+            gap: 40px;
             align-items: center;
             flex-grow: 1;
             overflow: hidden;
         }
 
         #album-art { 
-            width: 260px; 
-            height: 260px; 
+            width: 280px; 
+            height: 280px; 
             aspect-ratio: 1 / 1; 
             object-fit: cover; 
             background-color: #000; 
-            border-radius: 12px; 
+            border-radius: 15px; 
             border: 2px solid #1a1a40; 
             flex-shrink: 0;
         }
@@ -63,11 +65,9 @@
         }
 
         .marquee-container { overflow: hidden; white-space: nowrap; width: 100%; }
-        
-        /* Smaller font sizes to fit more text */
         #artist { font-size: 20px; opacity: 0.8; margin-bottom: 5px; display: inline-block; }
         #title { 
-            font-size: 40px; 
+            font-size: 42px; 
             color: #a0baff; 
             text-shadow: 0 0 15px rgba(120, 152, 251, 0.5); 
             line-height: 1.1; 
@@ -77,7 +77,7 @@
 
         .animate-scroll {
             animation: jvc-step 45s steps(60, end) infinite;
-            padding-right: 100px;
+            padding-right: 150px;
         }
 
         @keyframes jvc-step {
@@ -85,23 +85,24 @@
             100% { transform: translateX(-100%); }
         }
 
-        #status-bar { position: absolute; top: 15px; right: 25px; font-size: 12px; display: flex; align-items: center; gap: 6px; color: #444488; }
+        #status-bar { position: absolute; top: 20px; right: 30px; font-size: 12px; display: flex; align-items: center; gap: 6px; color: #444488; }
         #status-dot { width: 8px; height: 8px; background-color: #ff3333; border-radius: 50%; }
         .live-glow { background-color: #00ff66 !important; box-shadow: 0 0 10px #00ff66 !important; }
 
-        .btn-request { margin-top: 15px; padding: 8px 16px; border: 2px solid #7898FB; color: #7898FB; text-decoration: none; font-size: 16px; transition: 0.3s; width: fit-content; text-transform: uppercase; }
+        .btn-request { margin-top: 15px; padding: 10px 20px; border: 2px solid #7898FB; color: #7898FB; text-decoration: none; font-size: 18px; transition: 0.3s; width: fit-content; text-transform: uppercase; }
         .btn-request:hover { background: #7898FB; color: #020210; }
 
-        /* --- PLAYLIST WIDGET (WIDER) --- */
+        /* --- PLAYLIST WIDGET (RIGHT - WIDE ENOUGH FOR SINGLE LINE) --- */
         #history-widget {
-            width: 650px; /* Wider to match the player expansion */
-            height: 400px;
+            flex: 1; /* Takes up 40% of available space */
+            height: 420px;
             background: linear-gradient(145deg, #050525, #0a0a35);
             border: 3px solid #1a1a40;
-            border-radius: 20px;
-            padding: 20px;
+            border-radius: 25px;
+            padding: 25px;
             display: flex;
             flex-direction: column;
+            min-width: 0;
         }
 
         .history-header { font-size: 20px; color: #a0baff; margin-bottom: 12px; border-bottom: 1px solid #1a1a40; padding-bottom: 8px; text-transform: uppercase; }
@@ -109,7 +110,7 @@
         #tracks-inner { 
             flex-grow: 1; 
             overflow-y: auto; 
-            font-size: 16px; /* Slightly smaller for better log fit */
+            font-size: 15px; 
             color: #444488; 
         }
 
@@ -117,15 +118,19 @@
         #tracks-inner::-webkit-scrollbar-thumb { background: #1a1a40; border-radius: 10px; }
         
         .history-item { 
-            margin-bottom: 10px; 
+            margin-bottom: 8px; 
             display: flex; 
             gap: 12px; 
             border-bottom: 1px solid #0a0a35; 
-            padding-bottom: 6px; 
+            padding-bottom: 4px; 
+            /* Force single line for History Log */
+            white-space: nowrap; 
+            overflow: hidden;
+            text-overflow: ellipsis; 
         }
 
-        .history-time { color: #3a3a6a; min-width: 60px; flex-shrink: 0; }
-        .history-track { flex-grow: 1; white-space: normal; word-break: break-word; }
+        .history-time { color: #3a3a6a; min-width: 55px; flex-shrink: 0; }
+        .history-track { flex-grow: 1; overflow: hidden; text-overflow: ellipsis; }
     </style>
 </head>
 <body>
@@ -148,7 +153,7 @@
     </div>
 
 <script>
-// --- CONFIGURATION ---
+// (Previous script logic remains the same for Supabase and Radio API)
 const SUPABASE_URL = 'https://jjevapkfrxepdfyymtpa.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_fu_ULJb3PP0bde3uNFNEYA_rKglhlaw';
 const STATION_KEY  = 'SNAP107_SECRET'; 
