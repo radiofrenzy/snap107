@@ -4,27 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SNAP 107 - JVC PIXEL DASH</title>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { 
             background-color: #020210; 
             color: #7898FB; 
-            font-family: 'VT323', monospace; 
+            font-family: 'DotGothic16', sans-serif; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
             height: 100vh; 
             margin: 0; 
-            padding: 0 50px; 
-            text-transform: uppercase; 
+            padding: 0 40px; 
             overflow: hidden;
         }
 
-        /* --- PLAYER WIDGET --- */
+        /* --- PLAYER WIDGET (LEFT) --- */
         #player-widget {
-            width: 850px; 
-            height: 380px;
+            width: 800px; 
+            height: 400px;
             background: linear-gradient(145deg, #050525, #0a0a35);
             border: 3px solid #1a1a40;
             border-radius: 20px;
@@ -44,8 +43,8 @@
         }
 
         #album-art { 
-            width: 260px; 
-            height: 260px; 
+            width: 280px; 
+            height: 280px; 
             aspect-ratio: 1 / 1; 
             object-fit: cover; 
             background-color: #000; 
@@ -64,34 +63,21 @@
         }
 
         /* --- JVC PIXEL-STEP MARQUEE --- */
-        .marquee-container { 
-            overflow: hidden; 
-            white-space: nowrap; 
-            width: 100%; 
-        }
+        .marquee-container { overflow: hidden; white-space: nowrap; width: 100%; }
         
-        #artist { 
-            font-size: 32px; 
-            opacity: 0.7; 
-            margin-bottom: 5px; 
-            display: inline-block;
-        }
-        
+        #artist { font-size: 24px; opacity: 0.8; margin-bottom: 8px; display: inline-block; }
         #title { 
-            font-size: 56px; 
+            font-size: 48px; 
             color: #a0baff; 
             text-shadow: 0 0 20px rgba(120, 152, 251, 0.6); 
-            line-height: 1; 
+            line-height: 1.2; 
             margin: 0;
             display: inline-block;
         }
 
-        /* The magic: 'steps' makes it jump pixel-by-pixel 
-           Duration is set long (40s+) so each "step" feels like ~1.5s
-        */
         .animate-scroll {
-            animation: jvc-step 60s steps(40, end) infinite;
-            padding-right: 100px;
+            animation: jvc-step 45s steps(60, end) infinite;
+            padding-right: 150px;
         }
 
         @keyframes jvc-step {
@@ -99,30 +85,70 @@
             100% { transform: translateX(-100%); }
         }
 
-        /* Status & UI */
-        #status-bar { position: absolute; top: 20px; right: 30px; font-size: 18px; display: flex; align-items: center; gap: 10px; color: #444488; }
-        #status-dot { width: 12px; height: 12px; background-color: #ff3333; border-radius: 50%; }
-        .live-glow { background-color: #00ff66 !important; box-shadow: 0 0 15px #00ff66 !important; animation: pulse 2s infinite; }
+        #status-bar { position: absolute; top: 20px; right: 30px; font-size: 14px; display: flex; align-items: center; gap: 8px; color: #444488; }
+        #status-dot { width: 10px; height: 10px; background-color: #ff3333; border-radius: 50%; }
+        .live-glow { background-color: #00ff66 !important; box-shadow: 0 0 15px #00ff66 !important; }
 
-        .btn-request { margin-top: 20px; padding: 12px 25px; border: 2px solid #7898FB; color: #7898FB; text-decoration: none; font-size: 24px; transition: 0.3s; width: fit-content; }
+        .btn-request { 
+            margin-top: 20px; 
+            padding: 10px 20px; 
+            border: 2px solid #7898FB; 
+            color: #7898FB; 
+            text-decoration: none; 
+            font-size: 18px; 
+            transition: 0.3s; 
+            width: fit-content; 
+            text-transform: uppercase;
+        }
         .btn-request:hover { background: #7898FB; color: #020210; }
 
-        /* --- HISTORY WIDGET --- */
+        /* --- HISTORY WIDGET (RIGHT - NOW WIDER) --- */
         #history-widget {
-            width: 380px;
-            height: 380px;
+            width: 550px; /* Increased width to fill blank space */
+            height: 400px;
             background: linear-gradient(145deg, #050525, #0a0a35);
             border: 3px solid #1a1a40;
             border-radius: 20px;
             padding: 25px;
             display: flex;
             flex-direction: column;
+            box-shadow: 0 0 40px rgba(0,0,0,0.8);
         }
 
-        .history-header { font-size: 26px; color: #a0baff; margin-bottom: 12px; border-bottom: 1px solid #1a1a40; padding-bottom: 8px; }
-        #tracks-inner { flex-grow: 1; overflow-y: auto; font-size: 20px; color: #444488; }
-        .history-item { margin-bottom: 10px; display: flex; gap: 10px; border-bottom: 1px solid #080828; padding-bottom: 5px; }
-        .history-time { color: #3a3a6a; min-width: 60px; }
+        .history-header { 
+            font-size: 22px; 
+            color: #a0baff; 
+            margin-bottom: 15px; 
+            border-bottom: 1px solid #1a1a40; 
+            padding-bottom: 10px; 
+            text-transform: uppercase;
+        }
+
+        #tracks-inner { 
+            flex-grow: 1; 
+            overflow-y: auto; 
+            font-size: 18px; 
+            color: #444488; 
+            scrollbar-width: thin;
+            scrollbar-color: #1a1a40 transparent;
+        }
+
+        /* Webkit scrollbar for Chrome/Safari */
+        #tracks-inner::-webkit-scrollbar { width: 6px; }
+        #tracks-inner::-webkit-scrollbar-thumb { background: #1a1a40; border-radius: 10px; }
+        
+        .history-item { 
+            margin-bottom: 12px; 
+            display: flex; 
+            gap: 15px; 
+            border-bottom: 1px solid #080828; 
+            padding-bottom: 8px; 
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .history-time { color: #3a3a6a; min-width: 65px; flex-shrink: 0; }
+        .history-track { flex-grow: 1; overflow: hidden; text-overflow: ellipsis; }
     </style>
 </head>
 <body>
@@ -158,7 +184,6 @@ let lastTrack = "";
 
 function handleMarquee(element) {
     const container = element.parentElement;
-    // Clear previous clones to prevent infinite duplication
     const originalText = element.getAttribute('data-original') || element.innerHTML;
     element.innerHTML = originalText; 
     element.setAttribute('data-original', originalText);
@@ -184,7 +209,7 @@ async function fetchGlobalHistory() {
     if (data) {
         document.getElementById('tracks-inner').innerHTML = data.map(item => `
             <div class="history-item">
-                <span class="history-time">[${new Date(item.created_at).getHours()}:${String(new Date(item.created_at).getMinutes()).padStart(2, '0')}]</span> 
+                <span class="history-time">[${String(new Date(item.created_at).getHours()).padStart(2, '0')}:${String(new Date(item.created_at).getMinutes()).padStart(2, '0')}]</span> 
                 <span class="history-track">${item.track_title}</span>
             </div>
         `).join('');
