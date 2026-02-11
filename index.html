@@ -31,18 +31,20 @@ body {
     box-shadow: 0 0 50px rgba(0,0,0,0.8);
 }
 
+/* LEFT BOX – PLAYER */
 #player-widget {
-    flex: 1.6 1 0;       /* make left box even wider */
-    min-width: 900px;    /* allows left box to grow more */
+    flex: 1 1 0;       /* smaller left box */
+    min-width: 500px;  /* smaller minimum width */
     padding: 20px 25px;
     display: flex;
     flex-direction: column;
     position: relative;
 }
 
+/* RIGHT BOX – HISTORY */
 #history-widget {
-    flex: 1 1 0;         /* right box grows proportionally */
-    min-width: 600px;    /* slightly bigger minimum width */
+    flex: 1.8 1 0;     /* right box dominates width */
+    min-width: 900px;  /* ensures it can grow wide */
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -174,7 +176,7 @@ body {
     display: flex;
     gap: 15px;
     width: 100%;
-    max-width: 2200px;   /* much wider top row */
+    max-width: 2200px;   /* wide top row for large screens */
 }
 
 #caster-container {
