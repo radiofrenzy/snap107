@@ -12,23 +12,25 @@ body {
     background-color: #020210;
     color: #7898FB;
     font-family: 'DotGothic16', sans-serif;
+    margin: 0;
+    padding: 40px 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin: 0;
-    padding: 40px 20px;
-    gap: 25px;
+    gap: 30px;
 }
 
-/* TOP ROW CONTAINER */
+/* CENTERING WRAPPER */
 #top-row {
     display: flex;
+    justify-content: center;
     gap: 15px;
     width: 100%;
     max-width: 1600px;
 }
 
-/* ORIGINAL BOXES (UNCHANGED STYLING) */
+/* ORIGINAL STYLING BELOW (UNCHANGED) */
+
 #player-widget, #history-widget {
     height: 380px;
     background: linear-gradient(145deg, #050525, #0a0a35);
@@ -94,7 +96,6 @@ body {
     font-weight: bold;
 }
 
-/* ORIGINAL AUDIO UI RESTORED */
 #audio-ui {
     margin: 15px 0;
     display: flex;
@@ -159,7 +160,7 @@ body {
     text-transform: uppercase;
 }
 
-/* HISTORY STYLING UNCHANGED */
+/* HISTORY */
 .history-header {
     font-size: 18px;
     color: #fff;
@@ -201,7 +202,7 @@ body {
     color: #ff3333 !important;
 }
 
-/* NEW DEDICATED CASTER BOX */
+/* CASTER BOX */
 #caster-container {
     width: 100%;
     max-width: 1600px;
@@ -218,7 +219,7 @@ body {
 
 <div id="top-row">
 
-    <!-- ORIGINAL PLAYER BOX -->
+    <!-- ORIGINAL LEFT BOX -->
     <div id="player-widget">
         <div id="player-content">
             <img id="album-art" src="https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107">
@@ -237,7 +238,7 @@ body {
         </div>
     </div>
 
-    <!-- HISTORY BOX (UNCHANGED) -->
+    <!-- ORIGINAL RIGHT BOX -->
     <div id="history-widget">
         <div class="history-header">7-DAY RADIO LOG</div>
         <div id="tracks-inner">CONNECTING...</div>
@@ -245,7 +246,7 @@ body {
 
 </div>
 
-<!-- NEW SEPARATE CASTER BOX -->
+<!-- CASTER PLAYER BOX (CENTERED) -->
 <div id="caster-container">
     <div data-type="newStreamPlayer"
          data-publicToken="68bebccc-3f3d-406f-84e0-10e7cfe152d5"
