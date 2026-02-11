@@ -1,252 +1,136 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SNAP 107 - LIVE</title>
-<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<style>
-body {
-    background-color: #020210;
-    color: #7898FB;
-    font-family: 'DotGothic16', sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-    padding: 0 20px;
-    gap: 15px;
-    overflow: hidden;
-}
-
-#player-widget, #history-widget {
-    height: 380px;
-    background: linear-gradient(145deg, #050525, #0a0a35);
-    border: 3px solid #1a1a40;
-    border-radius: 20px;
-    box-shadow: 0 0 50px rgba(0,0,0,0.8);
-}
-
-#player-widget {
-    flex: 1.22;
-    padding: 20px 25px;
-    display: flex;
-    flex-direction: column;
-}
-
-#history-widget {
-    flex: 1;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-}
-
-#player-content {
-    display: flex;
-    gap: 25px;
-    align-items: center;
-    flex-grow: 1;
-}
-
-#album-art {
-    width: 220px;
-    height: 220px;
-    object-fit: cover;
-    border-radius: 12px;
-    border: 2px solid #1a1a40;
-}
-
-#text-info {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    flex-grow: 1;
-    overflow: hidden;
-}
-
-.marquee-container {
-    overflow: hidden;
-    white-space: nowrap;
-    margin-bottom: 4px;
-}
-
-#artist {
-    font-size: 17px;
-    opacity: 0.8;
-}
-
-#title {
-    font-size: 38px;
-    color: #a0baff;
-    text-shadow: 0 0 15px rgba(120,152,251,.5);
-    line-height: 1.1;
-    font-weight: bold;
-}
-
-/* NEW: Caster widget container */
-#caster-player-box {
-    margin-top: 20px;
-    padding: 12px;
-    background: rgba(26, 26, 64, 0.6);
-    border-radius: 15px;
-    border: 1px solid #7898FB;
-}
-
-/* History styling */
-.history-header {
-    font-size: 18px;
-    color: #fff;
-    font-weight: bold;
-    margin-bottom: 12px;
-    border-bottom: 2px solid #1a1a40;
-    padding-bottom: 8px;
-}
-
-#tracks-inner {
-    flex-grow: 1;
-    overflow-y: auto;
-    font-size: 15.5px;
-    color: #a0baff;
-    font-weight: bold;
-}
-
-.history-item {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 8px;
-    border-bottom: 1px solid #080828;
-    padding-bottom: 4px;
-    color: #7898FB;
-}
-
-.history-time {
-    color: #3a3a6a;
-    min-width: 50px;
-}
-
-.history-item:first-child {
-    color: #ff3333 !important;
-    text-shadow: 0 0 10px rgba(255, 51, 51, 0.3);
-    font-size: 17px;
-}
-
-.history-item:first-child .history-time {
-    color: #ff3333 !important;
-}
-
-.animate-scroll {
-    animation: jvc-step 40s steps(60,end) infinite;
-}
-
-@keyframes jvc-step {
-    from { transform: translateX(0); }
-    to { transform: translateX(-100%); }
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNAP 107 - LIVE</title>
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background-color: #020210; color: #7898FB; font-family: 'DotGothic16', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; padding: 0 20px; gap: 15px; overflow: hidden; }
+        #player-widget, #history-widget { height: 380px; background: linear-gradient(145deg, #050525, #0a0a35); border: 3px solid #1a1a40; border-radius: 20px; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
+        #player-widget { flex: 1.22; padding: 20px 25px; display: flex; flex-direction: column; position: relative; }
+        #history-widget { flex: 1; padding: 20px; display: flex; flex-direction: column; }
+        #player-content { display: flex; gap: 25px; align-items: center; flex-grow: 1; }
+        #album-art { width: 220px; height: 220px; object-fit: cover; border-radius: 12px; border: 2px solid #1a1a40; }
+        #text-info { display: flex; flex-direction: column; justify-content: center; flex-grow: 1; overflow: hidden; }
+        .marquee-container { overflow: hidden; white-space: nowrap; margin-bottom: 2px; }
+        #artist { font-size: 17px; opacity: 0.8; }
+        #title { font-size: 38px; color: #a0baff; text-shadow: 0 0 15px rgba(120,152,251,.5); line-height: 1.1; font-weight: bold; }
+        #audio-ui { margin: 15px 0; display: flex; align-items: center; gap: 12px; background: rgba(26, 26, 64, 0.6); padding: 10px 18px; border-radius: 50px; border: 1px solid #7898FB; width: fit-content; }
+        #play-btn { background: #7898FB; border: none; width: 40px; height: 40px; border-radius: 50%; color: #020210; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        #play-btn:hover { background: #fff; transform: scale(1.1); }
+        #vol-slider { width: 90px; accent-color: #7898FB; cursor: pointer; }
+        .live-tag { font-size: 10px; color: #ff3333; font-weight: bold; letter-spacing: 1px; animation: blink 1.5s infinite; margin-left: 5px; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        .animate-scroll { animation: jvc-step 40s steps(60,end) infinite; }
+        @keyframes jvc-step { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+        .history-header { font-size: 18px; color: #fff; font-weight: bold; margin-bottom: 12px; border-bottom: 2px solid #1a1a40; padding-bottom: 8px; }
+        #tracks-inner { flex-grow: 1; overflow-y: auto; font-size: 15.5px; color: #a0baff; font-weight: bold; }
+        .history-item { display: flex; gap: 10px; margin-bottom: 8px; border-bottom: 1px solid #080828; padding-bottom: 4px; color: #7898FB; }
+        .history-time { color: #3a3a6a; min-width: 50px; }
+        .history-item:first-child { color: #ff3333 !important; text-shadow: 0 0 10px rgba(255, 51, 51, 0.3); font-size: 17px; }
+        .history-item:first-child .history-time { color: #ff3333 !important; }
+        .btn-request { margin-top: 5px; padding: 6px 12px; border: 1px solid #7898FB; color: #7898FB; text-decoration: none; font-size: 13px; width: fit-content; text-transform: uppercase; }
+    </style>
 </head>
-
 <body>
 
-<div id="player-widget">
-    <div id="player-content">
-        <img id="album-art" src="https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107">
-        <div id="text-info">
-            <div class="marquee-container"><div id="artist">STATION</div></div>
-            <div class="marquee-container"><div id="title">SNAP 107</div></div>
-
-            <!-- NEW CASTER PLAYER BOX -->
-            <div id="caster-player-box">
-                <div data-type="newStreamPlayer"
-                     data-publicToken="68bebccc-3f3d-406f-84e0-10e7cfe152d5"
-                     data-theme="dark"
-                     data-color="1E3BE8"
-                     class="cstrEmbed">
-                    <a href="https://www.caster.fm">Shoutcast Hosting</a>
+    <div id="player-widget">
+        <div id="player-content">
+            <img id="album-art" src="https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107">
+            <div id="text-info">
+                <div class="marquee-container"><div id="artist">STATION</div></div>
+                <div class="marquee-container"><div id="title">SNAP 107</div></div>
+                <div id="audio-ui">
+                    <button id="play-btn">▶</button>
+                    <input type="range" id="vol-slider" min="0" max="1" step="0.01" value="0.8">
+                    <span class="live-tag">● LIVE</span>
                 </div>
+                <a href="#" class="btn-request">REQUEST SONG</a>
             </div>
-
         </div>
     </div>
-</div>
 
-<div id="history-widget">
-    <div class="history-header">7-DAY RADIO LOG</div>
-    <div id="tracks-inner">CONNECTING...</div>
-</div>
+    <div id="history-widget">
+        <div class="history-header">7-DAY RADIO LOG</div>
+        <div id="tracks-inner">CONNECTING...</div>
+    </div>
 
-<script src="//cdn.cloud.caster.fm/widgets/embed.js"></script>
+    <audio id="main-audio" src="http://sapircast.caster.fm:13044/;"></audio>
 
 <script>
-const SUPABASE_URL = 'https://jjevapkfrxepdfyymtpa.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_fu_ULJb3PP0bde3uNFNEYA_rKglhlaw';
-const STATION_KEY  = 'SNAP107_SECRET';
+    const SUPABASE_URL = 'https://jjevapkfrxepdfyymtpa.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_fu_ULJb3PP0bde3uNFNEYA_rKglhlaw';
+    const STATION_KEY  = 'SNAP107_SECRET';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { global: { headers: { 'x-station-key': STATION_KEY } } });
 
-const supabaseClient = supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY,
-    { global: { headers: { 'x-station-key': STATION_KEY } } }
-);
+    const audio = document.getElementById('main-audio');
+    const playBtn = document.getElementById('play-btn');
+    const volSlider = document.getElementById('vol-slider');
+    let currentSongInLog = "";
 
-let currentSongInLog = "";
+    playBtn.onclick = () => {
+        if (audio.paused) { audio.load(); audio.play(); playBtn.innerText = "⏸"; } 
+        else { audio.pause(); playBtn.innerText = "▶"; }
+    };
+    volSlider.oninput = (e) => { audio.volume = e.target.value; };
 
-function handleMarquee(el, text) {
-    const container = el.parentElement;
-    el.classList.remove('animate-scroll');
-    el.innerText = text;
+    function handleMarquee(el, text) {
+        const container = el.parentElement;
+        el.classList.remove('animate-scroll');
+        el.innerText = text;
+        requestAnimationFrame(() => {
+            if (el.scrollWidth > container.offsetWidth) {
+                el.classList.add('animate-scroll');
+                el.innerHTML = `${text}&nbsp;&nbsp;&nbsp;&nbsp;${text}`;
+            }
+        });
+    }
 
-    requestAnimationFrame(() => {
-        if (el.scrollWidth > container.offsetWidth) {
-            el.classList.add('animate-scroll');
-            el.innerHTML = `${text}&nbsp;&nbsp;&nbsp;&nbsp;${text}`;
+    async function getCover(artist, title) {
+        try {
+            const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist+' '+title)}&entity=song&limit=1`);
+            const data = await res.json();
+            return data.results?.[0]?.artworkUrl100?.replace('100x100','600x600') || "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
+        } catch { return "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107"; }
+    }
+
+    async function updateDisplay() {
+        const { data } = await supabaseClient.from('radio_history').select('*').order('created_at', { ascending: false }).limit(30);
+        if (!data?.length) return;
+        document.getElementById('tracks-inner').innerHTML = data.map(d =>
+            `<div class="history-item">
+                <span class="history-time">[${new Date(d.created_at).getHours()}:${String(new Date(d.created_at).getMinutes()).padStart(2,'0')}]</span>
+                <span>${d.track_title}</span>
+            </div>`
+        ).join('');
+        const topTrack = data[0].track_title.trim();
+        if (topTrack !== currentSongInLog) {
+            currentSongInLog = topTrack;
+            const [artist, title] = topTrack.split(/ - | – /);
+            handleMarquee(document.getElementById('artist'), artist || "SNAP 107");
+            handleMarquee(document.getElementById('title'), title || artist);
+            document.getElementById('album-art').src = await getCover(artist || "", title || "");
         }
-    });
-}
-
-async function getCover(artist, title) {
-    try {
-        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist+' '+title)}&entity=song&limit=1`);
-        const data = await res.json();
-        return data.results?.[0]?.artworkUrl100?.replace('100x100','600x600')
-            || "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
-    } catch {
-        return "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
     }
-}
 
-async function updateDisplay() {
-    const { data } = await supabaseClient
-        .from('radio_history')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(30);
-
-    if (!data?.length) return;
-
-    document.getElementById('tracks-inner').innerHTML = data.map(d =>
-        `<div class="history-item">
-            <span class="history-time">[${new Date(d.created_at).getHours()}:${String(new Date(d.created_at).getMinutes()).padStart(2,'0')}]</span>
-            <span>${d.track_title}</span>
-        </div>`
-    ).join('');
-
-    const topTrack = data[0].track_title.trim();
-
-    if (topTrack !== currentSongInLog) {
-        currentSongInLog = topTrack;
-        const [artist, title] = topTrack.split(/ - | – /);
-
-        handleMarquee(document.getElementById('artist'), artist || "SNAP 107");
-        handleMarquee(document.getElementById('title'), title || artist);
-        document.getElementById('album-art').src = await getCover(artist || "", title || "");
+    const PROXIES = [url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, url => `https://thingproxy.freeboard.io/fetch/${url}`];
+    let pxIdx = 0;
+    async function checkServer() {
+        try {
+            const res = await fetch(PROXIES[pxIdx](`http://sapircast.caster.fm:13044/status-json.xsl?cb=${Date.now()}`));
+            const json = await res.json();
+            const content = json.contents ? JSON.parse(json.contents) : json;
+            const now = content.icestats.source["display-title"]?.trim();
+            if (now && now !== currentSongInLog) { await supabaseClient.from('radio_history').insert([{ track_title: now }]); }
+        } catch { pxIdx = (pxIdx + 1) % PROXIES.length; }
     }
-}
 
-setInterval(updateDisplay, 5000);
-updateDisplay();
+    setInterval(updateDisplay, 5000);
+    setInterval(checkServer, 15000);
+    updateDisplay();
+    checkServer();
 </script>
-
 </body>
 </html>
