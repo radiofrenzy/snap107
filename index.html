@@ -288,6 +288,42 @@ async function updateDisplay() {
     }
 }
 
+/* -------- STREAM CHECKER (adds new songs to Supabase) -------- */
+
+const PROXIES = [
+  url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+  url => `https://thingproxy.freeboard.io/fetch/${url}`
+];
+
+let pxIdx = 0;
+
+async function checkServer() {
+  try {
+    const res = await fetch(PROXIES[pxIdx](
+      `http://sapircast.caster.fm:13044/status-json.xsl?cb=${Date.now()}`
+    ));
+
+    const json = await res.json();
+    const content = json.contents ? JSON.parse(json.contents) : json;
+
+    const now = content.icestats.source["display-title"]?.trim();
+
+    if (now && now !== currentSongInLog) {
+      await supabaseClient.from('radio_history').insert([
+        { track_title: now }
+      ]);
+    }
+
+  } catch {
+    pxIdx = (pxIdx + 1) % PROXIES.length;
+  }
+}
+
+setInterval(checkServer, 15000);
+checkServer();
+
+/* -------- END STREAM CHECKER -------- */
+
 setInterval(updateDisplay, 5000);
 updateDisplay();
 </script>
