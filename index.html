@@ -31,26 +31,26 @@ body {
     box-shadow: 0 0 50px rgba(0,0,0,0.8);
 }
 
-/* LEFT BOX – PLAYER */
+/* LEFT BOX */
 #player-widget {
-    flex: 1.5 1 0;       /* a bit more space for left box */
-    min-width: 700px;    /* left box grows more easily */
+    flex: 1.5 1 0;
+    min-width: 700px;
     padding: 20px 25px;
     display: flex;
     flex-direction: column;
     position: relative;
 }
 
-/* RIGHT BOX – HISTORY */
+/* RIGHT BOX */
 #history-widget {
-    flex: 1.2 1 0;       /* smaller right box */
-    min-width: 600px;    /* keeps it readable but not dominant */
+    flex: 1.2 1 0;
+    min-width: 600px;
     padding: 20px;
     display: flex;
     flex-direction: column;
 }
 
-/* LIVE INDICATOR TOP LEFT */
+/* LIVE INDICATOR */
 .live-tag {
     position: absolute;
     top: 15px;
@@ -149,22 +149,22 @@ body {
 }
 
 .history-time {
-    color: #3a3a6a;   /* timestamp stays gray */
+    color: #3a3a6a;
     min-width: 50px;
 }
 
-/* Latest track: bold + green glow ONLY on title, not timestamp */
+/* Latest track glow ONLY on title */
 .history-item:first-child {
     font-weight: bold;
     font-size: 17px;
 }
 
 .history-item:first-child span:nth-child(2) {
-    color: #2EF049;           /* tick-mark green */
-    text-shadow: 0 0 8px #2EF049;  /* soft glow */
+    color: #2EF049;
+    text-shadow: 0 0 8px #2EF049;
 }
 
-/* LAYOUT WRAPPER */
+/* LAYOUT */
 #page-wrapper {
     display: flex;
     flex-direction: column;
@@ -176,7 +176,7 @@ body {
     display: flex;
     gap: 15px;
     width: 100%;
-    max-width: 2200px;   /* wide top row for large screens */
+    max-width: 2200px;
 }
 
 #caster-container {
@@ -247,12 +247,6 @@ const supabaseClient = supabase.createClient(
 
 let currentSongInLog = "";
 
-function handleMarquee(el, text) {
-    const container = el.parentElement;
-    el.classList.remove('animate-scroll');
-    el.innerText = text;
-}
-
 async function getCover(artist, title) {
     try {
         const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist+' '+title)}&entity=song&limit=1`);
@@ -265,13 +259,13 @@ async function getCover(artist, title) {
 }
 
 async function updateDisplay() {
-    const { data } = await supabaseClient
+    const { data, error } = await supabaseClient
         .from('radio_history')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(30);
 
-    if (!data?.length) return;
+    if (error || !data?.length) return;
 
     document.getElementById('tracks-inner').innerHTML = data.map(d =>
         `<div class="history-item">
@@ -285,9 +279,12 @@ async function updateDisplay() {
     if (topTrack !== currentSongInLog) {
         currentSongInLog = topTrack;
         const [artist, title] = topTrack.split(/ - | – /);
-        handleMarquee(document.getElementById('artist'), artist || "SNAP 107");
-        handleMarquee(document.getElementById('title'), title || artist);
-        document.getElementById('album-art').src = await getCover(artist || "", title || "");
+
+        document.getElementById('artist').innerText = artist || "SNAP 107";
+        document.getElementById('title').innerText = title || artist;
+
+        document.getElementById('album-art').src =
+            await getCover(artist || "", title || "");
     }
 }
 
