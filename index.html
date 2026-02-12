@@ -22,18 +22,17 @@ body {
     overflow: hidden;
 }
 
-/* BLUR BACKGROUND */
-#blur-bg {
+/* ----- BACKGROUND ANIMATION ----- */
+#bg-animation {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     background-size: cover;
-    background-position: center;
-    filter: blur(50px) brightness(0.35);
+    filter: brightness(0.35) blur(20px);
     z-index: 0;
-    transition: background-image 1s ease, filter 1s ease;
+    transition: background-image 1s ease-in-out;
 }
 
 /* MAIN BOXES */
@@ -44,7 +43,7 @@ body {
     border-radius: 20px;
     box-shadow: 0 0 50px rgba(0,0,0,0.8);
     position: relative;
-    z-index: 1;
+    z-index: 2; /* in front of BG */
 }
 
 /* LEFT BOX */
@@ -54,7 +53,6 @@ body {
     padding: 20px 25px;
     display: flex;
     flex-direction: column;
-    position: relative;
 }
 
 /* RIGHT BOX */
@@ -75,13 +73,6 @@ body {
     color: #ff3333;
     font-weight: bold;
     letter-spacing: 1px;
-    animation: blink 1.5s infinite;
-}
-
-@keyframes blink {
-    0% { opacity: 1; }
-    50% { opacity: 0.3; }
-    100% { opacity: 1; }
 }
 
 /* PLAYER CONTENT */
@@ -224,20 +215,35 @@ body {
 }
 
 #caster-container {
+    position: relative;
     width: 100%;
     max-width: 1600px;
     padding: 20px;
-    background: #050525;
+    background: transparent; /* transparent to show BG */
     border: 3px solid #1a1a40;
     border-radius: 20px;
     box-shadow: 0 0 50px rgba(0,0,0,0.8);
+    z-index: 2;
+}
+
+/* Overlay for caster player */
+#caster-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(5, 5, 37, 0.7);
+    border-radius: 20px;
+    pointer-events: none; /* clicks pass through */
+    z-index: 1;
 }
 </style>
 </head>
 
 <body>
 
-<div id="blur-bg"></div>
+<div id="bg-animation"></div>
 
 <div id="page-wrapper">
 
@@ -268,15 +274,16 @@ body {
 
 <!-- CASTER PLAYER BOX -->
 <div id="caster-container">
-<div data-type="newStreamPlayer"
-data-publicToken="68bebccc-3f3d-406f-84e0-10e7cfe152d5"
-data-theme="dark"
-data-color="1E3BE8"
-class="cstrEmbed">
-<a href="https://www.caster.fm">Shoutcast Hosting</a>
-<a href="https://www.caster.fm">Stream Hosting</a>
-<a href="https://www.caster.fm">Radio Server Hosting</a>
-</div>
+    <div id="caster-overlay"></div>
+    <div data-type="newStreamPlayer"
+         data-publicToken="68bebccc-3f3d-406f-84e0-10e7cfe152d5"
+         data-theme="dark"
+         data-color="1E3BE8"
+         class="cstrEmbed">
+         <a href="https://www.caster.fm">Shoutcast Hosting</a>
+         <a href="https://www.caster.fm">Stream Hosting</a>
+         <a href="https://www.caster.fm">Radio Server Hosting</a>
+    </div>
 </div>
 
 </div>
@@ -295,12 +302,17 @@ const supabaseClient = supabase.createClient(
 );
 
 let currentSongInLog = "";
-let daySections = {};
-let currentTab = getDateKey();
+let daySections = {}; // store songs by dayKey
+let currentTab = getDateKey(); // start on today
 
 function getDateKey(date = new Date()) {
     const d = date;
     return `${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// ----- BACKGROUND UPDATE -----
+async function updateBackground(url) {
+    document.getElementById('bg-animation').style.backgroundImage = `url(${url})`;
 }
 
 // --- RENDER TABS ---
@@ -311,7 +323,7 @@ function renderTabs() {
         const [am, ad] = a.split('.').map(Number);
         const [bm, bd] = b.split('.').map(Number);
         return bm*31 + bd - (am*31 + ad);
-    }).slice(-7);
+    }).slice(-7); // last 7 days
 
     keys.forEach(key => {
         const tab = document.createElement('div');
@@ -346,7 +358,7 @@ async function getCover(artist, title) {
     }
 }
 
-// --- UPDATE LEFT BOX & BLUR BG ---
+// --- UPDATE LEFT BOX & DAY SECTIONS ---
 async function updateDisplay() {
     const { data, error } = await supabaseClient
         .from('radio_history')
@@ -356,6 +368,7 @@ async function updateDisplay() {
 
     if (error || !data?.length) return;
 
+    // populate daySections
     data.forEach(d => {
         const dayKey = getDateKey(new Date(d.created_at));
         if (!daySections[dayKey]) daySections[dayKey] = [];
@@ -368,18 +381,16 @@ async function updateDisplay() {
     renderTabs();
     renderTracks();
 
+    // update left box with latest
     const topTrack = data[0].track_title.trim();
     if (topTrack !== currentSongInLog) {
         currentSongInLog = topTrack;
         const [artist, title] = topTrack.split(/ - | – /);
         document.getElementById('artist').innerText = artist || "SNAP 107";
         document.getElementById('title').innerText = title || artist;
-
-        const albumUrl = await getCover(artist || "", title || "");
-        document.getElementById('album-art').src = albumUrl;
-
-        // ---- Update blurred background ----
-        document.getElementById('blur-bg').style.backgroundImage = `url(${albumUrl})`;
+        const coverUrl = await getCover(artist || "", title || "");
+        document.getElementById('album-art').src = coverUrl;
+        updateBackground(coverUrl); // update BG to match album
     }
 }
 
@@ -396,12 +407,14 @@ async function checkServer() {
     const res = await fetch(PROXIES[pxIdx](
       `http://sapircast.caster.fm:13044/status-json.xsl?cb=${Date.now()}`
     ));
+
     const json = await res.json();
     const content = json.contents ? JSON.parse(json.contents) : json;
 
     const now = content.icestats.source["display-title"]?.trim();
     if (!now) return;
 
+    // get last logged track from Supabase
     const { data } = await supabaseClient
       .from('radio_history')
       .select('track_title, created_at')
