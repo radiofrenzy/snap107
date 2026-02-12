@@ -21,21 +21,14 @@ body {
     gap: 15px;
     overflow: hidden;
 }
-
-/* ----- BACKGROUND ANIMATION ----- */
 #bg-animation {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 0; left: 0; width: 100%; height: 100%;
     background-size: cover;
     filter: brightness(0.35) blur(20px);
     z-index: 0;
     transition: background-image 1s ease-in-out;
 }
-
-/* MAIN BOXES */
 #player-widget, #history-widget {
     height: 380px;
     background: linear-gradient(145deg, #050525, #0a0a35);
@@ -43,206 +36,35 @@ body {
     border-radius: 20px;
     box-shadow: 0 0 50px rgba(0,0,0,0.8);
     position: relative;
-    z-index: 2; /* in front of BG */
-}
-
-/* LEFT BOX */
-#player-widget {
-    flex: 1.5 1 0;
-    min-width: 700px;
-    padding: 20px 25px;
-    display: flex;
-    flex-direction: column;
-}
-
-/* RIGHT BOX */
-#history-widget {
-    flex: 1.2 1 0;
-    min-width: 600px;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-}
-
-/* LIVE INDICATOR */
-.live-tag {
-    position: absolute;
-    top: 15px;
-    left: 20px;
-    font-size: 12px;
-    color: #ff3333;
-    font-weight: bold;
-    letter-spacing: 1px;
-}
-
-/* PLAYER CONTENT */
-#player-content {
-    display: flex;
-    gap: 25px;
-    align-items: center;
-    flex-grow: 1;
-}
-
-#album-art {
-    width: 220px;
-    height: 220px;
-    object-fit: cover;
-    border-radius: 12px;
-    border: 2px solid #1a1a40;
-}
-
-#text-info {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    flex-grow: 1;
-    overflow: hidden;
-}
-
-.marquee-container {
-    overflow: hidden;
-    white-space: nowrap;
-    margin-bottom: 2px;
-}
-
-#artist {
-    font-size: 17px;
-    opacity: 0.8;
-}
-
-#title {
-    font-size: 38px;
-    color: #a0baff;
-    text-shadow: 0 0 15px rgba(120,152,251,.5);
-    line-height: 1.1;
-    font-weight: bold;
-}
-
-.btn-request {
-    margin-top: 15px;
-    padding: 6px 12px;
-    border: 1px solid #7898FB;
-    color: #7898FB;
-    text-decoration: none;
-    font-size: 13px;
-    width: fit-content;
-    text-transform: uppercase;
-}
-
-/* HISTORY BOX */
-.history-header {
-    font-size: 18px;
-    color: #fff;
-    font-weight: bold;
-    margin-bottom: 12px;
-    border-bottom: 2px solid #1a1a40;
-    padding-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-/* Tabs container */
-#date-tabs {
-    display: flex;
-    gap: 5px;
-    margin-left: auto;
-}
-
-/* Individual date tab */
-.date-tab {
-    background: #1a1a40;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 12px;
-    cursor: pointer;
-    color: #7898FB;
-    transition: 0.2s;
-}
-
-.date-tab.active {
-    background: #2EF049;
-    color: #020210;
-    font-weight: bold;
-}
-
-#tracks-inner {
-    flex-grow: 1;
-    overflow-y: auto;
-    font-size: 15.5px;
-    color: #a0baff;
-    font-weight: bold;
-}
-
-.history-item {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 8px;
-    border-bottom: 1px solid #080828;
-    padding-bottom: 4px;
-}
-
-.history-time {
-    color: #3a3a6a;
-    min-width: 50px;
-}
-
-/* Latest track glow ONLY on title */
-.history-item:first-child {
-    font-weight: bold;
-    font-size: 17px;
-}
-
-.history-item:first-child span:nth-child(2) {
-    color: #2EF049;
-    text-shadow: 0 0 8px #2EF049;
-}
-
-/* LAYOUT */
-#page-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-}
-
-#top-row {
-    display: flex;
-    gap: 15px;
-    width: 100%;
-    max-width: 2200px;
-}
-
-#caster-container {
-    position: relative;
-    width: 100%;
-    max-width: 1600px;
-    padding: 20px;
-    background: transparent; /* transparent to show BG */
-    border: 3px solid #1a1a40;
-    border-radius: 20px;
-    box-shadow: 0 0 50px rgba(0,0,0,0.8);
     z-index: 2;
 }
-
-/* Overlay for caster player */
-#caster-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(5, 5, 37, 0.7);
-    border-radius: 20px;
-    pointer-events: none; /* clicks pass through */
-    z-index: 1;
-}
+#player-widget { flex: 1.5 1 0; min-width: 700px; padding: 20px 25px; display: flex; flex-direction: column; }
+#history-widget { flex: 1.2 1 0; min-width: 600px; padding: 20px; display: flex; flex-direction: column; }
+.live-tag { position: absolute; top: 15px; left: 20px; font-size: 12px; color: #ff3333; font-weight: bold; letter-spacing: 1px; }
+#player-content { display: flex; gap: 25px; align-items: center; flex-grow: 1; }
+#album-art { width: 220px; height: 220px; object-fit: cover; border-radius: 12px; border: 2px solid #1a1a40; }
+#text-info { display: flex; flex-direction: column; justify-content: center; flex-grow: 1; overflow: hidden; }
+.marquee-container { overflow: hidden; white-space: nowrap; margin-bottom: 2px; }
+#artist { font-size: 17px; opacity: 0.8; }
+#title { font-size: 38px; color: #a0baff; text-shadow: 0 0 15px rgba(120,152,251,.5); line-height: 1.1; font-weight: bold; }
+.btn-request { margin-top: 15px; padding: 6px 12px; border: 1px solid #7898FB; color: #7898FB; text-decoration: none; font-size: 13px; width: fit-content; text-transform: uppercase; }
+.history-header { font-size: 18px; color: #fff; font-weight: bold; margin-bottom: 12px; border-bottom: 2px solid #1a1a40; padding-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+#date-tabs { display: flex; gap: 5px; margin-left: auto; }
+.date-tab { background: #1a1a40; padding: 2px 6px; border-radius: 4px; font-size: 12px; cursor: pointer; color: #7898FB; transition: 0.2s; }
+.date-tab.active { background: #2EF049; color: #020210; font-weight: bold; }
+#tracks-inner { flex-grow: 1; overflow-y: auto; font-size: 15.5px; color: #a0baff; font-weight: bold; }
+.history-item { display: flex; gap: 10px; margin-bottom: 8px; border-bottom: 1px solid #080828; padding-bottom: 4px; }
+.history-time { color: #3a3a6a; min-width: 50px; }
+.history-item:first-child { font-weight: bold; font-size: 17px; }
+.history-item:first-child span:nth-child(2) { color: #2EF049; text-shadow: 0 0 8px #2EF049; }
+#page-wrapper { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+#top-row { display: flex; gap: 15px; width: 100%; max-width: 2200px; }
+#caster-container { position: relative; width: 100%; max-width: 1600px; padding: 20px; background: transparent; border: 3px solid #1a1a40; border-radius: 20px; box-shadow: 0 0 50px rgba(0,0,0,0.8); z-index: 2; }
+#caster-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 5, 37, 0.7); border-radius: 20px; pointer-events: none; z-index: 1; }
 </style>
 </head>
 
 <body>
-
 <div id="bg-animation"></div>
 
 <div id="page-wrapper">
@@ -281,8 +103,6 @@ body {
          data-color="1E3BE8"
          class="cstrEmbed">
          <a href="https://www.caster.fm">Shoutcast Hosting</a>
-         <a href="https://www.caster.fm">Stream Hosting</a>
-         <a href="https://www.caster.fm">Radio Server Hosting</a>
     </div>
 </div>
 
@@ -302,8 +122,8 @@ const supabaseClient = supabase.createClient(
 );
 
 let currentSongInLog = "";
-let daySections = {}; // store songs by dayKey
-let currentTab = getDateKey(); // start on today
+let daySections = {};
+let currentTab = getDateKey();
 
 function getDateKey(date = new Date()) {
     const d = date;
@@ -323,7 +143,7 @@ function renderTabs() {
         const [am, ad] = a.split('.').map(Number);
         const [bm, bd] = b.split('.').map(Number);
         return bm*31 + bd - (am*31 + ad);
-    }).slice(-7); // last 7 days
+    }).slice(-7);
 
     keys.forEach(key => {
         const tab = document.createElement('div');
@@ -334,7 +154,7 @@ function renderTabs() {
     });
 }
 
-// --- RENDER TRACKS FOR CURRENT TAB ---
+// --- RENDER TRACKS ---
 function renderTracks() {
     const container = document.getElementById('tracks-inner');
     const tracks = daySections[currentTab] || [];
@@ -358,7 +178,7 @@ async function getCover(artist, title) {
     }
 }
 
-// --- UPDATE LEFT BOX & DAY SECTIONS ---
+// --- UPDATE DISPLAY ---
 async function updateDisplay() {
     const { data, error } = await supabaseClient
         .from('radio_history')
@@ -379,7 +199,6 @@ async function updateDisplay() {
         return;
     }
 
-    // RESET daySections each refresh (important)
     daySections = {};
 
     data.forEach(d => {
@@ -394,7 +213,6 @@ async function updateDisplay() {
     renderTabs();
     renderTracks();
 
-    // Update left box
     const topTrack = data[0].track_title.trim();
     if (topTrack !== currentSongInLog) {
         currentSongInLog = topTrack;
@@ -407,48 +225,6 @@ async function updateDisplay() {
         updateBackground(coverUrl);
     }
 }
-
-/* -------- STREAM CHECKER (logs new songs ONCE) -------- */
-const PROXIES = [
-  url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-  url => `https://thingproxy.freeboard.io/fetch/${url}`
-];
-
-let pxIdx = 0;
-
-async function checkServer() {
-  try {
-    const res = await fetch(PROXIES[pxIdx](
-      `http://sapircast.caster.fm:13044/status-json.xsl?cb=${Date.now()}`
-    ));
-
-    const json = await res.json();
-    const content = json.contents ? JSON.parse(json.contents) : json;
-
-    const now = content.icestats.source["display-title"]?.trim();
-    if (!now) return;
-
-    // get last logged track from Supabase
-    const { data } = await supabaseClient
-      .from('radio_history')
-      .select('track_title, created_at')
-      .order('created_at', { ascending: false })
-      .limit(1);
-
-    const lastLogged = data?.[0]?.track_title?.trim();
-
-    if (now !== lastLogged) {
-      const createdAt = new Date().toISOString();
-      await supabaseClient.from('radio_history').insert([{ track_title: now, created_at: createdAt }]);
-    }
-
-  } catch {
-    pxIdx = (pxIdx + 1) % PROXIES.length;
-  }
-}
-
-setInterval(checkServer, 8000);
-checkServer();
 
 /* -------- MIDNIGHT ROLLOVER -------- */
 let lastCheckedDate = getDateKey();
@@ -465,7 +241,6 @@ function checkMidnightRollover() {
 setInterval(checkMidnightRollover, 60_000);
 checkMidnightRollover();
 
-/* -------- UPDATE DISPLAY EVERY 5s -------- */
 setInterval(updateDisplay, 5000);
 updateDisplay();
 </script>
