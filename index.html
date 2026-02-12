@@ -88,129 +88,131 @@ class="cstrEmbed">
 <script src="https://www.gstatic.com/firebasejs/9.25.0/firebase-firestore-compat.js"></script>
 
 <script>
-/* -------- FIREBASE INIT -------- */
-const firebaseConfig = {
-  apiKey: "AIzaSyAAbYsWAjxCc-k1ccEhdP4sk5KWhcqykD8",
-  authDomain: "snap107-radiolog.firebaseapp.com",
-  projectId: "snap107-radiolog",
-  storageBucket: "snap107-radiolog.firebasestorage.app",
-  messagingSenderId: "48538616273",
-  appId: "1:48538616273:web:26b458348581938bdc60f0"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+document.addEventListener('DOMContentLoaded', () => {
+  /* -------- FIREBASE INIT -------- */
+  const firebaseConfig = {
+    apiKey: "AIzaSyAAbYsWAjxCc-k1ccEhdP4sk5KWhcqykD8",
+    authDomain: "snap107-radiolog.firebaseapp.com",
+    projectId: "snap107-radiolog",
+    storageBucket: "snap107-radiolog.firebasestorage.app",
+    messagingSenderId: "48538616273",
+    appId: "1:48538616273:web:26b458348581938bdc60f0"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
-/* -------- UTILITY -------- */
-function getDateKey(date = new Date()) {
-  const d = date;
-  return `${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
-}
-
-let daySections = {};
-let currentSongInLog = "";
-let currentTab = getDateKey();
-
-/* -------- RENDER TABS -------- */
-function renderTabs() {
-  const container = document.getElementById('date-tabs');
-  container.innerHTML = '';
-  const keys = Object.keys(daySections).sort((a,b)=>{
-    const [am, ad] = a.split('.').map(Number);
-    const [bm, bd] = b.split('.').map(Number);
-    return bm*31 + bd - (am*31 + ad);
-  }).slice(-7);
-
-  keys.forEach(key=>{
-    const tab = document.createElement('div');
-    tab.className = 'date-tab' + (key===currentTab?' active':'');
-    tab.innerText = key;
-    tab.onclick = () => { currentTab = key; renderTabs(); renderTracks(); };
-    container.appendChild(tab);
-  });
-}
-
-/* -------- RENDER TRACKS -------- */
-function renderTracks() {
-  const container = document.getElementById('tracks-inner');
-  const tracks = daySections[currentTab] || [];
-  container.innerHTML = tracks.map(d=>`
-    <div class="history-item">
-      <span class="history-time">[${d.time}]</span>
-      <span>${d.track_title}</span>
-    </div>
-  `).join('');
-}
-
-/* -------- GET COVER ART -------- */
-async function getCover(artist, title){
-  try {
-    const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist+' '+title)}&entity=song&limit=1`);
-    const data = await res.json();
-    return data.results?.[0]?.artworkUrl100?.replace('100x100','600x600') || "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
-  } catch {
-    return "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
+  /* -------- UTILITY -------- */
+  function getDateKey(date = new Date()) {
+    const d = date;
+    return `${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
   }
-}
 
-/* -------- UPDATE DISPLAY -------- */
-async function updateDisplay() {
-  const snapshot = await db.collection('radio_history')
-    .orderBy('created_at','desc')
-    .limit(30)
-    .get();
+  let daySections = {};
+  let currentSongInLog = "";
+  let currentTab = getDateKey();
 
-  daySections = {};
-  snapshot.docs.forEach(doc=>{
-    const d = doc.data();
-    const timeObj = d.created_at?.toDate() || new Date();
-    const dayKey = getDateKey(timeObj);
-    if(!daySections[dayKey]) daySections[dayKey] = [];
-    const timeStr = `${String(timeObj.getHours()).padStart(2,'0')}:${String(timeObj.getMinutes()).padStart(2,'0')}`;
-    if(!daySections[dayKey].some(t=>t.track_title===d.track_title && t.time===timeStr)){
-      daySections[dayKey].push({track_title:d.track_title, time:timeStr});
+  /* -------- RENDER TABS -------- */
+  function renderTabs() {
+    const container = document.getElementById('date-tabs');
+    container.innerHTML = '';
+    const keys = Object.keys(daySections).sort((a,b)=>{
+      const [am, ad] = a.split('.').map(Number);
+      const [bm, bd] = b.split('.').map(Number);
+      return bm*31 + bd - (am*31 + ad);
+    }).slice(-7);
+
+    keys.forEach(key=>{
+      const tab = document.createElement('div');
+      tab.className = 'date-tab' + (key===currentTab?' active':'');
+      tab.innerText = key;
+      tab.onclick = () => { currentTab = key; renderTabs(); renderTracks(); };
+      container.appendChild(tab);
+    });
+  }
+
+  /* -------- RENDER TRACKS -------- */
+  function renderTracks() {
+    const container = document.getElementById('tracks-inner');
+    const tracks = daySections[currentTab] || [];
+    container.innerHTML = tracks.map(d=>`
+      <div class="history-item">
+        <span class="history-time">[${d.time}]</span>
+        <span>${d.track_title}</span>
+      </div>
+    `).join('');
+  }
+
+  /* -------- GET COVER ART -------- */
+  async function getCover(artist, title){
+    try {
+      const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist+' '+title)}&entity=song&limit=1`);
+      const data = await res.json();
+      return data.results?.[0]?.artworkUrl100?.replace('100x100','600x600') || "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
+    } catch {
+      return "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
     }
-  });
-
-  renderTabs();
-  renderTracks();
-
-  const topTrack = snapshot.docs[0]?.data().track_title?.trim();
-  if(topTrack && topTrack !== currentSongInLog){
-    currentSongInLog = topTrack;
-    const [artist, title] = topTrack.split(/ - | – /);
-    document.getElementById('artist').innerText = artist || "SNAP 107";
-    document.getElementById('title').innerText = title || artist;
-
-    const albumUrl = await getCover(artist||"", title||"");
-    document.getElementById('album-art').src = albumUrl;
-    document.getElementById('blur-bg').style.backgroundImage = `url(${albumUrl})`;
   }
-}
 
-/* -------- LOG NEW TRACK -------- */
-async function logTrack(title){
-  await db.collection('radio_history').add({
-    track_title: title,
-    created_at: firebase.firestore.FieldValue.serverTimestamp()
-  });
-  updateDisplay();
-}
+  /* -------- UPDATE DISPLAY -------- */
+  async function updateDisplay() {
+    const snapshot = await db.collection('radio_history')
+      .orderBy('created_at','desc')
+      .limit(30)
+      .get();
 
-/* -------- MIDNIGHT ROLLOVER -------- */
-let lastCheckedDate = getDateKey();
-setInterval(()=>{
-  const today = getDateKey();
-  if(today !== lastCheckedDate){
-    lastCheckedDate = today;
-    currentTab = today;
+    daySections = {};
+    snapshot.docs.forEach(doc=>{
+      const d = doc.data();
+      const timeObj = d.created_at?.toDate() || new Date();
+      const dayKey = getDateKey(timeObj);
+      if(!daySections[dayKey]) daySections[dayKey] = [];
+      const timeStr = `${String(timeObj.getHours()).padStart(2,'0')}:${String(timeObj.getMinutes()).padStart(2,'0')}`;
+      if(!daySections[dayKey].some(t=>t.track_title===d.track_title && t.time===timeStr)){
+        daySections[dayKey].push({track_title:d.track_title, time:timeStr});
+      }
+    });
+
     renderTabs();
     renderTracks();
-  }
-}, 60_000);
 
-/* -------- AUTO UPDATE EVERY 5s -------- */
-setInterval(updateDisplay, 5000);
-updateDisplay();
+    const topTrack = snapshot.docs[0]?.data().track_title?.trim();
+    if(topTrack && topTrack !== currentSongInLog){
+      currentSongInLog = topTrack;
+      const [artist, title] = topTrack.split(/ - | – /);
+      document.getElementById('artist').innerText = artist || "SNAP 107";
+      document.getElementById('title').innerText = title || artist;
+
+      const albumUrl = await getCover(artist||"", title||"");
+      document.getElementById('album-art').src = albumUrl;
+      document.getElementById('blur-bg').style.backgroundImage = `url(${albumUrl})`;
+    }
+  }
+
+  /* -------- LOG NEW TRACK -------- */
+  async function logTrack(title){
+    await db.collection('radio_history').add({
+      track_title: title,
+      created_at: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    updateDisplay();
+  }
+
+  /* -------- MIDNIGHT ROLLOVER -------- */
+  let lastCheckedDate = getDateKey();
+  setInterval(()=>{
+    const today = getDateKey();
+    if(today !== lastCheckedDate){
+      lastCheckedDate = today;
+      currentTab = today;
+      renderTabs();
+      renderTracks();
+    }
+  }, 60_000);
+
+  /* -------- AUTO UPDATE EVERY 5s -------- */
+  setInterval(updateDisplay, 5000);
+  updateDisplay();
+});
 </script>
 
 </body>
