@@ -101,6 +101,15 @@ document.addEventListener('DOMContentLoaded', () => {
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
+  /* -------- MAKE logTrack GLOBAL -------- */
+  window.logTrack = async (title) => {
+    await db.collection('radio_history').add({
+      track_title: title,
+      created_at: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    updateDisplay();
+  };
+
   /* -------- UTILITY -------- */
   function getDateKey(date = new Date()) {
     const d = date;
@@ -186,15 +195,6 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('album-art').src = albumUrl;
       document.getElementById('blur-bg').style.backgroundImage = `url(${albumUrl})`;
     }
-  }
-
-  /* -------- LOG NEW TRACK -------- */
-  async function logTrack(title){
-    await db.collection('radio_history').add({
-      track_title: title,
-      created_at: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    updateDisplay();
   }
 
   /* -------- MIDNIGHT ROLLOVER -------- */
