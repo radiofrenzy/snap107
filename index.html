@@ -130,6 +130,34 @@ body {
     margin-bottom: 12px;
     border-bottom: 2px solid #1a1a40;
     padding-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* Tabs container */
+#date-tabs {
+    display: flex;
+    gap: 5px;
+    margin-left: auto;
+}
+
+/* Individual date tab */
+.date-tab {
+    background: #1a1a40;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    color: #7898FB;
+    transition: 0.2s;
+}
+
+.date-tab.active {
+    background: #2EF049;
+    color: #020210;
+    font-weight: bold;
 }
 
 #tracks-inner {
@@ -211,7 +239,10 @@ body {
 </div>
 
 <div id="history-widget">
-<div class="history-header">7-DAY RADIO LOG</div>
+<div class="history-header">
+    <span id="current-date">7-DAY RADIO LOG</span>
+    <div id="date-tabs"></div>
+</div>
 <div id="tracks-inner">CONNECTING...</div>
 </div>
 
@@ -246,8 +277,46 @@ const supabaseClient = supabase.createClient(
 );
 
 let currentSongInLog = "";
-let lastLoggedTrack = ""; // NEW: keep track of last inserted track
+let daySections = {}; // store songs by dayKey
+let currentTab = getDateKey(); // start on today
 
+function getDateKey(date = new Date()) {
+    const d = date;
+    return `${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// --- RENDER TABS ---
+function renderTabs() {
+    const tabsContainer = document.getElementById('date-tabs');
+    tabsContainer.innerHTML = '';
+    const keys = Object.keys(daySections).sort((a,b) => {
+        const [am, ad] = a.split('.').map(Number);
+        const [bm, bd] = b.split('.').map(Number);
+        return bm*31 + bd - (am*31 + ad);
+    }).slice(-7); // last 7 days
+
+    keys.forEach(key => {
+        const tab = document.createElement('div');
+        tab.className = 'date-tab' + (key===currentTab?' active':'');
+        tab.innerText = key;
+        tab.onclick = () => { currentTab = key; renderTabs(); renderTracks(); };
+        tabsContainer.appendChild(tab);
+    });
+}
+
+// --- RENDER TRACKS FOR CURRENT TAB ---
+function renderTracks() {
+    const container = document.getElementById('tracks-inner');
+    const tracks = daySections[currentTab] || [];
+    container.innerHTML = tracks.map(d =>
+        `<div class="history-item">
+            <span class="history-time">[${d.time}]</span>
+            <span>${d.track_title}</span>
+        </div>`
+    ).join('');
+}
+
+// --- GET COVER ART ---
 async function getCover(artist, title) {
     try {
         const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist+' '+title)}&entity=song&limit=1`);
@@ -259,6 +328,7 @@ async function getCover(artist, title) {
     }
 }
 
+// --- UPDATE LEFT BOX ---
 async function updateDisplay() {
     const { data, error } = await supabaseClient
         .from('radio_history')
@@ -268,29 +338,31 @@ async function updateDisplay() {
 
     if (error || !data?.length) return;
 
-    document.getElementById('tracks-inner').innerHTML = data.map(d =>
-        `<div class="history-item">
-            <span class="history-time">[${new Date(d.created_at).getHours()}:${String(new Date(d.created_at).getMinutes()).padStart(2,'0')}]</span>
-            <span>${d.track_title}</span>
-        </div>`
-    ).join('');
+    // populate daySections
+    data.forEach(d => {
+        const dayKey = getDateKey(new Date(d.created_at));
+        if (!daySections[dayKey]) daySections[dayKey] = [];
+        const time = `${String(new Date(d.created_at).getHours()).padStart(2,'0')}:${String(new Date(d.created_at).getMinutes()).padStart(2,'0')}`;
+        if (!daySections[dayKey].some(t=>t.track_title===d.track_title && t.time===time)) {
+            daySections[dayKey].push({ track_title: d.track_title, time });
+        }
+    });
 
+    renderTabs();
+    renderTracks();
+
+    // update left box with latest
     const topTrack = data[0].track_title.trim();
-
     if (topTrack !== currentSongInLog) {
         currentSongInLog = topTrack;
         const [artist, title] = topTrack.split(/ - | – /);
-
         document.getElementById('artist').innerText = artist || "SNAP 107";
         document.getElementById('title').innerText = title || artist;
-
-        document.getElementById('album-art').src =
-            await getCover(artist || "", title || "");
+        document.getElementById('album-art').src = await getCover(artist || "", title || "");
     }
 }
 
 /* -------- STREAM CHECKER (logs new songs ONCE) -------- */
-
 const PROXIES = [
   url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
   url => `https://thingproxy.freeboard.io/fetch/${url}`
@@ -308,23 +380,20 @@ async function checkServer() {
     const content = json.contents ? JSON.parse(json.contents) : json;
 
     const now = content.icestats.source["display-title"]?.trim();
-
     if (!now) return;
 
-    // 🔥 Get latest logged song from Supabase
+    // get last logged track from Supabase
     const { data } = await supabaseClient
       .from('radio_history')
-      .select('track_title')
+      .select('track_title, created_at')
       .order('created_at', { ascending: false })
       .limit(1);
 
     const lastLogged = data?.[0]?.track_title?.trim();
 
-    // Only insert if DIFFERENT from last logged in database
     if (now !== lastLogged) {
-      await supabaseClient.from('radio_history').insert([
-        { track_title: now }
-      ]);
+      const createdAt = new Date().toISOString();
+      await supabaseClient.from('radio_history').insert([{ track_title: now, created_at: createdAt }]);
     }
 
   } catch {
@@ -332,12 +401,26 @@ async function checkServer() {
   }
 }
 
-setInterval(checkServer, 8000); // logging
+setInterval(checkServer, 8000);
 checkServer();
 
-/* -------- END STREAM CHECKER -------- */
+/* -------- MIDNIGHT ROLLOVER -------- */
+let lastCheckedDate = getDateKey();
+function checkMidnightRollover() {
+    const todayKey = getDateKey();
+    if (todayKey !== lastCheckedDate) {
+        if (!daySections[todayKey]) daySections[todayKey] = [];
+        lastCheckedDate = todayKey;
+        currentTab = todayKey;
+        renderTabs();
+        renderTracks();
+    }
+}
+setInterval(checkMidnightRollover, 60_000);
+checkMidnightRollover();
 
-setInterval(updateDisplay, 5000); // UI updates
+/* -------- UPDATE DISPLAY EVERY 5s -------- */
+setInterval(updateDisplay, 5000);
 updateDisplay();
 </script>
 
