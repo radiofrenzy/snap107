@@ -309,9 +309,19 @@ async function checkServer() {
 
     const now = content.icestats.source["display-title"]?.trim();
 
-    // Only log if it's a new song
-    if (now && now !== lastLoggedTrack) {
-      lastLoggedTrack = now; // remember it
+    if (!now) return;
+
+    // 🔥 Get latest logged song from Supabase
+    const { data } = await supabaseClient
+      .from('radio_history')
+      .select('track_title')
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    const lastLogged = data?.[0]?.track_title?.trim();
+
+    // Only insert if DIFFERENT from last logged in database
+    if (now !== lastLogged) {
       await supabaseClient.from('radio_history').insert([
         { track_title: now }
       ]);
@@ -322,12 +332,12 @@ async function checkServer() {
   }
 }
 
-setInterval(checkServer, 8000);
+setInterval(checkServer, 8000); // logging
 checkServer();
 
 /* -------- END STREAM CHECKER -------- */
 
-setInterval(updateDisplay, 5000);
+setInterval(updateDisplay, 5000); // UI updates
 updateDisplay();
 </script>
 
