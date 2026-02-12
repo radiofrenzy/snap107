@@ -366,31 +366,45 @@ async function updateDisplay() {
         .order('created_at', { ascending: false })
         .limit(30);
 
-    if (error || !data?.length) return;
+    const container = document.getElementById('tracks-inner');
 
-    // populate daySections
+    if (error) {
+        console.error("Supabase error:", error);
+        container.innerText = "LOG ERROR";
+        return;
+    }
+
+    if (!data || data.length === 0) {
+        container.innerText = "NO TRACKS LOGGED YET";
+        return;
+    }
+
+    // RESET daySections each refresh (important)
+    daySections = {};
+
     data.forEach(d => {
-        const dayKey = getDateKey(new Date(d.created_at));
+        const dateObj = new Date(d.created_at);
+        const dayKey = getDateKey(dateObj);
+        const time = `${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
+
         if (!daySections[dayKey]) daySections[dayKey] = [];
-        const time = `${String(new Date(d.created_at).getHours()).padStart(2,'0')}:${String(new Date(d.created_at).getMinutes()).padStart(2,'0')}`;
-        if (!daySections[dayKey].some(t=>t.track_title===d.track_title && t.time===time)) {
-            daySections[dayKey].push({ track_title: d.track_title, time });
-        }
+        daySections[dayKey].push({ track_title: d.track_title, time });
     });
 
     renderTabs();
     renderTracks();
 
-    // update left box with latest
+    // Update left box
     const topTrack = data[0].track_title.trim();
     if (topTrack !== currentSongInLog) {
         currentSongInLog = topTrack;
         const [artist, title] = topTrack.split(/ - | – /);
         document.getElementById('artist').innerText = artist || "SNAP 107";
         document.getElementById('title').innerText = title || artist;
+
         const coverUrl = await getCover(artist || "", title || "");
         document.getElementById('album-art').src = coverUrl;
-        updateBackground(coverUrl); // update BG to match album
+        updateBackground(coverUrl);
     }
 }
 
