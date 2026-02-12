@@ -122,8 +122,8 @@ const supabaseClient = supabase.createClient(
 );
 
 let currentSongInLog = "";
-let daySections = {};
-let currentTab = getDateKey();
+let daySections = {}; // store songs by dayKey
+let currentTab = getDateKey(); // start on today
 
 function getDateKey(date = new Date()) {
     const d = date;
@@ -143,7 +143,7 @@ function renderTabs() {
         const [am, ad] = a.split('.').map(Number);
         const [bm, bd] = b.split('.').map(Number);
         return bm*31 + bd - (am*31 + ad);
-    }).slice(-7);
+    }).slice(-7); // last 7 days
 
     keys.forEach(key => {
         const tab = document.createElement('div');
@@ -154,7 +154,7 @@ function renderTabs() {
     });
 }
 
-// --- RENDER TRACKS ---
+// --- RENDER TRACKS FOR CURRENT TAB ---
 function renderTracks() {
     const container = document.getElementById('tracks-inner');
     const tracks = daySections[currentTab] || [];
@@ -178,7 +178,7 @@ async function getCover(artist, title) {
     }
 }
 
-// --- UPDATE DISPLAY ---
+// --- UPDATE LEFT BOX & DAY SECTIONS ---
 async function updateDisplay() {
     const { data, error } = await supabaseClient
         .from('radio_history')
@@ -199,6 +199,7 @@ async function updateDisplay() {
         return;
     }
 
+    // RESET daySections each refresh
     daySections = {};
 
     data.forEach(d => {
@@ -213,6 +214,7 @@ async function updateDisplay() {
     renderTabs();
     renderTracks();
 
+    // Update left box
     const topTrack = data[0].track_title.trim();
     if (topTrack !== currentSongInLog) {
         currentSongInLog = topTrack;
@@ -225,6 +227,48 @@ async function updateDisplay() {
         updateBackground(coverUrl);
     }
 }
+
+/* -------- STREAM CHECKER (logs new songs automatically) -------- */
+const PROXIES = [
+  url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+  url => `https://thingproxy.freeboard.io/fetch/${url}`
+];
+
+let pxIdx = 0;
+
+async function checkServer() {
+  try {
+    const res = await fetch(PROXIES[pxIdx](
+      `http://sapircast.caster.fm:13044/status-json.xsl?cb=${Date.now()}`
+    ));
+
+    const json = await res.json();
+    const content = json.contents ? JSON.parse(json.contents) : json;
+
+    const now = content.icestats.source["display-title"]?.trim();
+    if (!now) return;
+
+    // get last logged track from Supabase
+    const { data } = await supabaseClient
+      .from('radio_history')
+      .select('track_title, created_at')
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    const lastLogged = data?.[0]?.track_title?.trim();
+
+    if (now !== lastLogged) {
+      const createdAt = new Date().toISOString();
+      await supabaseClient.from('radio_history').insert([{ track_title: now, created_at: createdAt }]);
+    }
+
+  } catch {
+    pxIdx = (pxIdx + 1) % PROXIES.length;
+  }
+}
+
+setInterval(checkServer, 8000);
+checkServer();
 
 /* -------- MIDNIGHT ROLLOVER -------- */
 let lastCheckedDate = getDateKey();
@@ -241,6 +285,7 @@ function checkMidnightRollover() {
 setInterval(checkMidnightRollover, 60_000);
 checkMidnightRollover();
 
+/* -------- UPDATE DISPLAY EVERY 5s -------- */
 setInterval(updateDisplay, 5000);
 updateDisplay();
 </script>
