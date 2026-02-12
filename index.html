@@ -22,16 +22,16 @@ body {
     overflow: hidden;
 }
 
-/* ----- BACKGROUND ANIMATION ----- */
-#bg-animation {
+/* ---- BLURRED ALBUM BACKGROUND ---- */
+#bg-blur {
     position: fixed;
     inset: 0;
     background-size: cover;
     background-position: center;
-    filter: brightness(0.35) blur(40px);
+    filter: blur(60px) brightness(0.35);
     transform: scale(1.2);
-    z-index: 0;
-    transition: background-image 1s ease-in-out;
+    z-index: -1;
+    transition: background-image 0.8s ease-in-out;
 }
 
 /* MAIN BOXES */
@@ -41,8 +41,6 @@ body {
     border: 3px solid #1a1a40;
     border-radius: 20px;
     box-shadow: 0 0 50px rgba(0,0,0,0.8);
-    position: relative;
-    z-index: 2;
 }
 
 /* LEFT BOX */
@@ -52,6 +50,7 @@ body {
     padding: 20px 25px;
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
 /* RIGHT BOX */
@@ -63,7 +62,6 @@ body {
     flex-direction: column;
 }
 
-/* LIVE INDICATOR */
 .live-tag {
     position: absolute;
     top: 15px;
@@ -71,10 +69,8 @@ body {
     font-size: 12px;
     color: #ff3333;
     font-weight: bold;
-    letter-spacing: 1px;
 }
 
-/* PLAYER CONTENT */
 #player-content {
     display: flex;
     gap: 25px;
@@ -90,38 +86,13 @@ body {
     border: 2px solid #1a1a40;
 }
 
-#text-info {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    flex-grow: 1;
-}
-
-#artist {
-    font-size: 17px;
-    opacity: 0.8;
-}
-
+#artist { font-size: 17px; opacity: 0.8; }
 #title {
     font-size: 38px;
     color: #a0baff;
-    text-shadow: 0 0 15px rgba(120,152,251,.5);
-    line-height: 1.1;
     font-weight: bold;
 }
 
-.btn-request {
-    margin-top: 15px;
-    padding: 6px 12px;
-    border: 1px solid #7898FB;
-    color: #7898FB;
-    text-decoration: none;
-    font-size: 13px;
-    width: fit-content;
-    text-transform: uppercase;
-}
-
-/* HISTORY BOX */
 .history-header {
     font-size: 18px;
     color: #fff;
@@ -131,8 +102,6 @@ body {
     padding-bottom: 8px;
     display: flex;
     align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
 }
 
 #date-tabs {
@@ -168,8 +137,6 @@ body {
     display: flex;
     gap: 10px;
     margin-bottom: 8px;
-    border-bottom: 1px solid #080828;
-    padding-bottom: 4px;
 }
 
 .history-time {
@@ -177,14 +144,11 @@ body {
     min-width: 50px;
 }
 
-/* LAYOUT */
 #page-wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 20px;
-    position: relative;
-    z-index: 2;
 }
 
 #top-row {
@@ -194,7 +158,6 @@ body {
     max-width: 2200px;
 }
 
-/* CASTER BOX */
 #caster-container {
     width: 100%;
     max-width: 1600px;
@@ -203,15 +166,13 @@ body {
     border: 3px solid #1a1a40;
     border-radius: 20px;
     box-shadow: 0 0 50px rgba(0,0,0,0.8);
-    position: relative;
-    z-index: 2;
 }
 </style>
 </head>
 
 <body>
 
-<div id="bg-animation"></div>
+<div id="bg-blur"></div>
 
 <div id="page-wrapper">
 
@@ -219,13 +180,11 @@ body {
 
 <div id="player-widget">
 <span class="live-tag">● LIVE</span>
-
 <div id="player-content">
 <img id="album-art" src="https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107">
-<div id="text-info">
+<div>
 <div id="artist">STATION</div>
 <div id="title">SNAP 107</div>
-<a href="#" class="btn-request">REQUEST SONG</a>
 </div>
 </div>
 </div>
@@ -245,8 +204,7 @@ body {
      data-publicToken="68bebccc-3f3d-406f-84e0-10e7cfe152d5"
      data-theme="dark"
      data-color="1E3BE8"
-     class="cstrEmbed">
-</div>
+     class="cstrEmbed"></div>
 </div>
 
 </div>
@@ -273,36 +231,27 @@ function getDateKey(date = new Date()) {
     return `${String(date.getMonth()+1).padStart(2,'0')}.${String(date.getDate()).padStart(2,'0')}`;
 }
 
-function updateBackground(url) {
-    document.getElementById('bg-animation').style.backgroundImage = `url(${url})`;
-}
-
 function renderTabs() {
     const tabsContainer = document.getElementById('date-tabs');
     tabsContainer.innerHTML = '';
 
     const keys = Object.keys(daySections)
-        .sort((a,b) => b.localeCompare(a))
+        .sort((a,b)=>b.localeCompare(a))
         .slice(0,7);
 
-    keys.forEach(key => {
-        const tab = document.createElement('div');
-        tab.className = 'date-tab' + (key===currentTab?' active':'');
-        tab.innerText = key;
-        tab.onclick = () => {
-            currentTab = key;
-            renderTabs();
-            renderTracks();
-        };
+    keys.forEach(key=>{
+        const tab=document.createElement('div');
+        tab.className='date-tab'+(key===currentTab?' active':'');
+        tab.innerText=key;
+        tab.onclick=()=>{currentTab=key;renderTabs();renderTracks();};
         tabsContainer.appendChild(tab);
     });
 }
 
-function renderTracks() {
-    const container = document.getElementById('tracks-inner');
-    const tracks = daySections[currentTab] || [];
-
-    container.innerHTML = tracks.map(d =>
+function renderTracks(){
+    const container=document.getElementById('tracks-inner');
+    const tracks=daySections[currentTab]||[];
+    container.innerHTML=tracks.map(d=>
         `<div class="history-item">
             <span class="history-time">[${d.time}]</span>
             <span>${d.track_title}</span>
@@ -310,104 +259,102 @@ function renderTracks() {
     ).join('');
 }
 
-async function getCover(artist, title) {
-    try {
-        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist+' '+title)}&entity=song&limit=1`);
-        const data = await res.json();
+async function getCover(artist,title){
+    try{
+        const res=await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist+' '+title)}&entity=song&limit=1`);
+        const data=await res.json();
         return data.results?.[0]?.artworkUrl100?.replace('100x100','600x600')
-            || "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
-    } catch {
+        || "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
+    }catch{
         return "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
     }
 }
 
-async function updateDisplay() {
-    const { data } = await supabaseClient
+async function updateDisplay(){
+    const { data }=await supabaseClient
         .from('radio_history')
         .select('*')
-        .order('created_at', { ascending: false })
+        .order('created_at',{ascending:false})
         .limit(50);
 
-    if (!data?.length) return;
+    if(!data?.length) return;
 
-    daySections = {};
+    daySections={};
 
-    data.forEach(d => {
-        const dateObj = new Date(d.created_at);
-        const dayKey = getDateKey(dateObj);
-        const time = `${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
+    data.forEach(d=>{
+        const dateObj=new Date(d.created_at);
+        const dayKey=getDateKey(dateObj);
+        const time=`${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
 
-        if (!daySections[dayKey]) daySections[dayKey] = [];
-        daySections[dayKey].push({ track_title: d.track_title, time });
+        if(!daySections[dayKey]) daySections[dayKey]=[];
+        daySections[dayKey].push({track_title:d.track_title,time});
     });
 
     renderTabs();
     renderTracks();
 
-    const topTrack = data[0].track_title.trim();
-    if (topTrack !== currentSongInLog) {
-        currentSongInLog = topTrack;
-        const [artist, title] = topTrack.split(/ - | – /);
-        document.getElementById('artist').innerText = artist || "SNAP 107";
-        document.getElementById('title').innerText = title || artist;
+    const topTrack=data[0].track_title.trim();
+    if(topTrack!==currentSongInLog){
+        currentSongInLog=topTrack;
+        const [artist,title]=topTrack.split(/ - | – /);
+        document.getElementById('artist').innerText=artist||"SNAP 107";
+        document.getElementById('title').innerText=title||artist;
 
-        const cover = await getCover(artist || "", title || "");
-        document.getElementById('album-art').src = cover;
-        updateBackground(cover);
+        const cover=await getCover(artist||"",title||"");
+        document.getElementById('album-art').src=cover;
+        document.getElementById('bg-blur').style.backgroundImage=`url('${cover}')`;
     }
 }
 
-const PROXIES = [
-  url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-  url => `https://thingproxy.freeboard.io/fetch/${url}`
+const PROXIES=[
+  url=>`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+  url=>`https://thingproxy.freeboard.io/fetch/${url}`
 ];
 
-let pxIdx = 0;
+let pxIdx=0;
 
-async function checkServer() {
-  try {
-    const res = await fetch(PROXIES[pxIdx](
+async function checkServer(){
+  try{
+    const res=await fetch(PROXIES[pxIdx](
       `http://sapircast.caster.fm:13044/status-json.xsl?cb=${Date.now()}`
     ));
 
-    const json = await res.json();
-    const content = json.contents ? JSON.parse(json.contents) : json;
-    const now = content.icestats.source["display-title"]?.trim();
-    if (!now) return;
+    const json=await res.json();
+    const content=json.contents?JSON.parse(json.contents):json;
+    const now=content.icestats.source["display-title"]?.trim();
+    if(!now) return;
 
-    const { data } = await supabaseClient
+    const { data }=await supabaseClient
       .from('radio_history')
       .select('track_title')
-      .order('created_at', { ascending: false })
+      .order('created_at',{ascending:false})
       .limit(1);
 
-    const lastLogged = data?.[0]?.track_title?.trim();
+    const lastLogged=data?.[0]?.track_title?.trim();
 
-    if (now !== lastLogged) {
-      const createdAt = new Date().toISOString();
+    if(now!==lastLogged){
       await supabaseClient.from('radio_history')
-          .insert([{ track_title: now, created_at: createdAt }]);
-
-      updateDisplay(); // 🔥 force live refresh of right box
+          .insert([{track_title:now,created_at:new Date().toISOString()}]);
+      updateDisplay();
     }
 
-  } catch {
-    pxIdx = (pxIdx + 1) % PROXIES.length;
+  }catch{
+    pxIdx=(pxIdx+1)%PROXIES.length;
   }
 }
 
-function checkMidnightRollover() {
-    const todayKey = getDateKey();
-    if (todayKey !== lastCheckedDate) {
-        lastCheckedDate = todayKey;
-        currentTab = todayKey;
+function checkMidnightRollover(){
+    const todayKey=getDateKey();
+    if(todayKey!==lastCheckedDate){
+        lastCheckedDate=todayKey;
+        currentTab=todayKey;
         updateDisplay();
     }
 }
 
-setInterval(checkServer, 8000);
-setInterval(updateDisplay, 5000);
-setInterval(checkMidnightRollover, 60000);
+setInterval(checkServer,8000);
+setInterval(updateDisplay,5000);
+setInterval(checkMidnightRollover,60000);
 
 checkServer();
 updateDisplay();
