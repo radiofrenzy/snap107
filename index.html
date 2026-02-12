@@ -22,17 +22,18 @@ body {
     overflow: hidden;
 }
 
-/* ----- BACKGROUND ANIMATION ----- */
-#bg-animation {
+/* BLUR BACKGROUND */
+#blur-bg {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     background-size: cover;
-    filter: brightness(0.35) blur(20px);
+    background-position: center;
+    filter: blur(50px) brightness(0.35);
     z-index: 0;
-    transition: background-image 1s ease-in-out;
+    transition: background-image 1s ease, filter 1s ease;
 }
 
 /* MAIN BOXES */
@@ -43,7 +44,7 @@ body {
     border-radius: 20px;
     box-shadow: 0 0 50px rgba(0,0,0,0.8);
     position: relative;
-    z-index: 2; /* in front of BG */
+    z-index: 1;
 }
 
 /* LEFT BOX */
@@ -53,6 +54,7 @@ body {
     padding: 20px 25px;
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
 /* RIGHT BOX */
@@ -73,6 +75,13 @@ body {
     color: #ff3333;
     font-weight: bold;
     letter-spacing: 1px;
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; }
+    100% { opacity: 1; }
 }
 
 /* PLAYER CONTENT */
@@ -215,35 +224,20 @@ body {
 }
 
 #caster-container {
-    position: relative;
     width: 100%;
     max-width: 1600px;
     padding: 20px;
-    background: transparent; /* transparent to show BG */
+    background: #050525;
     border: 3px solid #1a1a40;
     border-radius: 20px;
     box-shadow: 0 0 50px rgba(0,0,0,0.8);
-    z-index: 2;
-}
-
-/* Overlay for caster player */
-#caster-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(5, 5, 37, 0.7);
-    border-radius: 20px;
-    pointer-events: none; /* clicks pass through */
-    z-index: 1;
 }
 </style>
 </head>
 
 <body>
 
-<div id="bg-animation"></div>
+<div id="blur-bg"></div>
 
 <div id="page-wrapper">
 
@@ -274,14 +268,15 @@ body {
 
 <!-- CASTER PLAYER BOX -->
 <div id="caster-container">
-    <div id="caster-overlay"></div>
-    <div data-type="newStreamPlayer"
-         data-publicToken="68bebccc-3f3d-406f-84e0-10e7cfe152d5"
-         data-theme="dark"
-         data-color="1E3BE8"
-         class="cstrEmbed">
-         <a href="https://www.caster.fm">Shoutcast Hosting</a>
-    </div>
+<div data-type="newStreamPlayer"
+data-publicToken="68bebccc-3f3d-406f-84e0-10e7cfe152d5"
+data-theme="dark"
+data-color="1E3BE8"
+class="cstrEmbed">
+<a href="https://www.caster.fm">Shoutcast Hosting</a>
+<a href="https://www.caster.fm">Stream Hosting</a>
+<a href="https://www.caster.fm">Radio Server Hosting</a>
+</div>
 </div>
 
 </div>
@@ -291,7 +286,7 @@ body {
 <script>
 const SUPABASE_URL = 'https://jjevapkfrxepdfyymtpa.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_fu_ULJb3PP0bde3uNFNEYA_rKglhlaw';
-const STATION_KEY  = 'sb_secret_HhTlkBsFjpmqENZ5ZE1yIw_-uMosmDx';
+const STATION_KEY  = 'SNAP107_SECRET';
 
 const supabaseClient = supabase.createClient(
     SUPABASE_URL,
@@ -306,11 +301,6 @@ let currentTab = getDateKey();
 function getDateKey(date = new Date()) {
     const d = date;
     return `${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
-}
-
-// ----- BACKGROUND UPDATE -----
-async function updateBackground(url) {
-    document.getElementById('bg-animation').style.backgroundImage = `url(${url})`;
 }
 
 // --- RENDER TABS ---
@@ -356,7 +346,7 @@ async function getCover(artist, title) {
     }
 }
 
-// --- UPDATE LEFT BOX & DAY SECTIONS ---
+// --- UPDATE LEFT BOX & BLUR BG ---
 async function updateDisplay() {
     const { data, error } = await supabaseClient
         .from('radio_history')
@@ -364,27 +354,15 @@ async function updateDisplay() {
         .order('created_at', { ascending: false })
         .limit(30);
 
-    const container = document.getElementById('tracks-inner');
-
-    if (error) {
-        console.error("Supabase error:", error);
-        container.innerText = "LOG ERROR";
-        return;
-    }
-
-    if (!data || data.length === 0) {
-        container.innerText = "NO TRACKS LOGGED YET";
-        return;
-    }
-
-    daySections = {};
+    if (error || !data?.length) return;
 
     data.forEach(d => {
-        const dateObj = new Date(d.created_at);
-        const dayKey = getDateKey(dateObj);
-        const time = `${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
+        const dayKey = getDateKey(new Date(d.created_at));
         if (!daySections[dayKey]) daySections[dayKey] = [];
-        daySections[dayKey].push({ track_title: d.track_title, time });
+        const time = `${String(new Date(d.created_at).getHours()).padStart(2,'0')}:${String(new Date(d.created_at).getMinutes()).padStart(2,'0')}`;
+        if (!daySections[dayKey].some(t=>t.track_title===d.track_title && t.time===time)) {
+            daySections[dayKey].push({ track_title: d.track_title, time });
+        }
     });
 
     renderTabs();
@@ -397,17 +375,20 @@ async function updateDisplay() {
         document.getElementById('artist').innerText = artist || "SNAP 107";
         document.getElementById('title').innerText = title || artist;
 
-        const coverUrl = await getCover(artist || "", title || "");
-        document.getElementById('album-art').src = coverUrl;
-        updateBackground(coverUrl);
+        const albumUrl = await getCover(artist || "", title || "");
+        document.getElementById('album-art').src = albumUrl;
+
+        // ---- Update blurred background ----
+        document.getElementById('blur-bg').style.backgroundImage = `url(${albumUrl})`;
     }
 }
 
-// -------- STREAM CHECKER (logs new songs) --------
+/* -------- STREAM CHECKER (logs new songs ONCE) -------- */
 const PROXIES = [
   url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
   url => `https://thingproxy.freeboard.io/fetch/${url}`
 ];
+
 let pxIdx = 0;
 
 async function checkServer() {
@@ -417,6 +398,7 @@ async function checkServer() {
     ));
     const json = await res.json();
     const content = json.contents ? JSON.parse(json.contents) : json;
+
     const now = content.icestats.source["display-title"]?.trim();
     if (!now) return;
 
@@ -441,7 +423,7 @@ async function checkServer() {
 setInterval(checkServer, 8000);
 checkServer();
 
-// -------- MIDNIGHT ROLLOVER --------
+/* -------- MIDNIGHT ROLLOVER -------- */
 let lastCheckedDate = getDateKey();
 function checkMidnightRollover() {
     const todayKey = getDateKey();
@@ -456,10 +438,10 @@ function checkMidnightRollover() {
 setInterval(checkMidnightRollover, 60_000);
 checkMidnightRollover();
 
-// -------- UPDATE DISPLAY EVERY 5s --------
+/* -------- UPDATE DISPLAY EVERY 5s -------- */
 setInterval(updateDisplay, 5000);
 updateDisplay();
-
 </script>
+
 </body>
 </html>
