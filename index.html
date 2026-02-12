@@ -22,6 +22,20 @@ body {
     overflow: hidden;
 }
 
+/* BLUR BACKGROUND */
+#blur-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    filter: blur(50px) brightness(0.35);
+    z-index: 0;
+    transition: background-image 1s ease, filter 1s ease;
+}
+
 /* MAIN BOXES */
 #player-widget, #history-widget {
     height: 380px;
@@ -29,6 +43,8 @@ body {
     border: 3px solid #1a1a40;
     border-radius: 20px;
     box-shadow: 0 0 50px rgba(0,0,0,0.8);
+    position: relative;
+    z-index: 1;
 }
 
 /* LEFT BOX */
@@ -221,6 +237,8 @@ body {
 
 <body>
 
+<div id="blur-bg"></div>
+
 <div id="page-wrapper">
 
 <div id="top-row">
@@ -277,8 +295,8 @@ const supabaseClient = supabase.createClient(
 );
 
 let currentSongInLog = "";
-let daySections = {}; // store songs by dayKey
-let currentTab = getDateKey(); // start on today
+let daySections = {};
+let currentTab = getDateKey();
 
 function getDateKey(date = new Date()) {
     const d = date;
@@ -293,7 +311,7 @@ function renderTabs() {
         const [am, ad] = a.split('.').map(Number);
         const [bm, bd] = b.split('.').map(Number);
         return bm*31 + bd - (am*31 + ad);
-    }).slice(-7); // last 7 days
+    }).slice(-7);
 
     keys.forEach(key => {
         const tab = document.createElement('div');
@@ -328,7 +346,7 @@ async function getCover(artist, title) {
     }
 }
 
-// --- UPDATE LEFT BOX ---
+// --- UPDATE LEFT BOX & BLUR BG ---
 async function updateDisplay() {
     const { data, error } = await supabaseClient
         .from('radio_history')
@@ -338,7 +356,6 @@ async function updateDisplay() {
 
     if (error || !data?.length) return;
 
-    // populate daySections
     data.forEach(d => {
         const dayKey = getDateKey(new Date(d.created_at));
         if (!daySections[dayKey]) daySections[dayKey] = [];
@@ -351,14 +368,18 @@ async function updateDisplay() {
     renderTabs();
     renderTracks();
 
-    // update left box with latest
     const topTrack = data[0].track_title.trim();
     if (topTrack !== currentSongInLog) {
         currentSongInLog = topTrack;
         const [artist, title] = topTrack.split(/ - | – /);
         document.getElementById('artist').innerText = artist || "SNAP 107";
         document.getElementById('title').innerText = title || artist;
-        document.getElementById('album-art').src = await getCover(artist || "", title || "");
+
+        const albumUrl = await getCover(artist || "", title || "");
+        document.getElementById('album-art').src = albumUrl;
+
+        // ---- Update blurred background ----
+        document.getElementById('blur-bg').style.backgroundImage = `url(${albumUrl})`;
     }
 }
 
@@ -375,14 +396,12 @@ async function checkServer() {
     const res = await fetch(PROXIES[pxIdx](
       `http://sapircast.caster.fm:13044/status-json.xsl?cb=${Date.now()}`
     ));
-
     const json = await res.json();
     const content = json.contents ? JSON.parse(json.contents) : json;
 
     const now = content.icestats.source["display-title"]?.trim();
     if (!now) return;
 
-    // get last logged track from Supabase
     const { data } = await supabaseClient
       .from('radio_history')
       .select('track_title, created_at')
