@@ -22,16 +22,17 @@ body {
     overflow: hidden;
 }
 
-/* ---- BLURRED ALBUM BACKGROUND ---- */
-#bg-blur {
+/* ----- BACKGROUND ANIMATION ----- */
+#bg-animation {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     background-size: cover;
-    background-position: center;
-    filter: blur(60px) brightness(0.35);
-    transform: scale(1.2);
-    z-index: -1;
-    transition: background-image 0.8s ease-in-out;
+    filter: brightness(0.35) blur(20px);
+    z-index: 0;
+    transition: background-image 1s ease-in-out;
 }
 
 /* MAIN BOXES */
@@ -41,6 +42,8 @@ body {
     border: 3px solid #1a1a40;
     border-radius: 20px;
     box-shadow: 0 0 50px rgba(0,0,0,0.8);
+    position: relative;
+    z-index: 2; /* in front of BG */
 }
 
 /* LEFT BOX */
@@ -50,7 +53,6 @@ body {
     padding: 20px 25px;
     display: flex;
     flex-direction: column;
-    position: relative;
 }
 
 /* RIGHT BOX */
@@ -62,6 +64,7 @@ body {
     flex-direction: column;
 }
 
+/* LIVE INDICATOR */
 .live-tag {
     position: absolute;
     top: 15px;
@@ -69,8 +72,10 @@ body {
     font-size: 12px;
     color: #ff3333;
     font-weight: bold;
+    letter-spacing: 1px;
 }
 
+/* PLAYER CONTENT */
 #player-content {
     display: flex;
     gap: 25px;
@@ -86,13 +91,45 @@ body {
     border: 2px solid #1a1a40;
 }
 
-#artist { font-size: 17px; opacity: 0.8; }
+#text-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.marquee-container {
+    overflow: hidden;
+    white-space: nowrap;
+    margin-bottom: 2px;
+}
+
+#artist {
+    font-size: 17px;
+    opacity: 0.8;
+}
+
 #title {
     font-size: 38px;
     color: #a0baff;
+    text-shadow: 0 0 15px rgba(120,152,251,.5);
+    line-height: 1.1;
     font-weight: bold;
 }
 
+.btn-request {
+    margin-top: 15px;
+    padding: 6px 12px;
+    border: 1px solid #7898FB;
+    color: #7898FB;
+    text-decoration: none;
+    font-size: 13px;
+    width: fit-content;
+    text-transform: uppercase;
+}
+
+/* HISTORY BOX */
 .history-header {
     font-size: 18px;
     color: #fff;
@@ -102,14 +139,18 @@ body {
     padding-bottom: 8px;
     display: flex;
     align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
+/* Tabs container */
 #date-tabs {
     display: flex;
     gap: 5px;
     margin-left: auto;
 }
 
+/* Individual date tab */
 .date-tab {
     background: #1a1a40;
     padding: 2px 6px;
@@ -117,6 +158,7 @@ body {
     font-size: 12px;
     cursor: pointer;
     color: #7898FB;
+    transition: 0.2s;
 }
 
 .date-tab.active {
@@ -137,6 +179,8 @@ body {
     display: flex;
     gap: 10px;
     margin-bottom: 8px;
+    border-bottom: 1px solid #080828;
+    padding-bottom: 4px;
 }
 
 .history-time {
@@ -144,6 +188,18 @@ body {
     min-width: 50px;
 }
 
+/* Latest track glow ONLY on title */
+.history-item:first-child {
+    font-weight: bold;
+    font-size: 17px;
+}
+
+.history-item:first-child span:nth-child(2) {
+    color: #2EF049;
+    text-shadow: 0 0 8px #2EF049;
+}
+
+/* LAYOUT */
 #page-wrapper {
     display: flex;
     flex-direction: column;
@@ -159,20 +215,35 @@ body {
 }
 
 #caster-container {
+    position: relative;
     width: 100%;
     max-width: 1600px;
     padding: 20px;
-    background: #050525;
+    background: transparent; /* transparent to show BG */
     border: 3px solid #1a1a40;
     border-radius: 20px;
     box-shadow: 0 0 50px rgba(0,0,0,0.8);
+    z-index: 2;
+}
+
+/* Overlay for caster player */
+#caster-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(5, 5, 37, 0.7);
+    border-radius: 20px;
+    pointer-events: none; /* clicks pass through */
+    z-index: 1;
 }
 </style>
 </head>
 
 <body>
 
-<div id="bg-blur"></div>
+<div id="bg-animation"></div>
 
 <div id="page-wrapper">
 
@@ -180,18 +251,20 @@ body {
 
 <div id="player-widget">
 <span class="live-tag">● LIVE</span>
+
 <div id="player-content">
 <img id="album-art" src="https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107">
-<div>
-<div id="artist">STATION</div>
-<div id="title">SNAP 107</div>
+<div id="text-info">
+<div class="marquee-container"><div id="artist">STATION</div></div>
+<div class="marquee-container"><div id="title">SNAP 107</div></div>
+<a href="#" class="btn-request">REQUEST SONG</a>
 </div>
 </div>
 </div>
 
 <div id="history-widget">
 <div class="history-header">
-    <span>7-DAY RADIO LOG</span>
+    <span id="current-date">7-DAY RADIO LOG</span>
     <div id="date-tabs"></div>
 </div>
 <div id="tracks-inner">CONNECTING...</div>
@@ -199,12 +272,18 @@ body {
 
 </div>
 
+<!-- CASTER PLAYER BOX -->
 <div id="caster-container">
-<div data-type="newStreamPlayer"
-     data-publicToken="68bebccc-3f3d-406f-84e0-10e7cfe152d5"
-     data-theme="dark"
-     data-color="1E3BE8"
-     class="cstrEmbed"></div>
+    <div id="caster-overlay"></div>
+    <div data-type="newStreamPlayer"
+         data-publicToken="68bebccc-3f3d-406f-84e0-10e7cfe152d5"
+         data-theme="dark"
+         data-color="1E3BE8"
+         class="cstrEmbed">
+         <a href="https://www.caster.fm">Shoutcast Hosting</a>
+         <a href="https://www.caster.fm">Stream Hosting</a>
+         <a href="https://www.caster.fm">Radio Server Hosting</a>
+    </div>
 </div>
 
 </div>
@@ -223,35 +302,43 @@ const supabaseClient = supabase.createClient(
 );
 
 let currentSongInLog = "";
-let daySections = {};
-let currentTab = getDateKey();
-let lastCheckedDate = getDateKey();
+let daySections = {}; // store songs by dayKey
+let currentTab = getDateKey(); // start on today
 
 function getDateKey(date = new Date()) {
-    return `${String(date.getMonth()+1).padStart(2,'0')}.${String(date.getDate()).padStart(2,'0')}`;
+    const d = date;
+    return `${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
 }
 
+// ----- BACKGROUND UPDATE -----
+async function updateBackground(url) {
+    document.getElementById('bg-animation').style.backgroundImage = `url(${url})`;
+}
+
+// --- RENDER TABS ---
 function renderTabs() {
     const tabsContainer = document.getElementById('date-tabs');
     tabsContainer.innerHTML = '';
+    const keys = Object.keys(daySections).sort((a,b) => {
+        const [am, ad] = a.split('.').map(Number);
+        const [bm, bd] = b.split('.').map(Number);
+        return bm*31 + bd - (am*31 + ad);
+    }).slice(-7); // last 7 days
 
-    const keys = Object.keys(daySections)
-        .sort((a,b)=>b.localeCompare(a))
-        .slice(0,7);
-
-    keys.forEach(key=>{
-        const tab=document.createElement('div');
-        tab.className='date-tab'+(key===currentTab?' active':'');
-        tab.innerText=key;
-        tab.onclick=()=>{currentTab=key;renderTabs();renderTracks();};
+    keys.forEach(key => {
+        const tab = document.createElement('div');
+        tab.className = 'date-tab' + (key===currentTab?' active':'');
+        tab.innerText = key;
+        tab.onclick = () => { currentTab = key; renderTabs(); renderTracks(); };
         tabsContainer.appendChild(tab);
     });
 }
 
-function renderTracks(){
-    const container=document.getElementById('tracks-inner');
-    const tracks=daySections[currentTab]||[];
-    container.innerHTML=tracks.map(d=>
+// --- RENDER TRACKS FOR CURRENT TAB ---
+function renderTracks() {
+    const container = document.getElementById('tracks-inner');
+    const tracks = daySections[currentTab] || [];
+    container.innerHTML = tracks.map(d =>
         `<div class="history-item">
             <span class="history-time">[${d.time}]</span>
             <span>${d.track_title}</span>
@@ -259,106 +346,114 @@ function renderTracks(){
     ).join('');
 }
 
-async function getCover(artist,title){
-    try{
-        const res=await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist+' '+title)}&entity=song&limit=1`);
-        const data=await res.json();
+// --- GET COVER ART ---
+async function getCover(artist, title) {
+    try {
+        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist+' '+title)}&entity=song&limit=1`);
+        const data = await res.json();
         return data.results?.[0]?.artworkUrl100?.replace('100x100','600x600')
-        || "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
-    }catch{
+            || "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
+    } catch {
         return "https://via.placeholder.com/600x600/000/7898FB?text=SNAP+107";
     }
 }
 
-async function updateDisplay(){
-    const { data }=await supabaseClient
+// --- UPDATE LEFT BOX & DAY SECTIONS ---
+async function updateDisplay() {
+    const { data, error } = await supabaseClient
         .from('radio_history')
         .select('*')
-        .order('created_at',{ascending:false})
-        .limit(50);
+        .order('created_at', { ascending: false })
+        .limit(30);
 
-    if(!data?.length) return;
+    if (error || !data?.length) return;
 
-    daySections={};
-
-    data.forEach(d=>{
-        const dateObj=new Date(d.created_at);
-        const dayKey=getDateKey(dateObj);
-        const time=`${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
-
-        if(!daySections[dayKey]) daySections[dayKey]=[];
-        daySections[dayKey].push({track_title:d.track_title,time});
+    // populate daySections
+    data.forEach(d => {
+        const dayKey = getDateKey(new Date(d.created_at));
+        if (!daySections[dayKey]) daySections[dayKey] = [];
+        const time = `${String(new Date(d.created_at).getHours()).padStart(2,'0')}:${String(new Date(d.created_at).getMinutes()).padStart(2,'0')}`;
+        if (!daySections[dayKey].some(t=>t.track_title===d.track_title && t.time===time)) {
+            daySections[dayKey].push({ track_title: d.track_title, time });
+        }
     });
 
     renderTabs();
     renderTracks();
 
-    const topTrack=data[0].track_title.trim();
-    if(topTrack!==currentSongInLog){
-        currentSongInLog=topTrack;
-        const [artist,title]=topTrack.split(/ - | – /);
-        document.getElementById('artist').innerText=artist||"SNAP 107";
-        document.getElementById('title').innerText=title||artist;
-
-        const cover=await getCover(artist||"",title||"");
-        document.getElementById('album-art').src=cover;
-        document.getElementById('bg-blur').style.backgroundImage=`url('${cover}')`;
+    // update left box with latest
+    const topTrack = data[0].track_title.trim();
+    if (topTrack !== currentSongInLog) {
+        currentSongInLog = topTrack;
+        const [artist, title] = topTrack.split(/ - | – /);
+        document.getElementById('artist').innerText = artist || "SNAP 107";
+        document.getElementById('title').innerText = title || artist;
+        const coverUrl = await getCover(artist || "", title || "");
+        document.getElementById('album-art').src = coverUrl;
+        updateBackground(coverUrl); // update BG to match album
     }
 }
 
-const PROXIES=[
-  url=>`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-  url=>`https://thingproxy.freeboard.io/fetch/${url}`
+/* -------- STREAM CHECKER (logs new songs ONCE) -------- */
+const PROXIES = [
+  url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+  url => `https://thingproxy.freeboard.io/fetch/${url}`
 ];
 
-let pxIdx=0;
+let pxIdx = 0;
 
-async function checkServer(){
-  try{
-    const res=await fetch(PROXIES[pxIdx](
+async function checkServer() {
+  try {
+    const res = await fetch(PROXIES[pxIdx](
       `http://sapircast.caster.fm:13044/status-json.xsl?cb=${Date.now()}`
     ));
 
-    const json=await res.json();
-    const content=json.contents?JSON.parse(json.contents):json;
-    const now=content.icestats.source["display-title"]?.trim();
-    if(!now) return;
+    const json = await res.json();
+    const content = json.contents ? JSON.parse(json.contents) : json;
 
-    const { data }=await supabaseClient
+    const now = content.icestats.source["display-title"]?.trim();
+    if (!now) return;
+
+    // get last logged track from Supabase
+    const { data } = await supabaseClient
       .from('radio_history')
-      .select('track_title')
-      .order('created_at',{ascending:false})
+      .select('track_title, created_at')
+      .order('created_at', { ascending: false })
       .limit(1);
 
-    const lastLogged=data?.[0]?.track_title?.trim();
+    const lastLogged = data?.[0]?.track_title?.trim();
 
-    if(now!==lastLogged){
-      await supabaseClient.from('radio_history')
-          .insert([{track_title:now,created_at:new Date().toISOString()}]);
-      updateDisplay();
+    if (now !== lastLogged) {
+      const createdAt = new Date().toISOString();
+      await supabaseClient.from('radio_history').insert([{ track_title: now, created_at: createdAt }]);
     }
 
-  }catch{
-    pxIdx=(pxIdx+1)%PROXIES.length;
+  } catch {
+    pxIdx = (pxIdx + 1) % PROXIES.length;
   }
 }
 
-function checkMidnightRollover(){
-    const todayKey=getDateKey();
-    if(todayKey!==lastCheckedDate){
-        lastCheckedDate=todayKey;
-        currentTab=todayKey;
-        updateDisplay();
+setInterval(checkServer, 8000);
+checkServer();
+
+/* -------- MIDNIGHT ROLLOVER -------- */
+let lastCheckedDate = getDateKey();
+function checkMidnightRollover() {
+    const todayKey = getDateKey();
+    if (todayKey !== lastCheckedDate) {
+        if (!daySections[todayKey]) daySections[todayKey] = [];
+        lastCheckedDate = todayKey;
+        currentTab = todayKey;
+        renderTabs();
+        renderTracks();
     }
 }
-
-setInterval(checkServer,8000);
-setInterval(updateDisplay,5000);
-setInterval(checkMidnightRollover,60000);
-
-checkServer();
-updateDisplay();
+setInterval(checkMidnightRollover, 60_000);
 checkMidnightRollover();
+
+/* -------- UPDATE DISPLAY EVERY 5s -------- */
+setInterval(updateDisplay, 5000);
+updateDisplay();
 </script>
 
 </body>
