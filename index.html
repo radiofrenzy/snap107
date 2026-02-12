@@ -246,6 +246,7 @@ const supabaseClient = supabase.createClient(
 );
 
 let currentSongInLog = "";
+let lastLoggedTrack = ""; // NEW: keep track of last inserted track
 
 async function getCover(artist, title) {
     try {
@@ -288,7 +289,7 @@ async function updateDisplay() {
     }
 }
 
-/* -------- STREAM CHECKER (adds new songs to Supabase) -------- */
+/* -------- STREAM CHECKER (logs new songs ONCE) -------- */
 
 const PROXIES = [
   url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
@@ -308,7 +309,9 @@ async function checkServer() {
 
     const now = content.icestats.source["display-title"]?.trim();
 
-    if (now && now !== currentSongInLog) {
+    // Only log if it's a new song
+    if (now && now !== lastLoggedTrack) {
+      lastLoggedTrack = now; // remember it
       await supabaseClient.from('radio_history').insert([
         { track_title: now }
       ]);
