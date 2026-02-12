@@ -258,7 +258,7 @@ body {
 <div id="text-info">
 <div class="marquee-container"><div id="artist">Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!</div></div>
 <div class="marquee-container"><div id="title">SNAP 107 - WSNP-IP</div></div>
-<a href="#" class="btn-request">REQUEST SONG</a>
+<a href="https://forms.gle/cq1F9Z9KotTy78js5" target="_blank" class="btn-request">REQUEST SONGS 12p-4p</a>
 </div>
 </div>
 </div>
@@ -466,6 +466,30 @@ checkMidnightRollover();
 /* -------- UPDATE DISPLAY EVERY 5s -------- */
 setInterval(updateDisplay, 5000);
 updateDisplay();
+
+// -------- AUTOMATE REQUEST BUTTON VISIBILITY --------
+function updateRequestButtonVisibility() {
+    const btn = document.querySelector('.btn-request');
+    const now = new Date();
+    const day = now.getDay(); // Sunday = 0, Monday = 1, ..., Saturday = 6
+    const hour = now.getHours();
+
+    // Only show Tuesday-Friday (2-5) between 12-16
+    if (day >= 2 && day <= 5 && hour >= 12 && hour < 16) {
+        btn.style.display = 'inline-block';
+    } else {
+        btn.style.display = 'none';
+    }
+}
+
+// Run on page load
+updateRequestButtonVisibility();
+
+// Optional: re-check every minute in case page stays open
+setInterval(updateRequestButtonVisibility, 60_000);
+</script>
+
+    
 </script>
 
 </body>
