@@ -294,15 +294,13 @@ body {
 #scale-wrapper {
     position: fixed;
     inset: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     overflow: hidden;
 }
 
 #fixed-canvas {
-    width: 1920px;   /* Your design width */
-    height: 1080px;   /* Your design height */
+    position: absolute;
+    top: 50%;
+    left: 50%;
     transform-origin: center center;
 }
 
@@ -602,7 +600,7 @@ function scaleLayout() {
 
     const scale = Math.min(scaleX, scaleY);
 
-    canvas.style.transform = `scale(${scale})`;
+    canvas.style.transform = `translate(-50%, -50%) scale(${scale})`;
 }
 
 window.addEventListener('resize', scaleLayout);
