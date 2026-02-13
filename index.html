@@ -313,7 +313,6 @@ body {
     height: 100%;
     background: rgba(5, 5, 37, 0.10);
     border-radius: 20px;
-    pointer-events: none;
     z-index: 1;
 }
 </style>
@@ -362,6 +361,18 @@ body {
             <!-- /#history-widget -->
 
         </div> <!-- /#top-row -->
+        
+<!-- CASTER PLAYER BOX -->
+<div id="caster-container">
+    <div id="caster-overlay"></div>
+    <div data-type="newStreamPlayer"
+         data-publicToken="68bebccc-3f3d-406f-84e0-10e7cfe152d5"
+         data-theme="dark"
+         data-color="1E3BE8"
+         class="cstrEmbed">
+         <a href="https://www.caster.fm">Shoutcast Hosting</a>
+    </div>
+</div>
 
     </div> <!-- /#page-wrapper -->
 </div> <!-- /#scale-wrapper -->
@@ -588,6 +599,28 @@ function updateActionButton() {
 // Run on page load and update every minute
 updateActionButton();
 setInterval(updateActionButton, 60_000);
+
+function fitPageWrapper() {
+    const wrapper = document.getElementById('scale-wrapper');
+    const page = document.getElementById('page-wrapper');
+
+    const wrapperWidth = wrapper.clientWidth;
+    const wrapperHeight = wrapper.clientHeight;
+
+    const pageWidth = 1600; // design width
+    const pageHeight = 900; // design height
+
+    const scaleX = wrapperWidth / pageWidth;
+    const scaleY = wrapperHeight / pageHeight;
+    const scale = Math.min(scaleX, scaleY, 1);
+
+    page.style.transform = `scale(${scale})`;
+}
+
+// Run on load and on resize
+fitPageWrapper();
+window.addEventListener('resize', fitPageWrapper);
+
 </script>
     
 </body>
