@@ -66,10 +66,12 @@ body {
 }
 
 /* LIVE INDICATOR */
-@keyframes blink {
-    0%, 50%, 100% { opacity: 1; }
-    25%, 75% { opacity: 0; }
+@keyframes liveFade {
+    0% { opacity: 0; }
+    50% { opacity: 1; }
+    100% { opacity: 0; }
 }
+
 .live-tag {
     position: absolute;
     top: 15px;
@@ -78,7 +80,7 @@ body {
     color: #ff3333;
     font-weight: bold;
     letter-spacing: 1px;
-    animation: blink 1s infinite;
+    animation: liveFade 2.5s infinite ease-in-out;
 }
 
 /* PLAYER CONTENT */
