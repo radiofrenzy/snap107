@@ -13,7 +13,7 @@ body {
     background-color: #020210;
     color: #7898FB;
     font-family: 'DotGothic16', sans-serif;
-    display: flex;               /* keep flex for centering */
+    display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
@@ -22,7 +22,6 @@ body {
     gap: 15px;
     overflow: hidden;
 }
-
 /* ----- TOP NOTE ----- */
 #top-note {
     position: absolute;       /* takes it out of flex flow */
@@ -255,31 +254,6 @@ body {
     animation: pulseGlow 3.0s ease-in-out infinite;
 }
 
-/* ----- SCALE WRAPPER FOR OTHER DEVICES ----- */
-#scale-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: auto;
-    transform-origin: top center; 
-}
-
-/* Dynamically scale page-wrapper inside scale-wrapper */
-#page-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-}
-
-/* Optional: scale down for smaller devices */
-@media (max-width: 1600px) { #page-wrapper { transform: scale(0.9); } }
-@media (max-width: 1400px) { #page-wrapper { transform: scale(0.8); } }
-@media (max-width: 1200px) { #page-wrapper { transform: scale(0.7); } }
-@media (max-width: 1000px) { #page-wrapper { transform: scale(0.6); } }
-@media (max-width: 800px)  { #page-wrapper { transform: scale(0.5); } }
-
 /* LAYOUT */
 #page-wrapper {
     display: flex;
@@ -299,17 +273,17 @@ body {
     position: relative;
     width: 100%;
     max-width: 1600px;
-    padding: 20px;              /* restores inner spacing */
+    padding: 20px;
     background: transparent;
     border: 3px solid #1a1a40;
     border-radius: 20px;
     box-shadow: 0 0 50px rgba(0,0,0,0.8);
     z-index: 2;
 }
-    
+
 /* Overlay for caster player */
 #caster-overlay {
-    position: absolute;          /* overlay sits on top of player */
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
@@ -325,47 +299,37 @@ body {
 <body>
 
 <div id="bg-animation"></div>
-
+    
 <div id="top-note">
     Owned and managed by <a href="https://youtube.com/@radiofrenzy" target="_blank">@radiofrenzy</a> on YouTube
 </div>
 
-<div id="scale-wrapper">
-    <div id="page-wrapper">
-        <div id="top-row">
+<div id="page-wrapper">
 
-            <!-- PLAYER WIDGET -->
-            <div id="player-widget">
-                <span class="live-tag">● LIVE</span>
+<div id="top-row">
 
-                <div id="player-content">
-                    <img id="album-art" src="fallback.png">
-                    <div id="text-info">
-                        <div class="marquee-container">
-                            <div id="artist">Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!</div>
-                        </div>
-                        <div class="marquee-container">
-                            <div id="title">SNAP 107 - WSNP-IP</div>
-                        </div>
-                        <a href="https://forms.gle/cq1F9Z9KotTy78js5" target="_blank" class="btn-request">REQUEST SONGS 12p-4p</a>
-                    </div>
-                </div>
-            </div>
-            <!-- /#player-widget -->
+<div id="player-widget">
+<span class="live-tag">● LIVE</span>
 
-            <!-- HISTORY WIDGET -->
-            <div id="history-widget">
-                <div class="history-header">
-                    <span id="current-date">7-DAY RADIO LOG</span>
-                    <div id="date-tabs"></div>
-                </div>
-                <div id="tracks-inner">CONNECTING...</div>
-            </div>
-            <!-- /#history-widget -->
+<div id="player-content">
+<img id="album-art" src="fallback.png">
+<div id="text-info">
+<div class="marquee-container"><div id="artist">Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!</div></div>
+<div class="marquee-container"><div id="title">SNAP 107 - WSNP-IP</div></div>
+<a href="https://forms.gle/cq1F9Z9KotTy78js5" target="_blank" class="btn-request">REQUEST SONGS 12p-4p</a>
+</div>
+</div>
+</div>
 
-        </div> <!-- /#top-row -->
-    </div> <!-- /#page-wrapper -->
-</div> <!-- /#scale-wrapper -->
+<div id="history-widget">
+<div class="history-header">
+    <span id="current-date">7-DAY RADIO LOG</span>
+    <div id="date-tabs"></div>
+</div>
+<div id="tracks-inner">CONNECTING...</div>
+</div>
+
+</div>
 
 <!-- CASTER PLAYER BOX -->
 <div id="caster-container">
@@ -376,8 +340,13 @@ body {
          data-color="1E3BE8"
          class="cstrEmbed">
          <a href="https://www.caster.fm">Shoutcast Hosting</a>
+         <a href="https://www.caster.fm">Stream Hosting</a>
+         <a href="https://www.caster.fm">Radio Server Hosting</a>
     </div>
-</div>    
+</div>
+
+</div>
+
 <script src="//cdn.cloud.caster.fm/widgets/embed.js"></script>
 
 <script>
@@ -600,28 +569,6 @@ function updateActionButton() {
 // Run on page load and update every minute
 updateActionButton();
 setInterval(updateActionButton, 60_000);
-
-function fitPageWrapper() {
-    const wrapper = document.getElementById('scale-wrapper');
-    const page = document.getElementById('page-wrapper');
-
-    const wrapperWidth = wrapper.clientWidth;
-    const wrapperHeight = wrapper.clientHeight;
-
-    const pageWidth = 1600; // design width
-    const pageHeight = 900; // design height
-
-    const scaleX = wrapperWidth / pageWidth;
-    const scaleY = wrapperHeight / pageHeight;
-    const scale = Math.min(scaleX, scaleY, 1);
-
-    page.style.transform = `scale(${scale})`;
-}
-
-// Run on load and on resize
-fitPageWrapper();
-window.addEventListener('resize', fitPageWrapper);
-
 </script>
     
 </body>
