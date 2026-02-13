@@ -254,6 +254,29 @@ body {
     animation: pulseGlow 3.0s ease-in-out infinite;
 }
 
+/* ----- SCALE WRAPPER FOR OTHER DEVICES ----- */
+#scale-wrapper {
+    width: 100%;           
+    height: 100%;          
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transform-origin: top center; 
+}
+
+/* Dynamically scale page-wrapper inside scale-wrapper */
+#page-wrapper {
+    transform: scale(1);       
+    transition: transform 0.2s; 
+}
+
+/* Optional: scale down for smaller devices */
+@media (max-width: 1600px) { #page-wrapper { transform: scale(0.9); } }
+@media (max-width: 1400px) { #page-wrapper { transform: scale(0.8); } }
+@media (max-width: 1200px) { #page-wrapper { transform: scale(0.7); } }
+@media (max-width: 1000px) { #page-wrapper { transform: scale(0.6); } }
+@media (max-width: 800px)  { #page-wrapper { transform: scale(0.5); } }
+
 /* LAYOUT */
 #page-wrapper {
     display: flex;
@@ -299,53 +322,49 @@ body {
 <body>
 
 <div id="bg-animation"></div>
-    
+
 <div id="top-note">
     Owned and managed by <a href="https://youtube.com/@radiofrenzy" target="_blank">@radiofrenzy</a> on YouTube
 </div>
 
-<div id="page-wrapper">
+<div id="scale-wrapper">
+    <div id="page-wrapper">
 
-<div id="top-row">
+        <div id="top-row">
 
-<div id="player-widget">
-<span class="live-tag">● LIVE</span>
+            <!-- PLAYER WIDGET -->
+            <div id="player-widget">
+                <span class="live-tag">● LIVE</span>
 
-<div id="player-content">
-<img id="album-art" src="fallback.png">
-<div id="text-info">
-<div class="marquee-container"><div id="artist">Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!</div></div>
-<div class="marquee-container"><div id="title">SNAP 107 - WSNP-IP</div></div>
-<a href="https://forms.gle/cq1F9Z9KotTy78js5" target="_blank" class="btn-request">REQUEST SONGS 12p-4p</a>
-</div>
-</div>
-</div>
+                <div id="player-content">
+                    <img id="album-art" src="fallback.png">
+                    <div id="text-info">
+                        <div class="marquee-container">
+                            <div id="artist">Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!</div>
+                        </div>
+                        <div class="marquee-container">
+                            <div id="title">SNAP 107 - WSNP-IP</div>
+                        </div>
+                        <a href="https://forms.gle/cq1F9Z9KotTy78js5" target="_blank" class="btn-request">REQUEST SONGS 12p-4p</a>
+                    </div>
+                </div>
+            </div>
+            <!-- /#player-widget -->
 
-<div id="history-widget">
-<div class="history-header">
-    <span id="current-date">7-DAY RADIO LOG</span>
-    <div id="date-tabs"></div>
-</div>
-<div id="tracks-inner">CONNECTING...</div>
-</div>
+            <!-- HISTORY WIDGET -->
+            <div id="history-widget">
+                <div class="history-header">
+                    <span id="current-date">7-DAY RADIO LOG</span>
+                    <div id="date-tabs"></div>
+                </div>
+                <div id="tracks-inner">CONNECTING...</div>
+            </div>
+            <!-- /#history-widget -->
 
-</div>
+        </div> <!-- /#top-row -->
 
-<!-- CASTER PLAYER BOX -->
-<div id="caster-container">
-    <div id="caster-overlay"></div>
-    <div data-type="newStreamPlayer"
-         data-publicToken="68bebccc-3f3d-406f-84e0-10e7cfe152d5"
-         data-theme="dark"
-         data-color="1E3BE8"
-         class="cstrEmbed">
-         <a href="https://www.caster.fm">Shoutcast Hosting</a>
-         <a href="https://www.caster.fm">Stream Hosting</a>
-         <a href="https://www.caster.fm">Radio Server Hosting</a>
-    </div>
-</div>
-
-</div>
+    </div> <!-- /#page-wrapper -->
+</div> <!-- /#scale-wrapper -->
 
 <script src="//cdn.cloud.caster.fm/widgets/embed.js"></script>
 
