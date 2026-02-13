@@ -360,8 +360,11 @@ async function getCover(artist, title) {
     }
 }
 
-// Update display WITHOUT fallback for right box
+// Update display with fallback timeout
 async function updateDisplay() {
+    let timeoutReached = false;
+    const timeout = setTimeout(()=>{ timeoutReached = true; }, 15000);
+
     try {
         const { data, error } = await supabaseClient
             .from('radio_history')
@@ -369,7 +372,7 @@ async function updateDisplay() {
             .order('created_at', { ascending: false })
             .limit(30);
 
-        if (error || !data?.length) return; // do nothing if no data
+        if (timeoutReached || error || !data?.length) throw new Error('Unable to load');
 
         data.forEach(d => {
             const dayKey = getDateKey(new Date(d.created_at));
@@ -380,29 +383,27 @@ async function updateDisplay() {
             }
         });
 
-        // Render the right box immediately
         renderTabs();
         renderTracks();
 
-        // Update left box only if the song changed
         const topTrack = data[0].track_title.trim();
         if (topTrack !== currentSongInLog) {
             currentSongInLog = topTrack;
             const [artist, title] = topTrack.split(/ - | – /);
-            document.getElementById('artist').innerText = artist || "Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!";
-            document.getElementById('title').innerText = title || artist || 'SNAP 107';
-
-            // Fire cover/background update asynchronously without awaiting
-            getCover(artist || "", title || "").then(coverUrl => {
-                document.getElementById('album-art').src = coverUrl;
-                updateBackground(coverUrl);
-            });
+            document.getElementById('artist').innerText = artist || "SNAP 107";
+            document.getElementById('title').innerText = title || artist;
+            const coverUrl = await getCover(artist || "", title || "");
+            document.getElementById('album-art').src = coverUrl;
+            updateBackground(coverUrl);
         }
-
     } catch {
-        // Only fallback for left box
+        document.getElementById('tracks-inner').innerText = 'Unable to load';
         document.getElementById('artist').innerText = "Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!";
         document.getElementById('title').innerText = 'SNAP 107';
+        document.getElementById('album-art').src = FALLBACK_IMAGE;
+        updateBackground(FALLBACK_IMAGE);
+    } finally {
+        clearTimeout(timeout);
     }
 }
 
