@@ -24,23 +24,25 @@ body {
 }
 /* ----- TOP NOTE ----- */
 #top-note {
-    width: 100%;
-    text-align: center;
-    font-family: 'DotGothic16', sans-serif; /* match your existing font */
-    color: #ffffff; /* white text */
+    position: absolute;       /* takes it out of flex flow */
+    top: 10px;                /* distance from top */
+    left: 50%;                /* center horizontally */
+    transform: translateX(-50%); /* truly center it */
+    font-family: 'DotGothic16', sans-serif;
+    color: #ffffff;
     font-size: 16px;
-    padding: 10px 0;
-    z-index: 3; /* above bg */
+    z-index: 5;               /* above everything else */
+    text-align: center;
 }
 
 #top-note a {
-    color: inherit;       /* keeps it white */
-    text-decoration: underline; /* simple underline */
+    color: inherit;
+    text-decoration: underline;
 }
 
 #top-note a:hover {
-    color: inherit;       /* still white on hover */
-    text-decoration: underline; /* no blue flash */
+    color: inherit;
+    text-decoration: underline;
 }
 
 /* ----- BACKGROUND ANIMATION ----- */
