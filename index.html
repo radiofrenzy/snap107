@@ -293,18 +293,18 @@ body {
 }
 
 #caster-container {
-    position: fixed;        /* fix at the bottom of the page */
-    bottom: 0;              /* stick to bottom */
-    left: 0;
-    width: 100%;            /* full width */
-    max-width: none;        /* remove scaling limits */
-    height: 120px;          /* adjust to whatever the player’s original height was */
-    padding: 0;             /* remove extra padding */
+    position: relative;       /* normal flow, not fixed */
+    bottom: auto;             /* remove fixed bottom */
+    left: auto;               /* remove positioning */
+    width: 100%;              /* full width like before */
+    max-width: 1600px;        /* optional, same as page-wrapper */
+    height: 120px;            /* original size */
+    padding: 20px;            /* optional, original padding */
     background: transparent;
-    border: none;           /* optional: remove border */
-    border-radius: 0;       /* optional: remove rounding */
-    box-shadow: none;       /* optional: remove shadow */
-    z-index: 9999;          /* make sure it’s above everything */
+    border: 3px solid #1a1a40;  /* match main boxes */
+    border-radius: 20px;         /* original rounded corners */
+    box-shadow: 0 0 50px rgba(0,0,0,0.8);
+    z-index: 2;               /* same layer as main boxes */
 }
 
 /* Overlay for caster player */
