@@ -24,12 +24,6 @@ body {
 }
 
 /* ----- BACKGROUND ANIMATION ----- */
-@keyframes bgMove {
-    0% { background-position: center 0%; }
-    50% { background-position: center 10%; } /* move down */
-    100% { background-position: center 0%; }
-}
-
 #bg-animation {
     position: fixed;
     top: 0;
@@ -40,7 +34,6 @@ body {
     filter: brightness(0.40) blur(20px);
     z-index: 0;
     transition: background-image 1s ease-in-out;
-    animation: bgMove 30s infinite ease-in-out; /* added animation */
 }
 
 /* MAIN BOXES */
@@ -301,7 +294,210 @@ body {
 <script src="//cdn.cloud.caster.fm/widgets/embed.js"></script>
 
 <script>
-// Your existing JS code is unchanged
+const SUPABASE_URL = 'https://jjevapkfrxepdfyymtpa.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_fu_ULJb3PP0bde3uNFNEYA_rKglhlaw';
+const STATION_KEY  = 'SNAP107_SECRET';
+const FALLBACK_IMAGE = 'fallback.png';
+
+const supabaseClient = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY,
+    { global: { headers: { 'x-station-key': STATION_KEY } } }
+);
+
+let currentSongInLog = "";
+let daySections = {};
+let currentTab = getDateKey();
+
+function getDateKey(date = new Date()) {
+    const d = date;
+    return `${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// Background update
+async function updateBackground(url) {
+    document.getElementById('bg-animation').style.backgroundImage = `url(${url})`;
+}
+
+// Render tabs
+function renderTabs() {
+    const tabsContainer = document.getElementById('date-tabs');
+    tabsContainer.innerHTML = '';
+    const keys = Object.keys(daySections).sort((a,b) => {
+        const [am, ad] = a.split('.').map(Number);
+        const [bm, bd] = b.split('.').map(Number);
+        return bm*31 + bd - (am*31 + ad);
+    }).slice(-7);
+
+    keys.forEach(key => {
+        const tab = document.createElement('div');
+        tab.className = 'date-tab' + (key===currentTab?' active':'');
+        tab.innerText = key;
+        tab.onclick = () => { currentTab = key; renderTabs(); renderTracks(); };
+        tabsContainer.appendChild(tab);
+    });
+}
+
+// Render tracks
+function renderTracks() {
+    const container = document.getElementById('tracks-inner');
+    const tracks = daySections[currentTab] || [];
+    if (!tracks.length) {
+        container.innerText = 'No tracks available';
+        return;
+    }
+
+    container.innerHTML = tracks.map((d, idx) =>
+        `<div class="history-item"${idx===0 ? ' style="font-weight:bold;font-size:17px;"' : ''}>
+            <span class="history-time">[${d.time}]</span>
+            <span${idx===0 ? ' style="color:#2EF049;text-shadow:0 0 8px #2EF049;"' : ''}>${d.track_title}</span>
+        </div>`
+    ).join('');
+}
+
+// Get cover art
+async function getCover(artist, title) {
+    try {
+        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist+' '+title)}&entity=song&limit=1`);
+        const data = await res.json();
+        return data.results?.[0]?.artworkUrl100?.replace('100x100','600x600') || FALLBACK_IMAGE;
+    } catch {
+        return FALLBACK_IMAGE;
+    }
+}
+
+// Update display with live sync
+async function updateDisplay() {
+    let timeoutReached = false;
+    const timeout = setTimeout(()=>{ timeoutReached = true; }, 15000);
+
+    try {
+        const { data, error } = await supabaseClient
+            .from('radio_history')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(30);
+
+        if (timeoutReached || error || !data?.length) throw new Error('Unable to load');
+
+        // Refresh daySections completely
+        daySections = {};
+        data.forEach(d => {
+            const dayKey = getDateKey(new Date(d.created_at));
+            if (!daySections[dayKey]) daySections[dayKey] = [];
+            const time = `${String(new Date(d.created_at).getHours()).padStart(2,'0')}:${String(new Date(d.created_at).getMinutes()).padStart(2,'0')}`;
+            daySections[dayKey].push({ track_title: d.track_title, time });
+        });
+
+        // Sort tracks newest first
+        Object.keys(daySections).forEach(day => {
+            daySections[day].sort((a,b)=> b.time.localeCompare(a.time));
+        });
+
+        renderTabs();
+        renderTracks();
+
+        // Update left box with latest song
+        const topTrack = data[0].track_title.trim();
+        if (topTrack !== currentSongInLog) {
+            currentSongInLog = topTrack;
+        }
+        const [artist, title] = topTrack.split(/ - | – /);
+        document.getElementById('artist').innerText = artist || "SNAP 107";
+        document.getElementById('title').innerText = title || artist;
+        const coverUrl = await getCover(artist || "", title || "");
+        document.getElementById('album-art').src = coverUrl;
+        updateBackground(coverUrl);
+
+    } catch {
+        document.getElementById('tracks-inner').innerText = 'Unable to load';
+        document.getElementById('artist').innerText = "Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!";
+        document.getElementById('title').innerText = 'SNAP 107';
+        document.getElementById('album-art').src = FALLBACK_IMAGE;
+        updateBackground(FALLBACK_IMAGE);
+    } finally {
+        clearTimeout(timeout);
+    }
+}
+
+/* -------- STREAM CHECKER (logs new songs ONCE) -------- */
+const PROXIES = [
+  url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+  url => `https://thingproxy.freeboard.io/fetch/${url}`
+];
+
+let pxIdx = 0;
+
+async function checkServer() {
+  try {
+    const res = await fetch(PROXIES[pxIdx](
+      `http://sapircast.caster.fm:13044/status-json.xsl?cb=${Date.now()}`
+    ));
+
+    const json = await res.json();
+    const content = json.contents ? JSON.parse(json.contents) : json;
+
+    const now = content.icestats.source["display-title"]?.trim();
+    if (!now) return;
+
+    const { data } = await supabaseClient
+      .from('radio_history')
+      .select('track_title, created_at')
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    const lastLogged = data?.[0]?.track_title?.trim();
+
+    if (now && now !== lastLogged) {
+      const createdAt = new Date().toISOString();
+      await supabaseClient.from('radio_history').insert([{ track_title: now, created_at: createdAt }]);
+    }
+
+  } catch {
+    pxIdx = (pxIdx + 1) % PROXIES.length;
+  }
+}
+
+setInterval(checkServer, 8000);
+checkServer();
+
+/* -------- MIDNIGHT ROLLOVER -------- */
+let lastCheckedDate = getDateKey();
+function checkMidnightRollover() {
+    const todayKey = getDateKey();
+    if (todayKey !== lastCheckedDate) {
+        if (!daySections[todayKey]) daySections[todayKey] = [];
+        lastCheckedDate = todayKey;
+        currentTab = todayKey;
+        renderTabs();
+        renderTracks();
+    }
+}
+setInterval(checkMidnightRollover, 60_000);
+checkMidnightRollover();
+
+/* -------- UPDATE DISPLAY EVERY 5s -------- */
+setInterval(updateDisplay, 5000);
+updateDisplay();
+
+// -------- AUTOMATE REQUEST BUTTON VISIBILITY --------
+function updateRequestButtonVisibility() {
+    const btn = document.querySelector('.btn-request');
+    const now = new Date();
+    const day = now.getDay(); // Sunday = 0, Monday = 1, ..., Saturday = 6
+    const hour = now.getHours();
+
+    // Only show Tuesday-Friday (2-5) between 12-16
+    if (day >= 2 && day <= 5 && hour >= 12 && hour < 16) {
+        btn.style.display = 'inline-block';
+    } else {
+        btn.style.display = 'none';
+    }
+}
+
+// Run on page load
+updateRequestButtonVisibility();
+setInterval(updateRequestButtonVisibility, 60_000);
 </script>
 
 </body>
