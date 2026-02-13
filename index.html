@@ -33,9 +33,9 @@ body {
     background-size: cover;
     filter: brightness(0.40) blur(20px);
     z-index: 0;
-    transition: background-image 1s ease-in-out;
-    animation: floatBG 15s ease-in-out infinite;
+    animation: floatBG 20s ease-in-out infinite;
 }
+
 
 /* MAIN BOXES */
 #player-widget, #history-widget {
@@ -74,9 +74,12 @@ body {
 }
 
 @keyframes floatBG {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-40px); }
-    100% { transform: translateY(0px); }
+    0%   { transform: scale(1) translateY(0px); }
+    20%  { transform: scale(1.03) translateY(-10px); }
+    40%  { transform: scale(1.06) translateY(0px); }
+    60%  { transform: scale(1.03) translateY(10px); }
+    80%  { transform: scale(1.05) translateY(0px); }
+    100% { transform: scale(1) translateY(0px); }
 }
 
 .live-tag {
