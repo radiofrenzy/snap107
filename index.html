@@ -22,6 +22,26 @@ body {
     gap: 15px;
     overflow: hidden;
 }
+/* ----- TOP NOTE ----- */
+#top-note {
+    width: 100%;
+    text-align: center;
+    font-family: 'DotGothic16', sans-serif; /* match your existing font */
+    color: #ffffff; /* white text */
+    font-size: 16px;
+    padding: 10px 0;
+    z-index: 3; /* above bg */
+}
+
+#top-note a {
+    color: inherit;       /* keeps it white */
+    text-decoration: underline; /* simple underline */
+}
+
+#top-note a:hover {
+    color: inherit;       /* still white on hover */
+    text-decoration: underline; /* no blue flash */
+}
 
 /* ----- BACKGROUND ANIMATION ----- */
 #bg-animation {
@@ -258,6 +278,10 @@ body {
 <body>
 
 <div id="bg-animation"></div>
+    
+<div id="top-note">
+    Owned and managed by <a href="https://youtube.com/@radiofrenzy" target="_blank">@radiofrenzy</a> on YouTube
+</div>
 
 <div id="page-wrapper">
 
