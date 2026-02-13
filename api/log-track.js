@@ -1,15 +1,20 @@
 import { createClient } from "@supabase/supabase-js";
 
-// Supabase config
+// Use dynamic import for fetch in Vercel
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
-const STATION_KEY  = process.env.STATION_KEY || "SNAP107_SECRET";
+const STATION_KEY = process.env.STATION_KEY || "SNAP107_SECRET";
+
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  console.error("Supabase env vars are missing!");
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-  global: { headers: { "x-station-key": STATION_KEY } }
+  global: { headers: { "x-station-key": STATION_KEY } },
 });
 
-// Proxy list to bypass CORS if needed
 const PROXIES = [
   url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
   url => `https://thingproxy.freeboard.io/fetch/${url}`
@@ -19,52 +24,41 @@ let proxyIndex = 0;
 
 export default async function handler(req, res) {
   try {
-    // Fetch current track
-    const response = await fetch(PROXIES[proxyIndex](
-      `http://sapircast.caster.fm:13044/status-json.xsl?cb=${Date.now()}`
-    ));
+    let json, data;
+    const url = `http://sapircast.caster.fm:13044/status-json.xsl?cb=${Date.now()}`;
 
-    let json;
     try {
+      const response = await fetch(PROXIES[proxyIndex](url));
       json = await response.json();
-    } catch {
-      // Sometimes CORS proxies wrap content in `contents`
-      const text = await response.text();
-      json = { contents: text };
+      data = json.contents ? JSON.parse(json.contents) : json;
+    } catch (err) {
+      proxyIndex = (proxyIndex + 1) % PROXIES.length;
+      console.warn("Proxy fetch failed, rotating proxy:", err.message);
+      return res.status(500).json({ error: "Failed to fetch track via proxy" });
     }
 
-    const data = json.contents ? JSON.parse(json.contents) : json;
+    const nowTrack = data.icestats?.source?.["display-title"]?.trim();
+    if (!nowTrack) return res.status(200).json({ message: "No track playing" });
 
-    const nowTrack = data.icestats.source["display-title"]?.trim();
-    if (!nowTrack) {
-      return res.status(200).json({ message: "No track currently playing" });
-    }
-
-    // Check last logged track
-    const { data: lastData, error: supaError } = await supabase
+    // Get last logged track safely
+    const { data: lastData, error: supError } = await supabase
       .from("radio_history")
       .select("track_title")
       .order("created_at", { ascending: false })
       .limit(1);
 
-    if (supaError) throw supaError;
+    if (supError) throw supError;
 
     const lastLogged = lastData?.[0]?.track_title?.trim();
 
     if (nowTrack && nowTrack !== lastLogged) {
-      const createdAt = new Date().toISOString();
-      await supabase
-        .from("radio_history")
-        .insert([{ track_title: nowTrack, created_at: createdAt }]);
-      console.log(`Logged new track: ${nowTrack}`);
-    } else {
-      console.log("Track already logged or empty");
+      await supabase.from("radio_history").insert([{ track_title: nowTrack, created_at: new Date().toISOString() }]);
+      console.log("Logged new track:", nowTrack);
     }
 
-    return res.status(200).json({ message: "Checked successfully" });
+    res.status(200).json({ message: "Checked successfully", track: nowTrack });
   } catch (err) {
-    console.error("Error fetching track:", err);
-    proxyIndex = (proxyIndex + 1) % PROXIES.length; // rotate proxy
-    return res.status(500).json({ error: err.message || "Unknown error" });
+    console.error("Handler error:", err.message);
+    res.status(500).json({ error: err.message });
   }
 }
