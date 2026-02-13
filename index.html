@@ -387,7 +387,7 @@ async function updateDisplay() {
             .from('radio_history')
             .select('*')
             .order('created_at', { ascending: false })
-            .limit(30);
+            .limit(450);
 
         if (timeoutReached || error || !data?.length) throw new Error('Unable to load');
 
