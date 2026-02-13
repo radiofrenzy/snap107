@@ -236,10 +236,22 @@ body {
     min-width: 50px;
 }
 
-/* Latest track glow ONLY on title */
+/* Subtle pulsing glow for latest song title */
+@keyframes pulseGlow {
+    0% {
+        text-shadow: 0 0 4px #cbd2f0, 0 0 6px #cbd2f0;
+    }
+    50% {
+        text-shadow: 0 0 8px #cbd2f0, 0 0 12px #cbd2f0;
+    }
+    100% {
+        text-shadow: 0 0 4px #cbd2f0, 0 0 6px #cbd2f0;
+    }
+}
+
 .history-item:first-child span:nth-child(2) {
-    color: #cbd2f0;
-    text-shadow: 0 0 8px #cbd2f0;
+    color: #cbd2f0; /* original color */
+    animation: pulseGlow 3.0s ease-in-out infinite;
 }
 
 /* LAYOUT */
