@@ -13,15 +13,10 @@ body {
     background-color: #020210;
     color: #7898FB;
     font-family: 'DotGothic16', sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
     margin: 0;
-    padding: 0 20px;
-    gap: 15px;
     overflow: hidden;
 }
+
 /* ----- TOP NOTE ----- */
 #top-note {
     position: absolute;       /* takes it out of flex flow */
@@ -293,10 +288,31 @@ body {
     pointer-events: none;
     z-index: 1;
 }
+
+/* --- SCALING SYSTEM --- */
+
+#scale-wrapper {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+#fixed-canvas {
+    width: 1800px;   /* Your design width */
+    height: 950px;   /* Your design height */
+    transform-origin: center center;
+}
+
 </style>
 </head>
 
 <body>
+
+<div id="scale-wrapper">
+<div id="fixed-canvas">
 
 <div id="bg-animation"></div>
     
@@ -347,6 +363,9 @@ body {
 
 </div>
 
+</div> <!-- fixed-canvas -->
+</div> <!-- scale-wrapper -->
+    
 <script src="//cdn.cloud.caster.fm/widgets/embed.js"></script>
 
 <script>
@@ -569,6 +588,25 @@ function updateActionButton() {
 // Run on page load and update every minute
 updateActionButton();
 setInterval(updateActionButton, 60_000);
+</script>
+
+<script>
+function scaleLayout() {
+    const canvas = document.getElementById('fixed-canvas');
+
+    const designWidth = 1800;
+    const designHeight = 950;
+
+    const scaleX = window.innerWidth / designWidth;
+    const scaleY = window.innerHeight / designHeight;
+
+    const scale = Math.min(scaleX, scaleY);
+
+    canvas.style.transform = `scale(${scale})`;
+}
+
+window.addEventListener('resize', scaleLayout);
+window.addEventListener('load', scaleLayout);
 </script>
     
 </body>
