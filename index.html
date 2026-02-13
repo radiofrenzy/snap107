@@ -34,6 +34,7 @@ body {
     filter: brightness(0.40) blur(20px);
     z-index: 0;
     transition: background-image 1s ease-in-out;
+    animation: floatBG 40s ease-in-out infinite;
 }
 
 /* MAIN BOXES */
@@ -70,6 +71,12 @@ body {
     0% { opacity: 0; }
     50% { opacity: 1; }
     100% { opacity: 0; }
+}
+
+@keyframes floatBG {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-15px); }
+    100% { transform: translateY(0px); }
 }
 
 .live-tag {
