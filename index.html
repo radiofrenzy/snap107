@@ -305,6 +305,11 @@ body {
 <script src="//cdn.cloud.caster.fm/widgets/embed.js"></script>
 
 <script>
+// Disable console output for visitors
+if (window.location.hostname !== 'localhost') {
+    console.log = console.warn = console.error = console.debug = () => {};
+}
+
 const SUPABASE_URL = 'https://jjevapkfrxepdfyymtpa.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_fu_ULJb3PP0bde3uNFNEYA_rKglhlaw';
 const STATION_KEY  = 'SNAP107_SECRET';
