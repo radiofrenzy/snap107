@@ -361,7 +361,7 @@ function renderTracks() {
     container.innerHTML = tracks.map((d, idx) =>
         `<div class="history-item"${idx===0 ? ' style="font-weight:bold;font-size:17px;"' : ''}>
             <span class="history-time">[${d.time}]</span>
-            <span${idx===0 ? ' style="color:#2EF049;text-shadow:0 0 8px #2EF049;"' : ''}>${d.track_title}</span>
+            <span${idx===0 ? ' style="color:#34952c;text-shadow:0 0 8px #34952c;"' : ''}>${d.track_title}</span>
         </div>`
     ).join('');
 }
