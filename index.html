@@ -362,9 +362,6 @@ async function getCover(artist, title) {
 
 // Update display with fallback timeout
 async function updateDisplay() {
-    let timeoutReached = false;
-    const timeout = setTimeout(()=>{ timeoutReached = true; }, 15000);
-
     try {
         const { data, error } = await supabaseClient
             .from('radio_history')
@@ -372,7 +369,7 @@ async function updateDisplay() {
             .order('created_at', { ascending: false })
             .limit(30);
 
-        if (timeoutReached || error || !data?.length) throw new Error('Unable to load');
+        if (error || !data?.length) throw new Error('Unable to load');
 
         data.forEach(d => {
             const dayKey = getDateKey(new Date(d.created_at));
@@ -383,27 +380,29 @@ async function updateDisplay() {
             }
         });
 
+        // Render right box EVERY time
         renderTabs();
         renderTracks();
 
+        // Update left box only if song changed
         const topTrack = data[0].track_title.trim();
         if (topTrack !== currentSongInLog) {
             currentSongInLog = topTrack;
             const [artist, title] = topTrack.split(/ - | – /);
-            document.getElementById('artist').innerText = artist || "SNAP 107";
-            document.getElementById('title').innerText = title || artist;
+            document.getElementById('artist').innerText = artist || "Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!";
+            document.getElementById('title').innerText = title || artist || 'SNAP 107';
             const coverUrl = await getCover(artist || "", title || "");
             document.getElementById('album-art').src = coverUrl;
             updateBackground(coverUrl);
         }
+
     } catch {
-        document.getElementById('tracks-inner').innerText = 'Unable to load';
+        // Only fallback for left box
         document.getElementById('artist').innerText = "Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!";
         document.getElementById('title').innerText = 'SNAP 107';
         document.getElementById('album-art').src = FALLBACK_IMAGE;
         updateBackground(FALLBACK_IMAGE);
-    } finally {
-        clearTimeout(timeout);
+        // Right box stays as-is instead of being overridden
     }
 }
 
