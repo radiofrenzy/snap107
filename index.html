@@ -13,13 +13,8 @@ body {
     background-color: #020210;
     color: #7898FB;
     font-family: 'DotGothic16', sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
     margin: 0;
     padding: 0 20px;
-    gap: 15px;
     overflow: hidden;
 }
 /* ----- TOP NOTE ----- */
@@ -256,11 +251,11 @@ body {
 
 /* ----- SCALE WRAPPER FOR OTHER DEVICES ----- */
 #scale-wrapper {
-    width: 100%;           
-    height: 100%;          
     display: flex;
     justify-content: center;
     align-items: center;
+    width: 100%;
+    height: auto;
     transform-origin: top center; 
 }
 
@@ -293,20 +288,17 @@ body {
 }
 
 #caster-container {
-    position: relative;       /* normal flow, not fixed */
-    bottom: auto;             /* remove fixed bottom */
-    left: auto;               /* remove positioning */
-    width: 100%;              /* full width like before */
-    max-width: 1600px;        /* optional, same as page-wrapper */
-    height: 120px;            /* original size */
-    padding: 20px;            /* optional, original padding */
+    position: relative;
+    width: 100%;
+    max-width: 1600px;
+    margin: 20px auto 0; /* space above it */
+    height: 120px;
     background: transparent;
-    border: 3px solid #1a1a40;  /* match main boxes */
-    border-radius: 20px;         /* original rounded corners */
+    border: 3px solid #1a1a40;
+    border-radius: 20px;
     box-shadow: 0 0 50px rgba(0,0,0,0.8);
-    z-index: 2;               /* same layer as main boxes */
 }
-
+    
 /* Overlay for caster player */
 #caster-overlay {
     display: none;
