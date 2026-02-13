@@ -380,29 +380,29 @@ async function updateDisplay() {
             }
         });
 
-        // Always render the right box live
+        // Render the right box immediately
         renderTabs();
         renderTracks();
 
-        // Update left box only if song changed
+        // Update left box only if the song changed
         const topTrack = data[0].track_title.trim();
         if (topTrack !== currentSongInLog) {
             currentSongInLog = topTrack;
             const [artist, title] = topTrack.split(/ - | – /);
             document.getElementById('artist').innerText = artist || "Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!";
             document.getElementById('title').innerText = title || artist || 'SNAP 107';
-            const coverUrl = await getCover(artist || "", title || "");
-            document.getElementById('album-art').src = coverUrl;
-            updateBackground(coverUrl);
+
+            // Fire cover/background update asynchronously without awaiting
+            getCover(artist || "", title || "").then(coverUrl => {
+                document.getElementById('album-art').src = coverUrl;
+                updateBackground(coverUrl);
+            });
         }
 
     } catch {
-        // Only fallback for the left box
+        // Only fallback for left box
         document.getElementById('artist').innerText = "Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!";
         document.getElementById('title').innerText = 'SNAP 107';
-        document.getElementById('album-art').src = FALLBACK_IMAGE;
-        updateBackground(FALLBACK_IMAGE);
-        // Right box stays as-is instead of being overridden
     }
 }
 
