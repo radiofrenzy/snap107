@@ -360,7 +360,7 @@ async function getCover(artist, title) {
     }
 }
 
-// Update display with fallback timeout
+// Update display WITHOUT fallback for right box
 async function updateDisplay() {
     try {
         const { data, error } = await supabaseClient
@@ -369,7 +369,7 @@ async function updateDisplay() {
             .order('created_at', { ascending: false })
             .limit(30);
 
-        if (error || !data?.length) throw new Error('Unable to load');
+        if (error || !data?.length) return; // do nothing if no data
 
         data.forEach(d => {
             const dayKey = getDateKey(new Date(d.created_at));
@@ -380,7 +380,7 @@ async function updateDisplay() {
             }
         });
 
-        // Render right box EVERY time
+        // Always render the right box live
         renderTabs();
         renderTracks();
 
@@ -397,7 +397,7 @@ async function updateDisplay() {
         }
 
     } catch {
-        // Only fallback for left box
+        // Only fallback for the left box
         document.getElementById('artist').innerText = "Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!";
         document.getElementById('title').innerText = 'SNAP 107';
         document.getElementById('album-art').src = FALLBACK_IMAGE;
