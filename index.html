@@ -523,24 +523,34 @@ setInterval(updateDisplay, 5000);
 updateDisplay();
 
 // -------- AUTOMATE REQUEST BUTTON VISIBILITY --------
-function updateRequestButtonVisibility() {
-    const btn = document.querySelector('.btn-request');
+function updateActionButton() {
     const now = new Date();
-    const day = now.getDay(); // Sunday = 0, Monday = 1, ..., Saturday = 6
-    const hour = now.getHours();
+    const estTime = new Date(
+        now.toLocaleString("en-US", { timeZone: "America/New_York" })
+    );
+    const day = estTime.getDay();    // Sunday = 0, Monday = 1, ...
+    const hour = estTime.getHours(); // 0-23
 
-    // Only show Tuesday-Friday (2-5) between 12-16
+    const btn = document.querySelector('.btn-request');
+
+    btn.style.display = 'inline-block';
+    btn.href = ''; // We'll set the correct link below
+
     if (day >= 2 && day <= 5 && hour >= 12 && hour < 16) {
-        btn.style.display = 'inline-block';
+        // Tue-Fri, 12-4 PM EST
+        btn.innerText = 'REQUEST SONGS! 12p-4p';
+        btn.href = 'https://forms.gle/cq1F9Z9KotTy78js5';
     } else {
-        btn.style.display = 'none';
+        // All other times
+        btn.innerText = 'SEND US A MESSAGE!';
+        btn.href = 'https://forms.gle/HHNFa9bhC4TUmk8E7';
     }
 }
 
-// Run on page load
-updateRequestButtonVisibility();
-setInterval(updateRequestButtonVisibility, 60_000);
+// Run on page load and update every minute
+updateActionButton();
+setInterval(updateActionButton, 60_000);
 </script>
-
+    
 </body>
 </html>
