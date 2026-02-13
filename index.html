@@ -66,6 +66,10 @@ body {
 }
 
 /* LIVE INDICATOR */
+@keyframes blink {
+    0%, 50%, 100% { opacity: 1; }
+    25%, 75% { opacity: 0; }
+}
 .live-tag {
     position: absolute;
     top: 15px;
@@ -74,6 +78,7 @@ body {
     color: #ff3333;
     font-weight: bold;
     letter-spacing: 1px;
+    animation: blink 1s infinite;
 }
 
 /* PLAYER CONTENT */
@@ -190,11 +195,6 @@ body {
 }
 
 /* Latest track glow ONLY on title */
-.history-item:first-child {
-    font-weight: bold;
-    font-size: 17px;
-}
-
 .history-item:first-child span:nth-child(2) {
     color: #2EF049;
     text-shadow: 0 0 8px #2EF049;
@@ -220,7 +220,7 @@ body {
     width: 100%;
     max-width: 1600px;
     padding: 20px;
-    background: transparent; /* transparent to show BG */
+    background: transparent;
     border: 3px solid #1a1a40;
     border-radius: 20px;
     box-shadow: 0 0 50px rgba(0,0,0,0.8);
@@ -236,7 +236,7 @@ body {
     height: 100%;
     background: rgba(5, 5, 37, 0.10);
     border-radius: 20px;
-    pointer-events: none; /* clicks pass through */
+    pointer-events: none;
     z-index: 1;
 }
 </style>
@@ -340,11 +340,15 @@ function renderTabs() {
 function renderTracks() {
     const container = document.getElementById('tracks-inner');
     const tracks = daySections[currentTab] || [];
-    if (!tracks.length) container.innerText = 'No tracks available';
-    else container.innerHTML = tracks.map(d =>
-        `<div class="history-item">
+    if (!tracks.length) {
+        container.innerText = 'No tracks available';
+        return;
+    }
+
+    container.innerHTML = tracks.map((d, idx) =>
+        `<div class="history-item"${idx===0 ? ' style="font-weight:bold;font-size:17px;"' : ''}>
             <span class="history-time">[${d.time}]</span>
-            <span>${d.track_title}</span>
+            <span${idx===0 ? ' style="color:#2EF049;text-shadow:0 0 8px #2EF049;"' : ''}>${d.track_title}</span>
         </div>`
     ).join('');
 }
@@ -360,7 +364,7 @@ async function getCover(artist, title) {
     }
 }
 
-// Update display with fallback timeout
+// Update display with live sync
 async function updateDisplay() {
     let timeoutReached = false;
     const timeout = setTimeout(()=>{ timeoutReached = true; }, 15000);
@@ -374,28 +378,35 @@ async function updateDisplay() {
 
         if (timeoutReached || error || !data?.length) throw new Error('Unable to load');
 
+        // Refresh daySections completely
+        daySections = {};
         data.forEach(d => {
             const dayKey = getDateKey(new Date(d.created_at));
             if (!daySections[dayKey]) daySections[dayKey] = [];
             const time = `${String(new Date(d.created_at).getHours()).padStart(2,'0')}:${String(new Date(d.created_at).getMinutes()).padStart(2,'0')}`;
-            if (!daySections[dayKey].some(t=>t.track_title===d.track_title && t.time===time)) {
-                daySections[dayKey].push({ track_title: d.track_title, time });
-            }
+            daySections[dayKey].push({ track_title: d.track_title, time });
+        });
+
+        // Sort tracks newest first
+        Object.keys(daySections).forEach(day => {
+            daySections[day].sort((a,b)=> b.time.localeCompare(a.time));
         });
 
         renderTabs();
         renderTracks();
 
+        // Update left box with latest song
         const topTrack = data[0].track_title.trim();
         if (topTrack !== currentSongInLog) {
             currentSongInLog = topTrack;
-            const [artist, title] = topTrack.split(/ - | – /);
-            document.getElementById('artist').innerText = artist || "SNAP 107";
-            document.getElementById('title').innerText = title || artist;
-            const coverUrl = await getCover(artist || "", title || "");
-            document.getElementById('album-art').src = coverUrl;
-            updateBackground(coverUrl);
         }
+        const [artist, title] = topTrack.split(/ - | – /);
+        document.getElementById('artist').innerText = artist || "SNAP 107";
+        document.getElementById('title').innerText = title || artist;
+        const coverUrl = await getCover(artist || "", title || "");
+        document.getElementById('album-art').src = coverUrl;
+        updateBackground(coverUrl);
+
     } catch {
         document.getElementById('tracks-inner').innerText = 'Unable to load';
         document.getElementById('artist').innerText = "Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!";
@@ -484,12 +495,7 @@ function updateRequestButtonVisibility() {
 
 // Run on page load
 updateRequestButtonVisibility();
-
-// Optional: re-check every minute in case page stays open
 setInterval(updateRequestButtonVisibility, 60_000);
-</script>
-
-    
 </script>
 
 </body>
