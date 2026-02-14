@@ -388,6 +388,7 @@ const supabaseClient = supabase.createClient(
 let currentSongInLog = "";
 let daySections = {};
 let currentTab = getDateKey();
+let isBlockedTrack = false; // NEW: tracks if current song is blocked
 
 function getDateKey(date = new Date()) {
     const d = date;
@@ -483,12 +484,12 @@ async function updateDisplay() {
             currentSongInLog = topTrack;
         }
         const [artist, title] = topTrack.split(/ - | – /);
+    if (!isBlockedTrack) { // ONLY update if not a blocked track
         document.getElementById('artist').innerText = artist || "SNAP 107";
         document.getElementById('title').innerText = title || artist;
         const coverUrl = await getCover(artist || "", title || "");
         document.getElementById('album-art').src = coverUrl;
         updateBackground(coverUrl);
-
     } catch {
         document.getElementById('tracks-inner').innerText = 'Unable to load';
         document.getElementById('artist').innerText = "Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!";
@@ -523,6 +524,7 @@ async function checkServer() {
     const cleaned = now.toLowerCase().replace(/^-\s*/, "").trim();
 
    if (BLOCKED_TRACKS.includes(cleaned)) {
+  isBlockedTrack = true; // SET FLAG
   // Update left box with fallback text and image
   document.getElementById('artist').innerText = "Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!";
   document.getElementById('title').innerText = "SNAP 107 - WSNP-IP";
@@ -531,6 +533,8 @@ async function checkServer() {
 
   // Skip logging in Supabase
   return;
+} else {
+  isBlockedTrack = false; // reset flag if it’s a real song
 }
       
     const { data } = await supabaseClient
