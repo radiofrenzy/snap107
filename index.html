@@ -40,7 +40,7 @@ body {
     text-decoration: underline;
 }
 
-#visitor-count {
+#listener-count {
     position: absolute;
     top: 35px; /* slightly below top-note */
     left: 50%;
@@ -322,7 +322,7 @@ body {
     Owned and managed by <a href="https://youtube.com/@radiofrenzy" target="_blank">@radiofrenzy</a> on YouTube
 </div>
     
-<div id="visitor-count">Visitors: 0</div>
+<div id="listener-count">Listeners: 0</div>
 
 <div id="scale-wrapper">
 <div id="fixed-canvas">
@@ -650,30 +650,23 @@ function scaleLayout() {
 window.addEventListener('resize', scaleLayout);
 window.addEventListener('load', scaleLayout);
 
-// ----- LIVE VISITOR COUNT -----
-let visitorCount = 0;
+// ----- LIVE LISTENER COUNT -----
+async function updateListeners() {
+    try {
+        const res = await fetch(`https://thingproxy.freeboard.io/fetch/http://sapircast.caster.fm:13044/status-json.xsl?cb=${Date.now()}`);
+        const json = await res.json();
+        const data = json.contents ? JSON.parse(json.contents) : json;
 
-// Create a BroadcastChannel for communication across tabs
-const visitorChannel = new BroadcastChannel('visitor_count_channel');
+        const listeners = data.icestats.source.listeners || 0;
+        document.getElementById('listener-count').innerText = `Listeners: ${listeners}`;
+    } catch {
+        document.getElementById('listener-count').innerText = `Listeners: 0`;
+    }
+}
 
-// Increment when page loads
-visitorCount++;
-visitorChannel.postMessage({ type: 'join' });
-
-// Listen for messages from other tabs
-visitorChannel.onmessage = (event) => {
-    if(event.data?.type === 'join') visitorCount++;
-    if(event.data?.type === 'leave') visitorCount--;
-    document.getElementById('visitor-count').innerText = `Visitors: ${visitorCount}`;
-};
-
-// Update own display
-document.getElementById('visitor-count').innerText = `Visitors: ${visitorCount}`;
-
-// Decrement when page unloads
-window.addEventListener('beforeunload', () => {
-    visitorChannel.postMessage({ type: 'leave' });
-});
+// Update every 5 seconds
+setInterval(updateListeners, 5000);
+updateListeners();
 
 </script>
     
