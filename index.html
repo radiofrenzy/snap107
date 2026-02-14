@@ -475,6 +475,7 @@ async function updateDisplay() {
             daySections[day].sort((a,b)=> b.time.localeCompare(a.time));
         });
 
+        // Always render history (right box)
         renderTabs();
         renderTracks();
 
@@ -484,12 +485,22 @@ async function updateDisplay() {
             currentSongInLog = topTrack;
         }
         const [artist, title] = topTrack.split(/ - | – /);
-    if (!isBlockedTrack) { // ONLY update if not a blocked track
-        document.getElementById('artist').innerText = artist || "SNAP 107";
-        document.getElementById('title').innerText = title || artist;
-        const coverUrl = await getCover(artist || "", title || "");
-        document.getElementById('album-art').src = coverUrl;
-        updateBackground(coverUrl);
+
+        if (isBlockedTrack) {
+            // Fallback display for blocked tracks
+            document.getElementById('artist').innerText = "Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!";
+            document.getElementById('title').innerText = "SNAP 107 - WSNP-IP";
+            document.getElementById('album-art').src = FALLBACK_IMAGE;
+            updateBackground(FALLBACK_IMAGE);
+        } else {
+            // Normal display for allowed tracks
+            document.getElementById('artist').innerText = artist || "SNAP 107";
+            document.getElementById('title').innerText = title || artist;
+            const coverUrl = await getCover(artist || "", title || "");
+            document.getElementById('album-art').src = coverUrl;
+            updateBackground(coverUrl);
+        }
+
     } catch {
         document.getElementById('tracks-inner').innerText = 'Unable to load';
         document.getElementById('artist').innerText = "Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!";
