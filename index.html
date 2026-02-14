@@ -652,21 +652,19 @@ window.addEventListener('load', scaleLayout);
 
 // ----- LIVE LISTENER COUNT -----
 async function updateListeners() {
-    try {
-        const res = await fetch(`https://thingproxy.freeboard.io/fetch/http://sapircast.caster.fm:13044/status-json.xsl?cb=${Date.now()}`);
-        const json = await res.json();
-        const data = json.contents ? JSON.parse(json.contents) : json;
-
-        const listeners = data.icestats.source.listeners || 0;
-        document.getElementById('listener-count').innerText = `Listeners: ${listeners}`;
-    } catch {
-        document.getElementById('listener-count').innerText = `Listeners: 0`;
-    }
+  try {
+    const res = await fetch('/api/listeners');
+    const data = await res.json();
+    document.getElementById('listener-count').innerText = `Listeners: ${data.listeners}`;
+  } catch {
+    document.getElementById('listener-count').innerText = `Listeners: 0`;
+  }
 }
 
 // Update every 5 seconds
 setInterval(updateListeners, 5000);
 updateListeners();
+
 
 </script>
     
