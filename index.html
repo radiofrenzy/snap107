@@ -372,6 +372,13 @@ const SUPABASE_KEY = 'sb_publishable_fu_ULJb3PP0bde3uNFNEYA_rKglhlaw';
 const STATION_KEY  = 'SNAP107_SECRET';
 const FALLBACK_IMAGE = 'fallback.png';
 
+const BLOCKED_TRACKS = [
+  "fun1","fun2","fun3","fun4","fun5",
+  "he1","he2","he3","he4","he5",
+  "qs1","qs2","qs3","qs4","qs5",
+  "wsnpid"
+];
+    
 const supabaseClient = supabase.createClient(
     SUPABASE_URL,
     SUPABASE_KEY,
@@ -512,7 +519,13 @@ async function checkServer() {
 
     const now = content.icestats.source["display-title"]?.trim();
     if (!now) return;
+      
+    const cleaned = now.toLowerCase().replace(/^-\s*/, "").trim();
 
+    if (BLOCKED_TRACKS.includes(cleaned)) {
+      return; // DO NOT LOG sweepers or legal ID
+    }
+      
     const { data } = await supabaseClient
       .from('radio_history')
       .select('track_title, created_at')
