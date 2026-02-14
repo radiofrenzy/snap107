@@ -522,9 +522,16 @@ async function checkServer() {
       
     const cleaned = now.toLowerCase().replace(/^-\s*/, "").trim();
 
-    if (BLOCKED_TRACKS.includes(cleaned)) {
-      return; // DO NOT LOG sweepers or legal ID
-    }
+   if (BLOCKED_TRACKS.includes(cleaned)) {
+  // Update left box with fallback text and image
+  document.getElementById('artist').innerText = "Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!";
+  document.getElementById('title').innerText = "SNAP 107 - WSNP-IP";
+  document.getElementById('album-art').src = FALLBACK_IMAGE;
+  updateBackground(FALLBACK_IMAGE);
+
+  // Skip logging in Supabase
+  return;
+}
       
     const { data } = await supabaseClient
       .from('radio_history')
