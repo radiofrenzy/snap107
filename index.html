@@ -145,20 +145,7 @@ body {
 .marquee-container {
     overflow: hidden;
     white-space: nowrap;
-    display: flex;
-    width: 100%;         /* keep box width fixed */
-}
-
-.marquee-content {
-    flex-shrink: 0;
-    white-space: nowrap;
-    display: inline-block;
-    padding-right: 50px; /* small gap before repeating */
-}
-
-@keyframes marquee-scroll {
-    0%   { transform: translateX(0); }
-    100% { transform: translateX(-50%); } /* scroll one copy width */
+    margin-bottom: 2px;
 }
 
 #artist {
@@ -323,16 +310,7 @@ body {
     left: 50%;
     transform-origin: center center;
 }
-/* --- MARQUEE SCROLL FOR SONG TITLE --- */
-@keyframes marquee-scroll {
-    0% { transform: translateX(100%); }
-    100% { transform: translateX(-100%); }
-}
 
-.marquee-content {
-    display: inline-block;
-    white-space: nowrap;
-}
 </style>
 </head>
 
@@ -532,7 +510,6 @@ async function updateDisplay() {
             // Normal display for allowed tracks
             document.getElementById('artist').innerText = artist || "SNAP 107";
             document.getElementById('title').innerText = title || artist;
-            applyMarquee();
             const coverUrl = await getCover(artist || "", title || "");
             document.getElementById('album-art').src = coverUrl;
             updateBackground(coverUrl);
@@ -654,41 +631,7 @@ function updateActionButton() {
 updateActionButton();
 setInterval(updateActionButton, 60_000);
 </script>
-<script>   
-function applyMarquee() {
-    const container = document.querySelector('.marquee-container');
-    const title = document.getElementById('title');
 
-    // Reset container content
-    container.innerHTML = '';
-
-    const content = document.createElement('div');
-    content.className = 'marquee-content';
-    content.innerText = title.innerText;
-
-    const clone = content.cloneNode(true); // duplicate for smooth loop
-    container.appendChild(content);
-    container.appendChild(clone);
-
-    const contentWidth = content.scrollWidth;
-    const containerWidth = container.offsetWidth;
-
-    // Stop scrolling if text fits container
-    if (contentWidth <= containerWidth) {
-        container.style.animation = 'none';
-        return;
-    }
-
-    // Animate continuously
-    const speed = 50; // pixels per second, adjust as needed
-    const duration = contentWidth / speed;
-    container.style.animation = `marquee-scroll ${duration}s linear infinite`;
-}
-
-// Optional: keep checking every 5s
-setInterval(applyMarquee, 5000);
-applyMarquee();
-</script>    
 <script>
 function scaleLayout() {
     const canvas = document.getElementById('fixed-canvas');
