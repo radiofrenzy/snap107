@@ -500,31 +500,42 @@ async function getCover(artist, title) {
     }
 }
 // --- FADE UPDATE HELPER ---
-async function fadeUpdate(element, newContent, isImage=false, isBackground=false) {
-    element.classList.add('fade');
-    await new Promise(r => setTimeout(r, 50)); // allow CSS to apply
-    element.style.opacity = 0;                  // fade out
+// --- FADE UPDATE HELPER (SIMULTANEOUS) ---
+async function fadeUpdateMultiple(updates) {
+    // updates: array of { element, newContent, isImage?, isBackground? }
+    const fadePromises = updates.map(async (u) => {
+        const el = u.element;
+        el.classList.add('fade');
+        await new Promise(r => setTimeout(r, 50));
+        el.style.opacity = 0;
 
-    await new Promise(r => setTimeout(r, 600)); // wait fade out duration
-    if (isImage) {
-        element.src = newContent;
-    } else if (isBackground) {
-        element.style.backgroundImage = newContent;
-    } else {
-        element.innerText = newContent;
-    }
-    element.style.opacity = 1;                  // fade in
-    element.classList.remove('fade');
+        await new Promise(r => setTimeout(r, 600)); // fade out
+
+        if (u.isImage) {
+            el.src = u.newContent;
+        } else if (u.isBackground) {
+            el.style.backgroundImage = u.newContent;
+        } else {
+            el.innerText = u.newContent;
+        }
+
+        el.style.opacity = 1; // fade in
+        el.classList.remove('fade');
+    });
+
+    await Promise.all(fadePromises); // run all fades at the same time
 }
 async function showSongOrFallback(artist, title, coverUrl) {
     const artistEl = document.getElementById('artist');
     const titleEl = document.getElementById('title-text');
     const albumEl = document.getElementById('album-art');
 
-    await fadeUpdate(artistEl, artist || "SNAP 107");
-    await fadeUpdate(titleEl, title || artist);
-    await fadeUpdate(albumEl, coverUrl || FALLBACK_IMAGE, true);  // album image
-    await fadeUpdate(document.getElementById('bg-animation'), `url(${coverUrl || FALLBACK_IMAGE})`, false, true); // background
+    await fadeUpdateMultiple([
+    { element: artistEl, newContent: artist || "SNAP 107" },
+    { element: titleEl, newContent: title || artist },
+    { element: albumEl, newContent: coverUrl || FALLBACK_IMAGE, isImage: true },
+    { element: document.getElementById('bg-animation'), newContent: `url(${coverUrl || FALLBACK_IMAGE})`, isBackground: true }
+]);
 
     setTimeout(applyRetroScroll, 100);
 }
@@ -545,10 +556,12 @@ async function flashFallback() {
         : "Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!"; // Weekends
 
     // Update UI with fade
-    await fadeUpdate(document.getElementById('artist'), artistText);
-    await fadeUpdate(document.getElementById('title-text'), titleText);
-    await fadeUpdate(document.getElementById('album-art'), FALLBACK_IMAGE, true);
-    await fadeUpdate(document.getElementById('bg-animation'), `url(${FALLBACK_IMAGE})`, false, true);
+    await fadeUpdateMultiple([
+    { element: document.getElementById('artist'), newContent: artistText },
+    { element: document.getElementById('title-text'), newContent: titleText },
+    { element: document.getElementById('album-art'), newContent: FALLBACK_IMAGE, isImage: true },
+    { element: document.getElementById('bg-animation'), newContent: `url(${FALLBACK_IMAGE})`, isBackground: true }
+]);
 
     setTimeout(applyRetroScroll, 100);
 
@@ -663,10 +676,12 @@ async function checkServer() {
     isBlockedTrack = true; // SET FLAG
 
     // Update left box with fallback text and image using fade
-    await fadeUpdate(document.getElementById('artist'), "Today's HOTTEST HITS & BEST Throwbacks! Requests 12-4p M-F");
-    await fadeUpdate(document.getElementById('title-text'), "SNAP 107 - WSNP-IP");
-    await fadeUpdate(document.getElementById('album-art'), FALLBACK_IMAGE, true);
-    await fadeUpdate(document.getElementById('bg-animation'), `url(${FALLBACK_IMAGE})`, false, true);
+    await fadeUpdateMultiple([
+    { element: document.getElementById('artist'), newContent: "Today's HOTTEST HITS & BEST Throwbacks! Requests 12-4p M-F" },
+    { element: document.getElementById('title-text'), newContent: "SNAP 107 - WSNP-IP" },
+    { element: document.getElementById('album-art'), newContent: FALLBACK_IMAGE, isImage: true },
+    { element: document.getElementById('bg-animation'), newContent: `url(${FALLBACK_IMAGE})`, isBackground: true }
+]);
 
     setTimeout(applyRetroScroll, 100);
 
