@@ -145,7 +145,20 @@ body {
 .marquee-container {
     overflow: hidden;
     white-space: nowrap;
-    margin-bottom: 2px;
+    display: flex;
+    width: 100%;         /* keep box width fixed */
+}
+
+.marquee-content {
+    flex-shrink: 0;
+    white-space: nowrap;
+    display: inline-block;
+    padding-right: 50px; /* small gap before repeating */
+}
+
+@keyframes marquee-scroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); } /* scroll one copy width */
 }
 
 #artist {
@@ -643,22 +656,33 @@ setInterval(updateActionButton, 60_000);
 </script>
 <script>   
 function applyMarquee() {
-    const titleContainer = document.getElementById('title');
-    const containerWidth = titleContainer.parentElement.offsetWidth;
-    const contentWidth = titleContainer.scrollWidth;
+    const container = document.querySelector('.marquee-container');
+    const title = document.getElementById('title');
 
-    // Reset previous animation
-    titleContainer.style.animation = 'none';
-    titleContainer.style.paddingLeft = '0';
+    // Reset container content
+    container.innerHTML = '';
 
-    if (contentWidth > containerWidth) {
-        const totalDistance = contentWidth + containerWidth;
-        const speed = 50; // pixels per second
-        const duration = totalDistance / speed;
+    const content = document.createElement('div');
+    content.className = 'marquee-content';
+    content.innerText = title.innerText;
 
-        titleContainer.style.paddingLeft = `${containerWidth}px`;
-        titleContainer.style.animation = `marquee-scroll ${duration}s linear infinite`;
+    const clone = content.cloneNode(true); // duplicate for smooth loop
+    container.appendChild(content);
+    container.appendChild(clone);
+
+    const contentWidth = content.scrollWidth;
+    const containerWidth = container.offsetWidth;
+
+    // Stop scrolling if text fits container
+    if (contentWidth <= containerWidth) {
+        container.style.animation = 'none';
+        return;
     }
+
+    // Animate continuously
+    const speed = 50; // pixels per second, adjust as needed
+    const duration = contentWidth / speed;
+    container.style.animation = `marquee-scroll ${duration}s linear infinite`;
 }
 
 // Optional: keep checking every 5s
