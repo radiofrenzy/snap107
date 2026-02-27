@@ -146,6 +146,18 @@ body {
     overflow: hidden;
     white-space: nowrap;
     margin-bottom: 2px;
+    position: relative; /* add this if not already */
+}
+
+.marquee-content {
+    display: inline-block;
+    padding-left: 0;
+    animation-timing-function: linear; /* ensures constant speed */
+}
+
+@keyframes marquee-scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
 }
 
 #artist {
@@ -154,7 +166,7 @@ body {
 }
 
 #title {
-    font-size: 38px;
+    font-size: 37px;
     color: #a0baff;
     text-shadow: 0 0 15px rgba(120,152,251,.5);
     line-height: 1.1;
@@ -337,11 +349,19 @@ body {
 <div id="player-content">
 <img id="album-art" src="fallback.png">
 <div id="text-info">
-<div class="marquee-container"><div id="artist">Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!</div></div>
-<div class="marquee-container"><div id="title">SNAP 107 - WSNP-IP</div></div>
-<a href="https://forms.gle/cq1F9Z9KotTy78js5" target="_blank" class="btn-request">REQUEST SONGS 12p-4p</a>
-</div>
-</div>
+    <div class="marquee-container">
+        <div class="marquee-content" id="artist">
+            Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!
+        </div>
+    </div>
+    <div class="marquee-container">
+        <div class="marquee-content" id="title">
+            SNAP 107 - WSNP-IP
+        </div>
+    </div>
+    <a href="https://forms.gle/cq1F9Z9KotTy78js5" target="_blank" class="btn-request">
+        REQUEST SONGS 12p-4p
+    </a>
 </div>
 
 <div id="history-widget">
@@ -510,6 +530,8 @@ async function updateDisplay() {
             // Normal display for allowed tracks
             document.getElementById('artist').innerText = artist || "SNAP 107";
             document.getElementById('title').innerText = title || artist;
+
+            applyMarquee();
             const coverUrl = await getCover(artist || "", title || "");
             document.getElementById('album-art').src = coverUrl;
             updateBackground(coverUrl);
@@ -601,6 +623,30 @@ checkMidnightRollover();
 /* -------- UPDATE DISPLAY EVERY 5s -------- */
 setInterval(updateDisplay, 5000);
 updateDisplay();
+
+function applyMarquee() {
+    const containers = document.querySelectorAll('.marquee-container');
+    containers.forEach(c => {
+        const content = c.firstElementChild;
+        const containerWidth = c.offsetWidth;
+        const contentWidth = content.scrollWidth;
+
+        // Reset any previous animation
+        content.style.animation = 'none';
+        content.style.paddingLeft = '0';
+
+        if (contentWidth > containerWidth) {
+            // Approximate slow scroll: 1.5s per 1.5 chars
+            const totalDistance = contentWidth + containerWidth;
+            const scrollTime = (totalDistance / 10) * 1.5; // adjust 10 = approx chars width
+            content.style.paddingLeft = `${containerWidth}px`;
+            content.style.animation = `marquee-scroll ${scrollTime}s linear infinite`;
+        }
+    });
+}
+
+// Optional: keep checking every 5s
+setInterval(applyMarquee, 5000);
 
 // -------- AUTOMATE REQUEST BUTTON VISIBILITY --------
 function updateActionButton() {
