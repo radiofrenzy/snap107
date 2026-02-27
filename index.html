@@ -164,18 +164,26 @@ body {
     width: 100%;          /* ADD THIS */
 }
 
-/* -------- RETRO HD RADIO TITLE SCROLL -------- */
-@keyframes retroScroll {
-    from { transform: translateX(0); }
-    to   { transform: translateX(-100%); }
+#title-text {
+    display: inline-block;    /* keep inline for scrolling */
+    white-space: nowrap;      /* prevent wrapping */
 }
-
+    
+/* -------- RETRO HD RADIO TITLE SCROLL -------- */
 .retro-scroll {
     display: inline-block;
-    padding-left: 100%;
-    animation-name: retroScroll;
-    animation-timing-function: steps(60, end); /* choppy retro */
+    animation-timing-function: steps(5, end); /* more steps = choppier */
     animation-iteration-count: infinite;
+    animation-fill-mode: forwards;
+}
+
+@keyframes retroScroll {
+    0% {
+        transform: translateX(0);           /* start normally */
+    }
+    100% {
+        transform: translateX(calc(-100% - 100px)); /* move fully past left, including extra buffer */
+    }
 }
 
 .btn-request {
@@ -626,23 +634,36 @@ function applyRetroScroll() {
     const text = document.getElementById('title-text');
     if (!container || !text) return;
 
-    // Reset any existing animation
+    // Remove old animation
     text.classList.remove('retro-scroll');
     text.style.animationDuration = '0s';
-
-    // Force reflow so removing the class actually resets animation
-    void text.offsetWidth;
+    void text.offsetWidth; // force reflow
 
     const containerWidth = container.offsetWidth;
     const textWidth = text.scrollWidth;
 
     if (textWidth > containerWidth) {
-        const distance = textWidth;
-        const speed = 40; // lower = faster
+        const distance = textWidth + containerWidth; // full distance
+        const speed = 40; // px/s
         const duration = distance / speed;
 
-        text.style.animationDuration = duration + "s";
+        // Use inline keyframes for this instance
+        text.style.animation = `scrollLeft ${duration}s linear infinite`;
         text.classList.add('retro-scroll');
+
+        // Dynamically create keyframes if not already
+        if (!document.getElementById('dynamic-scroll-keyframes')) {
+            const style = document.createElement('style');
+            style.id = 'dynamic-scroll-keyframes';
+            style.innerHTML = `
+                @keyframes scrollLeft {
+                    0%   { transform: translateX(${containerWidth}px); }
+                    100% { transform: translateX(-${textWidth}px); }
+                }`;
+            document.head.appendChild(style);
+        }
+    } else {
+        text.style.transform = 'translateX(0)';
     }
 }
 /* -------- UPDATE DISPLAY EVERY 5s -------- */
