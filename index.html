@@ -159,6 +159,23 @@ body {
     text-shadow: 0 0 15px rgba(120,152,251,.5);
     line-height: 1.1;
     font-weight: bold;
+    overflow: hidden;
+    display: block;       /* ADD THIS */
+    width: 100%;          /* ADD THIS */
+}
+
+/* -------- RETRO HD RADIO TITLE SCROLL -------- */
+@keyframes retroScroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-100%); }
+}
+
+.retro-scroll {
+    display: inline-block;
+    padding-left: 100%;
+    animation-name: retroScroll;
+    animation-timing-function: steps(60, end); /* choppy retro */
+    animation-iteration-count: infinite;
 }
 
 .btn-request {
@@ -338,7 +355,9 @@ body {
 <img id="album-art" src="fallback.png">
 <div id="text-info">
 <div class="marquee-container"><div id="artist">Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!</div></div>
-<div class="marquee-container"><div id="title">SNAP 107 - WSNP-IP</div></div>
+<div class="marquee-container">
+    <div id="title"><span id="title-text">SNAP 107 - WSNP-IP</span></div>
+</div>
 <a href="https://forms.gle/cq1F9Z9KotTy78js5" target="_blank" class="btn-request">REQUEST SONGS 12p-4p</a>
 </div>
 </div>
@@ -509,7 +528,8 @@ async function updateDisplay() {
         } else {
             // Normal display for allowed tracks
             document.getElementById('artist').innerText = artist || "SNAP 107";
-            document.getElementById('title').innerText = title || artist;
+            document.getElementById('title-text').innerText = title || artist;
+setTimeout(applyRetroScroll, 100);
             const coverUrl = await getCover(artist || "", title || "");
             document.getElementById('album-art').src = coverUrl;
             updateBackground(coverUrl);
@@ -518,7 +538,8 @@ async function updateDisplay() {
     } catch {
         document.getElementById('tracks-inner').innerText = 'Unable to load';
         document.getElementById('artist').innerText = "Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!";
-        document.getElementById('title').innerText = 'SNAP 107';
+        document.getElementById('title-text').innerText = 'SNAP 107';
+setTimeout(applyRetroScroll, 100);
         document.getElementById('album-art').src = FALLBACK_IMAGE;
         updateBackground(FALLBACK_IMAGE);
     } finally {
@@ -552,7 +573,8 @@ async function checkServer() {
   isBlockedTrack = true; // SET FLAG
   // Update left box with fallback text and image
   document.getElementById('artist').innerText = "Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!";
-  document.getElementById('title').innerText = "SNAP 107 - WSNP-IP";
+  document.getElementById('title-text').innerText = "SNAP 107 - WSNP-IP";
+setTimeout(applyRetroScroll, 100);
   document.getElementById('album-art').src = FALLBACK_IMAGE;
   updateBackground(FALLBACK_IMAGE);
 
@@ -598,6 +620,31 @@ function checkMidnightRollover() {
 setInterval(checkMidnightRollover, 60_000);
 checkMidnightRollover();
 
+/* -------- APPLY RETRO TITLE SCROLL -------- */
+function applyRetroScroll() {
+    const container = document.getElementById('title');
+    const text = document.getElementById('title-text');
+    if (!container || !text) return;
+
+    // Reset any existing animation
+    text.classList.remove('retro-scroll');
+    text.style.animationDuration = '0s';
+
+    // Force reflow so removing the class actually resets animation
+    void text.offsetWidth;
+
+    const containerWidth = container.offsetWidth;
+    const textWidth = text.scrollWidth;
+
+    if (textWidth > containerWidth) {
+        const distance = textWidth;
+        const speed = 40; // lower = faster
+        const duration = distance / speed;
+
+        text.style.animationDuration = duration + "s";
+        text.classList.add('retro-scroll');
+    }
+}
 /* -------- UPDATE DISPLAY EVERY 5s -------- */
 setInterval(updateDisplay, 5000);
 updateDisplay();
