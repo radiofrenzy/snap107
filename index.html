@@ -335,7 +335,17 @@ body {
     left: 50%;
     transform-origin: center center;
 }
+/* --- FADE EFFECTS --- */
+.fade {
+  opacity: 0;
+  transition: opacity 0.6s ease-in-out; /* fade out */
+}
 
+.fade-in {
+  opacity: 1;
+  transition: opacity 0.6s ease-in-out; /* fade in */
+}
+    
 </style>
 </head>
 
@@ -489,30 +499,44 @@ async function getCover(artist, title) {
         return FALLBACK_IMAGE;
     }
 }
+// --- FADE UPDATE HELPER ---
+async function fadeUpdate(element, newContent, isImage=false, isBackground=false) {
+    element.classList.add('fade');
+    await new Promise(r => setTimeout(r, 50)); // allow CSS to apply
+    element.style.opacity = 0;                  // fade out
 
+    await new Promise(r => setTimeout(r, 600)); // wait fade out duration
+    if (isImage) {
+        element.src = newContent;
+    } else if (isBackground) {
+        element.style.backgroundImage = newContent;
+    } else {
+        element.innerText = newContent;
+    }
+    element.style.opacity = 1;                  // fade in
+    element.classList.remove('fade');
+}
 async function showSongOrFallback(artist, title, coverUrl) {
     const artistEl = document.getElementById('artist');
     const titleEl = document.getElementById('title-text');
     const albumEl = document.getElementById('album-art');
 
-    artistEl.innerText = artist || "SNAP 107";
-    titleEl.innerText = title || artist;
-    albumEl.src = coverUrl || FALLBACK_IMAGE;
-    updateBackground(coverUrl || FALLBACK_IMAGE);
+    await fadeUpdate(artistEl, artist || "SNAP 107");
+    await fadeUpdate(titleEl, title || artist);
+    await fadeUpdate(albumEl, coverUrl || FALLBACK_IMAGE, true);  // album image
+    await fadeUpdate(document.getElementById('bg-animation'), `url(${coverUrl || FALLBACK_IMAGE})`, false, true); // background
+
     setTimeout(applyRetroScroll, 100);
 }
 
 async function flashFallback() {
     showingFallback = true;
 
-    const artistEl = document.getElementById('artist');
-    const titleEl = document.getElementById('title-text');
-    const albumEl = document.getElementById('album-art');
+    await fadeUpdate(document.getElementById('artist'), "Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!");
+    await fadeUpdate(document.getElementById('title-text'), "SNAP 107 - WSNP-IP");
+    await fadeUpdate(document.getElementById('album-art'), FALLBACK_IMAGE, true);
+    await fadeUpdate(document.getElementById('bg-animation'), `url(${FALLBACK_IMAGE})`, false, true);
 
-    artistEl.innerText = "Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!";
-    titleEl.innerText = "SNAP 107 - WSNP-IP";
-    albumEl.src = FALLBACK_IMAGE;
-    updateBackground(FALLBACK_IMAGE);
     setTimeout(applyRetroScroll, 100);
 
     // Keep fallback for 15s
@@ -520,7 +544,7 @@ async function flashFallback() {
 
     showingFallback = false;
 
-    // After fallback, revert to actual song again
+    // After fallback, revert to actual song
     const [artist, title] = currentSongInLog.split(/ - | – /);
     const coverUrl = await getCover(artist || "", title || "");
     showSongOrFallback(artist, title, coverUrl);
@@ -622,19 +646,21 @@ async function checkServer() {
       
     const cleaned = now.toLowerCase().replace(/^-\s*/, "").trim();
 
-   if (BLOCKED_TRACKS.includes(cleaned)) {
-  isBlockedTrack = true; // SET FLAG
-  // Update left box with fallback text and image
-  document.getElementById('artist').innerText = "Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!";
-  document.getElementById('title-text').innerText = "SNAP 107 - WSNP-IP";
-setTimeout(applyRetroScroll, 100);
-  document.getElementById('album-art').src = FALLBACK_IMAGE;
-  updateBackground(FALLBACK_IMAGE);
+  if (BLOCKED_TRACKS.includes(cleaned)) {
+    isBlockedTrack = true; // SET FLAG
 
-  // Skip logging in Supabase
-  return;
+    // Update left box with fallback text and image using fade
+    await fadeUpdate(document.getElementById('artist'), "Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!");
+    await fadeUpdate(document.getElementById('title-text'), "SNAP 107 - WSNP-IP");
+    await fadeUpdate(document.getElementById('album-art'), FALLBACK_IMAGE, true);
+    await fadeUpdate(document.getElementById('bg-animation'), `url(${FALLBACK_IMAGE})`, false, true);
+
+    setTimeout(applyRetroScroll, 100);
+
+    // Skip logging in Supabase
+    return;
 } else {
-  isBlockedTrack = false; // reset flag if it’s a real song
+    isBlockedTrack = false; // reset flag if it’s a real song
 }
       
     const { data } = await supabaseClient
