@@ -52,16 +52,26 @@ body {
     text-align: center;
 }
 
-/* ----- BACKGROUND ANIMATION ----- */
+/* ----- SMOOTH BRIGHT PULSE + ZOOM/FLOAT ----- */
 #bg-animation {
     position: fixed;
     inset: 0;
     background-size: cover;
     background-position: center;
-    filter: brightness(0.40) blur(20px);
+    filter: brightness(0.6) blur(20px); /* base brightness */
     z-index: 0;
+    animation: bgBrightPulseSmooth 12s linear infinite; /* linear easing for smooth motion */
 }
 
+@keyframes bgBrightPulseSmooth {
+  0%   { filter: brightness(0.6) blur(20px); transform: scale(1) translateY(0); }
+  20%  { filter: brightness(0.75) blur(20px); transform: scale(1.02) translateY(-5px); }
+  40%  { filter: brightness(0.85) blur(20px); transform: scale(1.04) translateY(-10px); }
+  60%  { filter: brightness(0.95) blur(20px); transform: scale(1.06) translateY(0); }
+  80%  { filter: brightness(0.8) blur(20px); transform: scale(1.03) translateY(5px); }
+  100% { filter: brightness(0.6) blur(20px); transform: scale(1) translateY(0); }
+}
+    
 /* MAIN BOXES */
 #player-widget, #history-widget {
     height: 380px;
