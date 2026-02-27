@@ -427,6 +427,8 @@ const supabaseClient = supabase.createClient(
 );
 
 let currentSongInLog = "";
+let songTimer = null;        // tracks fallback timer
+let showingFallback = false; // flag to know if fallback is active
 let daySections = {};
 let currentTab = getDateKey();
 let isBlockedTrack = false; // NEW: tracks if current song is blocked
@@ -488,6 +490,61 @@ async function getCover(artist, title) {
     }
 }
 
+async function showSongOrFallback(artist, title, coverUrl) {
+    const artistEl = document.getElementById('artist');
+    const titleEl = document.getElementById('title-text');
+    const albumEl = document.getElementById('album-art');
+
+    artistEl.innerText = artist || "SNAP 107";
+    titleEl.innerText = title || artist;
+    albumEl.src = coverUrl || FALLBACK_IMAGE;
+    updateBackground(coverUrl || FALLBACK_IMAGE);
+    setTimeout(applyRetroScroll, 100);
+}
+
+async function flashFallback() {
+    showingFallback = true;
+
+    const artistEl = document.getElementById('artist');
+    const titleEl = document.getElementById('title-text');
+    const albumEl = document.getElementById('album-art');
+
+    artistEl.innerText = "Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!";
+    titleEl.innerText = "SNAP 107 - WSNP-IP";
+    albumEl.src = FALLBACK_IMAGE;
+    updateBackground(FALLBACK_IMAGE);
+    setTimeout(applyRetroScroll, 100);
+
+    // Keep fallback for 15s
+    await new Promise(r => setTimeout(r, 15000));
+
+    showingFallback = false;
+
+    // After fallback, revert to actual song again
+    const [artist, title] = currentSongInLog.split(/ - | – /);
+    const coverUrl = await getCover(artist || "", title || "");
+    showSongOrFallback(artist, title, coverUrl);
+}
+
+async function handleNewSong(topTrack) {
+    if (topTrack === currentSongInLog) return; // no change
+
+    currentSongInLog = topTrack;
+
+    if (songTimer) clearTimeout(songTimer); // cancel any pending fallback
+
+    const [artist, title] = topTrack.split(/ - | – /);
+    const coverUrl = await getCover(artist || "", title || "");
+
+    // Show song immediately
+    showSongOrFallback(artist, title, coverUrl);
+
+    // Start timer to flash fallback after 15s
+    songTimer = setTimeout(() => {
+        flashFallback();
+    }, 15000);
+}
+
 // Update display with live sync
 async function updateDisplay() {
     let timeoutReached = false;
@@ -521,27 +578,15 @@ async function updateDisplay() {
         renderTracks();
 
         // Update left box with latest song
-        const topTrack = data[0].track_title.trim();
-        if (topTrack !== currentSongInLog) {
-            currentSongInLog = topTrack;
-        }
-        const [artist, title] = topTrack.split(/ - | – /);
+     const topTrack = data[0].track_title.trim();
 
-        if (isBlockedTrack) {
-            // Fallback display for blocked tracks
-            document.getElementById('artist').innerText = "Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!";
-            document.getElementById('title').innerText = "SNAP 107 - WSNP-IP";
-            document.getElementById('album-art').src = FALLBACK_IMAGE;
-            updateBackground(FALLBACK_IMAGE);
-        } else {
-            // Normal display for allowed tracks
-            document.getElementById('artist').innerText = artist || "SNAP 107";
-            document.getElementById('title-text').innerText = title || artist;
-setTimeout(applyRetroScroll, 100);
-            const coverUrl = await getCover(artist || "", title || "");
-            document.getElementById('album-art').src = coverUrl;
-            updateBackground(coverUrl);
-        }
+if (isBlockedTrack) {
+    // fallback immediately for blocked tracks
+    if (songTimer) clearTimeout(songTimer);
+    flashFallback();
+} else {
+    handleNewSong(topTrack);
+}
 
     } catch {
         document.getElementById('tracks-inner').innerText = 'Unable to load';
