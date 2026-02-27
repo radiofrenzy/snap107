@@ -532,8 +532,21 @@ async function showSongOrFallback(artist, title, coverUrl) {
 async function flashFallback() {
     showingFallback = true;
 
-    await fadeUpdate(document.getElementById('artist'), "Today's HOTTEST HITS & BEST Throwbacks! Songrequests 12-4p M-F");
-    await fadeUpdate(document.getElementById('title-text'), "SNAP 107 - WSNP-IP");
+    const now = new Date();
+    const day = now.getDay(); // Sunday = 0, Monday = 1, ..., Saturday = 6
+
+    // Determine weekday/weekend text
+    const artistText = (day >= 1 && day <= 5) 
+        ? "Today's HOTTEST HITS & BEST Throwbacks! Requests 12-4p M-F" // Weekdays
+        : "SNAP 107 - WSNP-IP"; // Weekends
+
+    const titleText = (day >= 1 && day <= 5) 
+        ? "SNAP 107 - WSNP-IP" // Weekdays
+        : "Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!"; // Weekends
+
+    // Update UI with fade
+    await fadeUpdate(document.getElementById('artist'), artistText);
+    await fadeUpdate(document.getElementById('title-text'), titleText);
     await fadeUpdate(document.getElementById('album-art'), FALLBACK_IMAGE, true);
     await fadeUpdate(document.getElementById('bg-animation'), `url(${FALLBACK_IMAGE})`, false, true);
 
@@ -650,7 +663,7 @@ async function checkServer() {
     isBlockedTrack = true; // SET FLAG
 
     // Update left box with fallback text and image using fade
-    await fadeUpdate(document.getElementById('artist'), "Today's HOTTEST HITS & BEST Throwbacks! Songrequests 12-4p M-F");
+    await fadeUpdate(document.getElementById('artist'), "Today's HOTTEST HITS & BEST Throwbacks! Requests 12-4p M-F");
     await fadeUpdate(document.getElementById('title-text'), "SNAP 107 - WSNP-IP");
     await fadeUpdate(document.getElementById('album-art'), FALLBACK_IMAGE, true);
     await fadeUpdate(document.getElementById('bg-animation'), `url(${FALLBACK_IMAGE})`, false, true);
