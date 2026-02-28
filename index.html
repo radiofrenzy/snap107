@@ -558,12 +558,12 @@ async function flashFallback() {
 
     // Determine weekday/weekend text
     const artistText = (day >= 1 && day <= 5) 
-        ? "SNAP 107 GREAT MUSIC to SNAP-KICK your Work Day, listen @ SNAP107.vercel.app or OnlineRadioBox" // Weekdays 
+        ? "SNAP 107 GREAT MUSIC to SNAP-KICK your work day | listen @ SNAP107.vercel.app or OnlineRadioBox" // Weekdays 
         : "SNAP 107 listen anywhere @ SNAP107.vercel.app or OnlineRadioBox"; // Weekends
 
     const titleText = (day >= 1 && day <= 5) 
         ? "Today's HOTTEST HITS & BEST Throwbacks! Request SONGs 12-4p T-F" // Weekdays
-        : "THE HOTTEST SONGS & GREAT Throwbacks for your SNAPPY WEEKEND!"; // Weekends
+        : "THE HOTTEST SONGs for your SNAPPY WEEKEND!"; // Weekends
 
     // Update UI with fade
     await fadeUpdateMultiple([
@@ -687,8 +687,8 @@ async function checkServer() {
 
     // Update left box with fallback text and image using fade
     await fadeUpdateMultiple([
-    { element: document.getElementById('artist'), newContent: "Today's HOTTEST HITS & BEST Throwbacks! Requests 12-4p T-F" },
-    { element: document.getElementById('title-text'), newContent: "SNAP 107 - WSNP-IP" },
+    { element: document.getElementById('artist'), newContent: "SNAP 107 WSNP-IP | Listen anywhere @ SNAP107.vercel.app or OnlineRadioBox" },
+    { element: document.getElementById('title-text'), newContent: "Today's HOTTEST HITS & BEST Throwbacks from Now, 2020s, 2010s, 2000s & 80s },
     { element: document.getElementById('album-art'), newContent: FALLBACK_IMAGE, isImage: true },
     { element: document.getElementById('bg-animation'), newContent: `url(${FALLBACK_IMAGE})`, isBackground: true }
 ]);
@@ -795,11 +795,11 @@ function updateActionButton() {
 
     if (day >= 2 && day <= 5 && hour >= 12 && hour < 16) {
         // Tue-Fri, 12-4 PM EST
-        btn.innerText = 'REQUEST SONGS! 12p-4p';
+        btn.innerText = 'REQUEST SONGs! 12p-4p';
         btn.href = 'https://forms.gle/cq1F9Z9KotTy78js5';
     } else {
         // All other times
-        btn.innerText = 'SEND US A MESSAGE!';
+        btn.innerText = 'SEND A Message TO SNAP';
         btn.href = 'https://forms.gle/HHNFa9bhC4TUmk8E7';
     }
 }
