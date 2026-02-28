@@ -558,11 +558,11 @@ async function flashFallback() {
 
     // Determine weekday/weekend text
     const artistText = (day >= 1 && day <= 5) 
-        ? "Today's HOTTEST HITS & BEST Throwbacks! Requests 12-4p T-F" // Weekdays
-        : "SNAP 107 - WSNP-IP"; // Weekends
+        ? "SNAP 107 WSNP-IP listen anywhere" // Weekdays
+        : "Today's HOTTEST HITS & BEST Throwbacks! Requests 12-4p T-F"; // Weekends
 
     const titleText = (day >= 1 && day <= 5) 
-        ? "SNAP 107 - WSNP-IP" // Weekdays
+        ? "SNAP 107 - WSNP-IP listen anywhere" // Weekdays
         : "THE HOTTEST & BEST MUSIC for your SNAPPY WEEKEND!"; // Weekends
 
     // Update UI with fade
@@ -576,7 +576,7 @@ async function flashFallback() {
     setTimeout(applyRetroScroll, 100);
 
     // Keep fallback for 15s
-    await new Promise(r => setTimeout(r, 15000));
+    await new Promise(r => setTimeout(r, 25000));
 
     showingFallback = false;
 
