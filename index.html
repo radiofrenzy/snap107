@@ -558,12 +558,12 @@ async function flashFallback() {
 
     // Determine weekday/weekend text
     const artistText = (day >= 1 && day <= 5) 
-        ? "Today's HOTTEST HITS & BEST Throwbacks! Requests 12-4p M-F" // Weekdays
+        ? "Today's HOTTEST HITS & BEST Throwbacks! Requests 12-4p T-F" // Weekdays
         : "SNAP 107 - WSNP-IP"; // Weekends
 
     const titleText = (day >= 1 && day <= 5) 
         ? "SNAP 107 - WSNP-IP" // Weekdays
-        : "Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!"; // Weekends
+        : "THE HOTTEST & BEST MUSIC for your SNAPPY WEEKEND!"; // Weekends
 
     // Update UI with fade
     await fadeUpdateMultiple([
@@ -687,7 +687,7 @@ async function checkServer() {
 
     // Update left box with fallback text and image using fade
     await fadeUpdateMultiple([
-    { element: document.getElementById('artist'), newContent: "Today's HOTTEST HITS & BEST Throwbacks! Requests 12-4p M-F" },
+    { element: document.getElementById('artist'), newContent: "Today's HOTTEST HITS & BEST Throwbacks! Requests 12-4p T-F" },
     { element: document.getElementById('title-text'), newContent: "SNAP 107 - WSNP-IP" },
     { element: document.getElementById('album-art'), newContent: FALLBACK_IMAGE, isImage: true },
     { element: document.getElementById('bg-animation'), newContent: `url(${FALLBACK_IMAGE})`, isBackground: true }
