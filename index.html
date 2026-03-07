@@ -20,6 +20,9 @@ body {
     font-family: 'SnapFont', sans-serif;
     margin: 0;
     overflow: hidden;
+
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 /* ----- TOP NOTE ----- */
@@ -165,19 +168,21 @@ body {
 }
 
 #artist {
-    font-size: 17px;
+    font-size: 19px;
     opacity: 0.8;
 }
 
 #title {
-    font-size: 30px;
+    font-size: 33px;
     color: #a0baff;
-    text-shadow: 0 0 15px rgba(120,152,251,.5);
+    text-shadow:
+        0 0 8px rgba(120,152,251,.6),
+        0 0 18px rgba(120,152,251,.4);
     line-height: 1.1;
     font-weight: bold;
     overflow: hidden;
-    display: block;       /* ADD THIS */
-    width: 100%;          /* ADD THIS */
+    display: block;
+    width: 100%;
 }
 
 #title-text {
@@ -261,7 +266,7 @@ body {
 #tracks-inner {
     flex-grow: 1;
     overflow-y: auto;
-    font-size: 15.5px;
+    font-size: 18px;
     color: #a0baff;
     font-weight: bold;
 }
@@ -498,7 +503,7 @@ function renderTracks() {
     }
 
     container.innerHTML = tracks.map((d, idx) =>
-        `<div class="history-item"${idx===0 ? ' style="font-weight:bold;font-size:17px;"' : ''}>
+        `<div class="history-item"${idx===0 ? ' style="font-weight:bold;font-size:19px;"' : ''}>
             <span class="history-time">[${d.time}]</span>
             <span${idx===0 ? ' style="color:#cbd2f0;text-shadow:0 0 8px #cbd2f0;"' : ''}>${d.track_title}</span>
         </div>`
