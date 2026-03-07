@@ -60,6 +60,29 @@ body {
     text-align: center;
 }
 
+/* ----- LIVE ALERT BANNER ----- */
+#live-alert{
+    position:absolute;
+    top:55px;
+    left:50%;
+    transform:translateX(-50%);
+    background:#ff3333;
+    color:#ffffff;
+    padding:6px 14px;
+    border-radius:6px;
+    font-size:14px;
+    font-weight:bold;
+    z-index:7;
+    text-align:center;
+    animation:alertFlash 1.5s infinite;
+}
+
+@keyframes alertFlash{
+0%{opacity:.6}
+50%{opacity:1}
+100%{opacity:.6}
+}
+ 
 /* ----- SMOOTH BRIGHT PULSE + ZOOM/FLOAT ----- */
 #bg-animation {
     position: fixed;
@@ -379,7 +402,9 @@ body {
 </div>
     
 <div id="listener-count">Listeners: 0</div>
-
+ 
+<div id="live-alert" style="display:none;"></div>
+ 
 <div id="scale-wrapper">
 <div id="fixed-canvas">
 
@@ -849,6 +874,37 @@ async function updateListeners() {
   }
 }
 
+// ----- LIVE ALERT FROM GOOGLE SHEET -----
+async function updateAlert(){
+
+  const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTIqqF_DB1fvEOnXrynp-6mEcc4E8kUNFmfQJPG7wUTyLwpA09YjNCmmKPu3NM6AT-GpCyl3GFYdcg5/pub?gid=0&single=true&output=csv";
+
+  try{
+
+    const res = await fetch(url);
+    const text = await res.text();
+
+    const rows = text.split("\n");
+    const message = rows[1];
+
+    const banner = document.getElementById("live-alert");
+
+    if(message && message.trim() !== ""){
+        banner.innerText = message;
+        banner.style.display = "block";
+    }else{
+        banner.style.display = "none";
+    }
+
+  }catch{
+    document.getElementById("live-alert").style.display = "none";
+  }
+
+}
+
+setInterval(updateAlert,5000);
+updateAlert();
+ 
 // Update every 5 seconds
 setInterval(updateListeners, 5000);
 updateListeners();
