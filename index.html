@@ -484,14 +484,19 @@ const supabaseClient = supabase.createClient(
 
 let currentSongInLog = "";
 let songTimer = null;        // tracks fallback timer
+const daysToKeep = 8;
 let showingFallback = false; // flag to know if fallback is active
 let daySections = {};
 let currentTab = getDateKey();
 let isBlockedTrack = false; // NEW: tracks if current song is blocked
 
 function getDateKey(date = new Date()) {
-    const d = date;
-    return `${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+    const d = new Date(date);
+
+    // FORCE local time correctly
+    const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+
+    return `${String(local.getMonth()+1).padStart(2,'0')}.${String(local.getDate()).padStart(2,'0')}`;
 }
 
 // Background update
@@ -503,19 +508,32 @@ async function updateBackground(url) {
 function renderTabs() {
     const tabsContainer = document.getElementById('date-tabs');
     tabsContainer.innerHTML = '';
-    const keys = Object.keys(daySections).sort((a,b) => {
+
+    // Get all days that actually have logs
+    let keys = Object.keys(daySections).sort((a, b) => {
+        // Sort by MM.DD
         const [am, ad] = a.split('.').map(Number);
         const [bm, bd] = b.split('.').map(Number);
-        return bm*31 + bd - (am*31 + ad);
-    }).slice(-7);
+        return (bm * 31 + bd) - (am * 31 + ad);
+    });
+
+    // Keep only the last 7 days with logs
+    keys = keys.slice(-7);
 
     keys.forEach(key => {
         const tab = document.createElement('div');
-        tab.className = 'date-tab' + (key===currentTab?' active':'');
+        tab.className = 'date-tab' + (key === currentTab ? ' active' : '');
         tab.innerText = key;
-        tab.onclick = () => { currentTab = key; renderTabs(); renderTracks(); };
+        tab.onclick = () => {
+            currentTab = key;
+            renderTabs();
+            renderTracks();
+        };
         tabsContainer.appendChild(tab);
     });
+
+    // If currentTab is no longer valid, default to last day
+    if (!keys.includes(currentTab)) currentTab = keys[keys.length-1] || '';
 }
 
 // Render tracks
@@ -647,22 +665,33 @@ async function updateDisplay() {
     const timeout = setTimeout(()=>{ timeoutReached = true; }, 15000);
 
     try {
-        const { data, error } = await supabaseClient
-            .from('radio_history')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(3150);
+const cutoff = new Date();
+cutoff.setHours(0, 0, 0, 0);
+cutoff.setDate(cutoff.getDate() - (daysToKeep - 1));
 
-        if (timeoutReached || error || !data?.length) throw new Error('Unable to load');
+const { data, error } = await supabaseClient
+    .from('radio_history')
+    .select('*')
+    .gte('created_at', cutoff.toISOString())
+    .order('created_at', { ascending: false });
+
+        if (timeoutReached || error || !data?.length) throw new Error('Unable To Load');
 
         // Refresh daySections completely
-        daySections = {};
-        data.forEach(d => {
-            const dayKey = getDateKey(new Date(d.created_at));
-            if (!daySections[dayKey]) daySections[dayKey] = [];
-            const time = `${String(new Date(d.created_at).getHours()).padStart(2,'0')}:${String(new Date(d.created_at).getMinutes()).padStart(2,'0')}`;
-            daySections[dayKey].push({ track_title: d.track_title, time });
-        });
+daySections = {};
+data.forEach(d => {
+    const dayKey = getDateKey(new Date(d.created_at));
+    if (!daySections[dayKey]) daySections[dayKey] = [];
+    const dt = new Date(d.created_at);
+const timestamp = dt.getTime(); // full milliseconds timestamp
+const time = `${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+daySections[dayKey].push({ track_title: d.track_title, time, timestamp });
+});
+
+// Sort each day newest first
+Object.keys(daySections).forEach(day => {
+    daySections[day].sort((a,b) => b.timestamp - a.timestamp); // newest first
+});
 
         // Sort tracks newest first
         Object.keys(daySections).forEach(day => {
