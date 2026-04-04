@@ -577,11 +577,15 @@ async function showSongOrFallback(artist, title, coverUrl) {
     const albumEl = document.getElementById('album-art');
 
     await fadeUpdateMultiple([
-    { element: artistEl, newContent: artist || "SNAP 107" },
-    { element: titleEl, newContent: title || artist },
-    { element: albumEl, newContent: coverUrl || FALLBACK_IMAGE, isImage: true },
-    { element: document.getElementById('bg-animation'), newContent: `url(${coverUrl || FALLBACK_IMAGE})`, isBackground: true }
-]);
+        { element: artistEl, newContent: artist || "SNAP 107" },
+        { element: titleEl, newContent: title || artist },
+        { element: albumEl, newContent: coverUrl || FALLBACK_IMAGE, isImage: true },
+        { element: document.getElementById('bg-animation'), newContent: `url(${coverUrl || FALLBACK_IMAGE})`, isBackground: true }
+    ]);
+
+    document.title = (artist && title)
+        ? `${artist} - ${title} on SNAP 107`
+        : "SNAP 107 WSNP-IP";
 
     setTimeout(applyRetroScroll, 100);
 }
@@ -608,7 +612,7 @@ async function flashFallback() {
     { element: document.getElementById('album-art'), newContent: FALLBACK_IMAGE, isImage: true },
     { element: document.getElementById('bg-animation'), newContent: `url(${FALLBACK_IMAGE})`, isBackground: true }
 ]);
-
+    document.title = "SNAP 107 WSNP-IP";
     setTimeout(applyRetroScroll, 100);
 
     // Keep fallback for 15s
@@ -690,6 +694,7 @@ if (isBlockedTrack) {
         document.getElementById('title-text').innerText = 'SNAP 107';
 setTimeout(applyRetroScroll, 100);
         document.getElementById('album-art').src = FALLBACK_IMAGE;
+        document.title = "SNAP 107 WSNP-IP";
         updateBackground(FALLBACK_IMAGE);
     } finally {
         clearTimeout(timeout);
@@ -728,7 +733,7 @@ async function checkServer() {
     { element: document.getElementById('album-art'), newContent: FALLBACK_IMAGE, isImage: true },
     { element: document.getElementById('bg-animation'), newContent: `url(${FALLBACK_IMAGE})`, isBackground: true }
 ]);
-
+    document.title = "SNAP 107 WSNP-IP";
     setTimeout(applyRetroScroll, 100);
 
     // Skip logging in Supabase
