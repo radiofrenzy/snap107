@@ -499,7 +499,7 @@ function startTitleScroll(text) {
         return;
     }
 
-    let scrollText = text + "   •   ";
+    let scrollText = text + "   |   ";
 
     titleScrollInterval = setInterval(() => {
         scrollText = scrollText.substring(1) + scrollText[0];
@@ -820,7 +820,7 @@ function applyRetroScroll() {
 
     if (textWidth > containerWidth) {
         const distance = textWidth + containerWidth; // full distance
-        const speed = 40; // px/s
+        const speed = 20; // px/s
         const duration = distance / speed;
 
         // Use inline keyframes for this instance
