@@ -489,6 +489,30 @@ let daySections = {};
 let currentTab = getDateKey();
 let isBlockedTrack = false; // NEW: tracks if current song is blocked
 
+let titleScrollInterval = null;
+
+function startTitleScroll(text) {
+    if (titleScrollInterval) clearInterval(titleScrollInterval);
+
+    if (text.length < 40) {
+        document.title = text;
+        return;
+    }
+
+    let scrollText = text + "   •   ";
+
+    titleScrollInterval = setInterval(() => {
+        scrollText = scrollText.substring(1) + scrollText[0];
+        document.title = scrollText;
+    }, 180);
+}
+
+function stopTitleScroll(fallbackText) {
+    if (titleScrollInterval) clearInterval(titleScrollInterval);
+    titleScrollInterval = null;
+    document.title = fallbackText;
+}
+ 
 function getDateKey(date = new Date()) {
     const d = date;
     return `${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
@@ -583,9 +607,11 @@ async function showSongOrFallback(artist, title, coverUrl) {
         { element: document.getElementById('bg-animation'), newContent: `url(${coverUrl || FALLBACK_IMAGE})`, isBackground: true }
     ]);
 
-    document.title = (artist && title)
-        ? `${artist} - ${title} on SNAP 107`
-        : "SNAP 107 WSNP-IP";
+const fullTitle = (artist && title)
+    ? `${artist} - ${title} on SNAP 107`
+    : "SNAP 107 WSNP-IP";
+
+startTitleScroll(fullTitle);
 
     setTimeout(applyRetroScroll, 100);
 }
@@ -612,7 +638,7 @@ async function flashFallback() {
     { element: document.getElementById('album-art'), newContent: FALLBACK_IMAGE, isImage: true },
     { element: document.getElementById('bg-animation'), newContent: `url(${FALLBACK_IMAGE})`, isBackground: true }
 ]);
-    document.title = "SNAP 107 WSNP-IP";
+stopTitleScroll("SNAP 107 WSNP-IP");
     setTimeout(applyRetroScroll, 100);
 
     // Keep fallback for 15s
@@ -694,7 +720,7 @@ if (isBlockedTrack) {
         document.getElementById('title-text').innerText = 'SNAP 107';
 setTimeout(applyRetroScroll, 100);
         document.getElementById('album-art').src = FALLBACK_IMAGE;
-        document.title = "SNAP 107 WSNP-IP";
+        stopTitleScroll("SNAP 107 WSNP-IP");
         updateBackground(FALLBACK_IMAGE);
     } finally {
         clearTimeout(timeout);
@@ -733,7 +759,7 @@ async function checkServer() {
     { element: document.getElementById('album-art'), newContent: FALLBACK_IMAGE, isImage: true },
     { element: document.getElementById('bg-animation'), newContent: `url(${FALLBACK_IMAGE})`, isBackground: true }
 ]);
-    document.title = "SNAP 107 WSNP-IP";
+    stopTitleScroll("SNAP 107 WSNP-IP");
     setTimeout(applyRetroScroll, 100);
 
     // Skip logging in Supabase
