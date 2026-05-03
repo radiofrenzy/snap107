@@ -418,11 +418,11 @@ body {
 <div id="player-content">
 <img id="album-art" src="fallback.png">
 <div id="text-info">
-<div class="marquee-container"><div id="artist">Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!</div></div>
+<div class="marquee-container"><div id="artist">#1 for Today's HOTTEST NEW HITS & Party Throwbacks!</div></div>
 <div class="marquee-container">
-    <div id="title"><span id="title-text">SNAP 107 - WSNP-IP</span></div>
+    <div id="title"><span id="title-text">SNAP 107 WSNP-IP</span></div>
 </div>
-<a href="https://forms.gle/cq1F9Z9KotTy78js5" target="_blank" class="btn-request">REQUEST SONGS 12p-4p</a>
+<a href="https://forms.gle/cq1F9Z9KotTy78js5" target="_blank" class="btn-request">REQUEST SONGS 12-4p</a>
 </div>
 </div>
 </div>
@@ -624,12 +624,12 @@ async function flashFallback() {
 
     // Determine weekday/weekend text
     const artistText = (day >= 1 && day <= 5) 
-        ? "SNAP 107 HOT Music to SNAPKICK your weekday | also on OnlineRadioBox" // Weekdays 
+        ? "SNAP 107 #1 for HOT New Music, Throwbacks & Variety for your weekday!" // Weekdays 
         : "SNAP 107 listen anywhere @ SNAP107.vercel.app or OnlineRadioBox"; // Weekends
 
     const titleText = (day >= 1 && day <= 5) 
-        ? "Today's HOTTEST HITs & GREAT Throwbacks! Request Songs 12-4p Tue-Fri" // Weekdays
-        : "More of Today's HOTTEST HITs & Many Throwbacks for your SNAPPY Weekend!"; // Weekends
+        ? "Today's HOTTEST HITS & Great Throwbacks! Music Req. 12-4p Tue-Fri" // Weekdays
+        : "More of Today's HOTTEST HITS & Throwbacks for your weekend!"; // Weekends
 
     // Update UI with fade
     await fadeUpdateMultiple([
@@ -716,7 +716,7 @@ if (isBlockedTrack) {
 
     } catch {
         document.getElementById('tracks-inner').innerText = 'Unable to load';
-        document.getElementById('artist').innerText = "Today's HOTTEST HITS & BEST Throwbacks to SNAP-KICK your day!";
+        document.getElementById('artist').innerText = "#1 for Today's HOTTEST NEW HITS & Party Throwbacks!";
         document.getElementById('title-text').innerText = 'SNAP 107';
 setTimeout(applyRetroScroll, 100);
         document.getElementById('album-art').src = FALLBACK_IMAGE;
@@ -754,8 +754,8 @@ async function checkServer() {
 
     // Update left box with fallback text and image using fade
     await fadeUpdateMultiple([
-    { element: document.getElementById('artist'), newContent: "Today's HOTTEST HITS & BEST Throwbacks! Requests 12-4p T-F" },
-    { element: document.getElementById('title-text'), newContent: "SNAP 107 - WSNP-IP" },
+    { element: document.getElementById('artist'), newContent: "#1 for Today's HOTTEST NEW HITS & Throwbacks! Music Req. 12-4p T-F" },
+    { element: document.getElementById('title-text'), newContent: "SNAP 107 WSNP-IP" },
     { element: document.getElementById('album-art'), newContent: FALLBACK_IMAGE, isImage: true },
     { element: document.getElementById('bg-animation'), newContent: `url(${FALLBACK_IMAGE})`, isBackground: true }
 ]);
