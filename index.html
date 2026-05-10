@@ -707,12 +707,10 @@ async function updateDisplay() {
      const topTrack = data[0].track_title.trim();
 
 if (isBlockedTrack) {
-    // fallback immediately for blocked tracks
-    if (songTimer) clearTimeout(songTimer);
-    flashFallback();
-} else {
-    handleNewSong(topTrack);
+    return;
 }
+
+handleNewSong(topTrack);
 
     } catch {
         document.getElementById('tracks-inner').innerText = 'Unable to load';
@@ -749,24 +747,37 @@ async function checkServer() {
       
     const cleaned = now.toLowerCase().replace(/^-\s*/, "").trim();
 
-  if (BLOCKED_TRACKS.includes(cleaned)) {
-    isBlockedTrack = true; // SET FLAG
+ if (cleaned === "wsnpid") {
 
-    // Update left box with fallback text and image using fade
-    await fadeUpdateMultiple([
-    { element: document.getElementById('artist'), newContent: "#1 for Today's HOTTEST NEW HITS & Throwbacks! Music Req. 12-4p T-F" },
-    { element: document.getElementById('title-text'), newContent: "SNAP 107 WSNP-IP" },
-    { element: document.getElementById('album-art'), newContent: FALLBACK_IMAGE, isImage: true },
-    { element: document.getElementById('bg-animation'), newContent: `url(${FALLBACK_IMAGE})`, isBackground: true }
-]);
-    stopTitleScroll("SNAP 107 WSNP-IP");
-    setTimeout(applyRetroScroll, 100);
+    isBlockedTrack = true;
 
-    // Skip logging in Supabase
+    // Only show fallback once
+    if (!showingFallback) {
+        showingFallback = true;
+
+        await fadeUpdateMultiple([
+            { element: document.getElementById('artist'), newContent: "#1 for Today's HOTTEST NEW HITS & Throwbacks! Music Req. 12-4p T-F" },
+            { element: document.getElementById('title-text'), newContent: "SNAP 107 WSNP-IP" },
+            { element: document.getElementById('album-art'), newContent: FALLBACK_IMAGE, isImage: true },
+            { element: document.getElementById('bg-animation'), newContent: `url(${FALLBACK_IMAGE})`, isBackground: true }
+        ]);
+
+        stopTitleScroll("SNAP 107 WSNP-IP");
+        setTimeout(applyRetroScroll, 100);
+    }
+
     return;
-} else {
-    isBlockedTrack = false; // reset flag if it’s a real song
 }
+
+// Ignore helper tracks completely
+if (BLOCKED_TRACKS.includes(cleaned)) {
+    isBlockedTrack = true;
+    return;
+}
+
+// Real song detected again
+isBlockedTrack = false;
+showingFallback = false;
       
     const { data } = await supabaseClient
       .from('radio_history')
