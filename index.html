@@ -624,12 +624,12 @@ async function flashFallback() {
 
     // Determine weekday/weekend text
     const artistText = (day >= 1 && day <= 5) 
-        ? "SNAP 107 #1 for HOT New Music, Throwbacks & Variety for your weekday!" // Weekdays 
+        ? "SNAP 107 #1 for HOT New Music, Throwbacks & Variety for your week" // Weekdays 
         : "SNAP 107 listen anywhere @ SNAP107.vercel.app or OnlineRadioBox"; // Weekends
 
     const titleText = (day >= 1 && day <= 5) 
-        ? "Today's HOTTEST HITS & Great Throwbacks! Music Req. 12-4p Tue-Fri" // Weekdays
-        : "More of Today's HOTTEST HITS & Throwbacks for your weekend!"; // Weekends
+        ? "Introducing Elevated Music Sounds: Music Insights for new trending songs!" // Weekdays
+        : "More of Today's HOTTEST HITS & Party Throwbacks for your weekend!"; // Weekends
 
     // Update UI with fade
     await fadeUpdateMultiple([
