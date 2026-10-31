@@ -418,7 +418,7 @@ body {
 <div id="player-content">
 <img id="album-art" src="fallback.png">
 <div id="text-info">
-<div class="marquee-container"><div id="artist">#1 for Today's HOTTEST NEW HITS & Party Throwbacks!</div></div>
+<div class="marquee-container"><div id="artist">#1 for Today's HOTTEST HITS & Variety!</div></div>
 <div class="marquee-container">
     <div id="title"><span id="title-text">SNAP 107 WWKL-IP</span></div>
 </div>
@@ -624,12 +624,12 @@ async function flashFallback() {
 
     // Determine weekday/weekend text
     const artistText = (day >= 1 && day <= 5) 
-        ? "SNAP 107 #1 for TODAY's HOTTEST HITs, Throwbacks & Variety" // Weekdays 
-        : "SNAP 107 listen ANYWHERE @ SNAP107.vercel.app or OnlineRadioBox"; // Weekends
+        ? "SNAP 107 listen with the myTuner or TuneIn apps!" // Weekdays 
+        : "SNAP 107"; // Weekends
 
     const titleText = (day >= 1 && day <= 5) 
-        ? "Listen to us @ SNAP107.vercel.app or OnlineRadioBox" // Weekdays
-        : "More of Today's HOTTEST HITS & Party Throwbacks for your weekend!"; // Weekends
+        ? "Beware of Ghosts and Goblins" // Weekdays
+        : "Beware of Ghosts and Goblins"; // Weekends
 
     // Update UI with fade
     await fadeUpdateMultiple([
