@@ -697,7 +697,17 @@ async function updateDisplay() {
         // Refresh daySections completely
 daySections = {};
 
-data.forEach(d => {
+// Exclude blocked tracks from playlist history
+const visibleData = data.filter(d => {
+    const cleaned = (d.track_title || "")
+        .toLowerCase()
+        .replace(/^-\s*/, "")
+        .trim();
+
+    return !BLOCKED_TRACKS.includes(cleaned);
+});
+
+visibleData.forEach(d => {
     const dayKey = getDateKey(new Date(d.created_at));
 
     if (!daySections[dayKey]) daySections[dayKey] = [];
@@ -727,7 +737,9 @@ Object.keys(daySections).forEach(day => {
         renderTracks();
 
         // Update left box with latest song
-     const topTrack = data[0].track_title.trim();
+     const topTrack = visibleData[0]?.track_title?.trim();
+
+if (!topTrack) return;
 
 if (isBlockedTrack) {
     return;
