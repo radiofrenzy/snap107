@@ -340,18 +340,6 @@ body {
     max-width: 2200px;
 }
 
-#caster-container {
-    position: relative;
-    width: 100%;
-    max-width: 1600px;
-    padding: 20px;
-    background: transparent;
-    border: 3px solid #1a1a40;
-    border-radius: 20px;
-    box-shadow: 0 0 50px rgba(0,0,0,0.8);
-    z-index: 2;
-}
-
 /* Overlay for caster player */
 #caster-overlay {
     position: absolute;
@@ -392,118 +380,208 @@ body {
 
 /* ===== SNAP 107 CUSTOM PLAYER ===== */
 
+#caster-container {
+    position: relative;
+    width: 100%;
+    max-width: 2200px;
+    padding: 0;
+    background: linear-gradient(145deg, #01351f, #011f12);
+    border: 3px solid #02472a;
+    border-radius: 20px;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+    z-index: 2;
+    overflow: hidden;
+}
+
 #custom-player {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 35px;
-    min-height: 155px;
-    padding: 20px;
-    color: #E9E2CB;
-    background: linear-gradient(145deg, #082719, #103B28);
-    border-radius: 14px;
+    justify-content: space-between;
+    gap: 30px;
+    min-height: 118px;
+    padding: 20px 36px;
+    background: transparent;
+    color: #e4ebe7;
     position: relative;
 }
 
-#player-status {
-    position: absolute;
-    top: 15px;
-    left: 20px;
+#player-left {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    font-weight: bold;
-    letter-spacing: 1px;
-    color: #D5B85B;
-}
-
-#player-status-dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: #B89B51;
-}
-
-#player-status-dot.playing {
-    background: #D04444;
-    box-shadow: 0 0 10px #D04444;
+    gap: 24px;
+    min-width: 0;
+    flex: 1;
 }
 
 #play-button {
-    width: 85px;
-    height: 85px;
+    width: 72px;
+    height: 72px;
     border-radius: 50%;
-    border: 3px solid #D5B85B;
-    background: #B83A3A;
-    color: white;
-    font-size: 32px;
+    border: 2px solid #8c243d;
+    background: radial-gradient(circle at 30% 30%, #780b28, #5b081e);
+    color: #f2f5f3;
+    font-size: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    transition: 0.2s ease;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.12);
+    transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    flex-shrink: 0;
 }
 
 #play-button:hover {
-    transform: scale(1.07);
-    background: #CE4949;
+    transform: scale(1.06);
+    background: radial-gradient(circle at 30% 30%, #8f1032, #6b0a24);
+    box-shadow: 0 0 22px rgba(91, 8, 30, 0.85), inset 0 1px 1px rgba(255, 255, 255, 0.18);
+}
+
+#play-button:active {
+    transform: scale(0.98);
 }
 
 #player-controls {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
+    min-width: 0;
+}
+
+#player-title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 #player-station-name {
-    font-size: 30px;
+    font-family: 'SnapFont', sans-serif;
+    font-size: 33px;
     font-weight: bold;
-    letter-spacing: 3px;
-    color: #D5B85B;
+    letter-spacing: 2px;
+    color: #edf2ef;
+    line-height: 1.1;
 }
 
-#player-station-tagline {
-    font-size: 12px;
-    letter-spacing: 1px;
-    color: #E9E2CB;
+#player-freq-badge {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: #012918;
+    border: 1px solid #02472a;
+    color: #9eb5aa;
+}
+
+#player-now-playing {
+    font-size: 15px;
+    letter-spacing: 0.8px;
+    color: #9eb5aa;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#player-center {
+    display: flex;
+    align-items: center;
+    padding: 12px 18px;
+    background: rgba(1, 20, 12, 0.45);
+    border: 1px solid #02472a;
+    border-radius: 999px;
+}
+
+#eq-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 16px;
+}
+
+#eq-bars span {
+    width: 3px;
+    height: 5px;
+    background: #8c243d;
+    border-radius: 2px;
+    transition: height 0.2s ease, background 0.2s ease;
+}
+
+#eq-bars.active span {
+    background: #c94a53;
+    animation: eqBounce 0.9s ease-in-out infinite;
+}
+
+#eq-bars.active span:nth-child(2) { animation-delay: 0.15s; }
+#eq-bars.active span:nth-child(3) { animation-delay: 0.3s; }
+#eq-bars.active span:nth-child(4) { animation-delay: 0.45s; }
+#eq-bars.active span:nth-child(5) { animation-delay: 0.2s; }
+
+@keyframes eqBounce {
+    0%, 100% { height: 4px; }
+    50% { height: 16px; }
+}
+
+#player-right {
+    display: flex;
+    align-items: center;
 }
 
 #volume-control {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-top: 8px;
-    color: #D5B85B;
-    font-weight: bold;
+    margin-top: 0;
+    padding: 10px 18px;
+    background: rgba(1, 20, 12, 0.45);
+    border: 1px solid #02472a;
+    border-radius: 999px;
+    color: #9eb5aa;
+    font-size: 12px;
+    letter-spacing: 1px;
+}
+
+#volume-percent {
+    min-width: 36px;
+    text-align: right;
+    color: #e4ebe7;
 }
 
 #volume-slider {
-    width: 180px;
-    accent-color: #B83A3A;
+    -webkit-appearance: none;
+    appearance: none;
+    width: 150px;
+    height: 6px;
+    background: #012918;
+    border: 1px solid #02472a;
+    border-radius: 999px;
+    outline: none;
     cursor: pointer;
 }
 
-@media (max-width: 600px) {
-    #custom-player {
-        gap: 18px;
-        padding: 35px 12px 15px;
-    }
+#volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #c94a53;
+    border: 2px solid #f2f5f3;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
 
-    #play-button {
-        width: 65px;
-        height: 65px;
-        font-size: 25px;
-    }
+#volume-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+}
 
-    #player-station-name {
-        font-size: 22px;
-    }
-
-    #player-station-tagline {
-        font-size: 9px;
-    }
-
-    #volume-slider {
-        width: 110px;
-    }
+#volume-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #c94a53;
+    border: 2px solid #f2f5f3;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
 }
  
 /* ===== SNAP 107 DARK FOREST & MUTED CRIMSON THEME ===== */
@@ -710,23 +788,28 @@ body {
 <div id="caster-container">
     <div id="custom-player">
 
-        <div id="player-status">
-            <span id="player-status-dot"></span>
-            <span id="player-status-text">READY TO PLAY</span>
+        <div id="player-left">
+            <button id="play-button" aria-label="Play">▶</button>
+            <div id="player-controls">
+                <div id="player-title-row">
+                    <span id="player-station-name">SNAP 107</span>
+                    <span id="player-freq-badge">WWKL-IP</span>
+                </div>
+                <span id="player-now-playing">SNAP 107 WWKL-IP</span>
+            </div>
         </div>
 
-        <button id="play-button" aria-label="Play">
-            ▶
-        </button>
+        <div id="player-center">
+            <div id="eq-bars" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span>
+            </div>
+        </div>
 
-        <div id="player-controls">
-            <span id="player-station-name">SNAP 107</span>
-            <span id="player-station-tagline">#1 FOR TODAY'S HOTTEST NEW HITS & PARTY THROWBACKS!</span>
-
+        <div id="player-right">
             <div id="volume-control">
-                <span>−</span>
-                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.8">
-                <span>+</span>
+                <span class="vol-label">VOL</span>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.8" aria-label="Volume">
+                <span id="volume-percent">80%</span>
             </div>
         </div>
 
@@ -746,23 +829,64 @@ body {
 const snapAudio = document.getElementById("snap-audio");
 const playButton = document.getElementById("play-button");
 const volumeSlider = document.getElementById("volume-slider");
-const statusText = document.getElementById("player-status-text");
-const statusDot = document.getElementById("player-status-dot");
+const eqBars = document.getElementById("eq-bars");
+const volumePercent = document.getElementById("volume-percent");
+const playerNowPlaying = document.getElementById("player-now-playing");
 
 snapAudio.volume = 0.8;
 
 playButton.addEventListener("click", async () => {
     if (snapAudio.paused) {
-        statusText.textContent = "CONNECTING...";
-
         try {
             await snapAudio.play();
         } catch (error) {
-            statusText.textContent = "UNABLE TO PLAY";
+            // handled via audio error event
         }
     } else {
         snapAudio.pause();
     }
+});
+
+snapAudio.addEventListener("playing", () => {
+    playButton.textContent = "Ⅱ";
+    playButton.setAttribute("aria-label", "Pause");
+    eqBars.classList.add("active");
+});
+
+snapAudio.addEventListener("pause", () => {
+    playButton.textContent = "▶";
+    playButton.setAttribute("aria-label", "Play");
+    eqBars.classList.remove("active");
+});
+
+volumeSlider.addEventListener("input", () => {
+    snapAudio.volume = volumeSlider.value;
+    volumePercent.textContent = `${Math.round(volumeSlider.value * 100)}%`;
+});
+
+snapAudio.addEventListener("playing", () => {
+    playButton.textContent = "Ⅱ";
+    playButton.setAttribute("aria-label", "Pause");
+    statusText.textContent = "NOW PLAYING";
+    statusDot.classList.add("playing");
+    eqBars.classList.add("active");
+});
+
+snapAudio.addEventListener("pause", () => {
+    playButton.textContent = "▶";
+    playButton.setAttribute("aria-label", "Play");
+    statusText.textContent = "PAUSED";
+    statusDot.classList.remove("playing");
+    eqBars.classList.remove("active");
+});
+
+snapAudio.addEventListener("error", () => {
+    statusText.textContent = "STREAM UNAVAILABLE";
+});
+
+volumeSlider.addEventListener("input", () => {
+    snapAudio.volume = volumeSlider.value;
+    volumePercent.textContent = `${Math.round(volumeSlider.value * 100)}%`;
 });
 
 snapAudio.addEventListener("playing", () => {
@@ -938,7 +1062,7 @@ async function showSongOrFallback(artist, title, coverUrl) {
     const artistEl = document.getElementById('artist');
     const titleEl = document.getElementById('title-text');
     const albumEl = document.getElementById('album-art');
-
+    
     await fadeUpdateMultiple([
         { element: artistEl, newContent: artist || "SNAP 107" },
         { element: titleEl, newContent: title || artist },
@@ -951,6 +1075,10 @@ const fullTitle = (artist && title)
     : "SNAP 107 WWKL-IP";
 
 startTitleScroll(fullTitle);
+const playerNowPlaying = document.getElementById("player-now-playing");
+if (playerNowPlaying) {
+    playerNowPlaying.textContent = (artist && title) ? `${artist} - ${title}` : (title || artist || "SNAP 107 WWKL-IP");
+}
 
     setTimeout(applyRetroScroll, 100);
 }
@@ -978,6 +1106,11 @@ async function flashFallback() {
     { element: document.getElementById('bg-animation'), newContent: `url(${FALLBACK_IMAGE})`, isBackground: true }
 ]);
 stopTitleScroll("SNAP 107 WWKL-IP");
+const playerNowPlaying = document.getElementById("player-now-playing");
+if (playerNowPlaying) {
+    playerNowPlaying.textContent = "SNAP 107 WWKL-IP";
+}
+ 
     setTimeout(applyRetroScroll, 100);
 
     // Keep fallback for 15s
