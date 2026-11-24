@@ -230,7 +230,7 @@ body {
     }
 }
 
-/* MODERN MESSAGE BUTTON */
+/* FOREST GREEN MESSAGE BUTTON */
 .btn-request {
     display: inline-flex;
     align-items: center;
@@ -239,32 +239,31 @@ body {
     padding: 10px 20px;
     width: fit-content;
 
-    background: linear-gradient(145deg, #780b28, #5b081e);
-    border: 1px solid #8c243d;
+    background: linear-gradient(145deg, #16432e, #0b2b1c);
+    border: 1px solid #37664b;
     border-radius: 999px;
 
-    color: #f2f5f3;
+    color: #c4d8c9;
     text-decoration: none;
     font-family: 'SnapFont', sans-serif;
     font-size: 13px;
     letter-spacing: 1px;
 
     box-shadow:
-        0 4px 14px rgba(0, 0, 0, 0.35),
-        inset 0 1px 1px rgba(255, 255, 255, 0.12);
+        0 4px 12px rgba(0, 0, 0, 0.3),
+        inset 0 1px 2px rgba(180, 220, 190, 0.08);
 
-    transition: transform 0.2s ease,
-                background 0.2s ease,
-                box-shadow 0.2s ease;
+    transition: all 0.25s ease;
 }
 
 .btn-request:hover {
-    background: linear-gradient(145deg, #991438, #780b28);
-    color: #ffffff;
+    background: linear-gradient(145deg, #20583b, #123b27);
+    color: #e4f0e7;
+    border-color: #568367;
     transform: translateY(-2px);
     box-shadow:
-        0 0 18px rgba(140, 36, 61, 0.45),
-        0 5px 15px rgba(0, 0, 0, 0.35);
+        0 0 12px rgba(75, 140, 95, 0.25),
+        0 4px 14px rgba(0, 0, 0, 0.3);
 }
 
 .btn-request:active {
@@ -481,7 +480,7 @@ body {
     font-size: 33px;
     font-weight: bold;
     letter-spacing: 2px;
-    color: #edf2ef;
+    color: #b8d2bf;
     line-height: 1.1;
 }
 
@@ -492,7 +491,7 @@ body {
     border-radius: 6px;
     background: #012918;
     border: 1px solid #02472a;
-    color: #9eb5aa;
+    color: #829b89;
 }
 
 #player-now-playing {
@@ -522,12 +521,22 @@ body {
 
 #eq-bars span {
     width: 3px;
-    height: 5px;
-    background: #8c243d;
+    height: 10px;
+    background: #9fc5aa;
     border-radius: 2px;
+    box-shadow:
+        0 0 5px rgba(130, 185, 145, 0.55),
+        0 0 10px rgba(100, 160, 115, 0.3);
     transition: height 0.2s ease, background 0.2s ease;
 }
-
+ 
+#eq-bars.active span {
+    background: #9fc5aa !important;
+    box-shadow:
+        0 0 5px rgba(130, 185, 145, 0.65),
+        0 0 10px rgba(100, 160, 115, 0.4);
+}
+ 
 #loading-spinner {
     display: none;
     width: 18px;
@@ -693,15 +702,16 @@ body {
     text-shadow: 0 0 12px rgba(91, 8, 30, 0.35);
 }
 
-/* Request button */
+/* Request button - forest green */
 .btn-request {
-    border-color: #7c0c29;
-    color: #c9b5b9;
+    border-color: #37664b;
+    color: #c4d8c9;
 }
 
 .btn-request:hover {
-    background-color: #5b081e;
-    color: #f2f5f3;
+    background: linear-gradient(145deg, #20583b, #123b27);
+    border-color: #568367;
+    color: #e4f0e7;
 }
 
 /* Playlist history */
@@ -794,25 +804,25 @@ body {
     accent-color: #5b081e;
 }
 
-/* Latest song highlight (toned-down red) */
+/* Latest song highlight (soft sage green) */
 .history-item:first-child span:nth-child(2) {
-    color: #d95f66;
+    color: #b8d2bf;
     text-shadow:
-        0 0 5px rgba(180, 45, 55, 0.55),
-        0 0 12px rgba(140, 25, 35, 0.35);
+        0 0 5px rgba(100, 160, 115, 0.55),
+        0 0 12px rgba(75, 130, 90, 0.35);
     animation: pulseGlow 2.5s ease-in-out infinite;
 }
 
 @keyframes pulseGlow {
     0%, 100% {
         text-shadow:
-            0 0 4px rgba(180, 45, 55, 0.45),
-            0 0 10px rgba(140, 25, 35, 0.25);
+            0 0 4px rgba(100, 160, 115, 0.45),
+            0 0 10px rgba(75, 130, 90, 0.25);
     }
     50% {
         text-shadow:
-            0 0 7px rgba(217, 95, 102, 0.7),
-            0 0 15px rgba(165, 35, 45, 0.45);
+            0 0 7px rgba(184, 210, 191, 0.7),
+            0 0 15px rgba(100, 160, 115, 0.45);
     }
 }
 
@@ -904,7 +914,9 @@ body {
                     <span id="player-station-name">SNAP 107</span>
                     <span id="player-freq-badge">WWKL-IP</span>
                 </div>
-                <span id="player-now-playing">SNAP 107 WWKL-IP</span>
+                <div id="player-divider"></div>
+<span id="now-playing-label">NOW PLAYING</span>
+<span id="player-now-playing">SNAP 107 WWKL-IP</span>
             </div>
         </div>
 
@@ -953,11 +965,15 @@ function setLoading(loading) {
     playIcon.classList.toggle("hidden", loading);
 }
 
+// Play / Pause and reconnect to live stream
 playButton.addEventListener("click", async () => {
     if (snapAudio.paused) {
         setLoading(true);
 
         try {
+            snapAudio.src = "https://radiofrenzy.duckdns.org/stream?t=" + Date.now();
+            snapAudio.load();
+
             await snapAudio.play();
         } catch (error) {
             setLoading(false);
@@ -978,22 +994,16 @@ snapAudio.addEventListener("playing", () => {
 // Stream is paused
 snapAudio.addEventListener("pause", () => {
     setLoading(false);
+    playIcon.classList.remove("hidden");
     playIcon.textContent = "▶";
     playButton.setAttribute("aria-label", "Play");
     eqBars.classList.remove("active");
 });
 
-// Buffering or waiting for stream data
+// Buffering
 snapAudio.addEventListener("waiting", () => {
     if (!snapAudio.paused) {
         setLoading(true);
-    }
-});
-
-// Buffering finished
-snapAudio.addEventListener("canplay", () => {
-    if (!snapAudio.paused && !snapAudio.ended) {
-        setLoading(false);
     }
 });
 
@@ -1012,70 +1022,6 @@ volumeSlider.addEventListener("input", () => {
         `${Math.round(volumeSlider.value * 100)}%`;
 });
 
-
-snapAudio.addEventListener("playing", () => {
-    playButton.textContent = "❚❚";
-    playButton.setAttribute("aria-label", "Pause");
-    eqBars.classList.add("active");
-});
-
-snapAudio.addEventListener("pause", () => {
-    playButton.textContent = "▶";
-    playButton.setAttribute("aria-label", "Play");
-    eqBars.classList.remove("active");
-});
-
-volumeSlider.addEventListener("input", () => {
-    snapAudio.volume = volumeSlider.value;
-    volumePercent.textContent = `${Math.round(volumeSlider.value * 100)}%`;
-});
-
-snapAudio.addEventListener("playing", () => {
-    playButton.textContent = "❚❚";
-    playButton.setAttribute("aria-label", "Pause");
-    statusText.textContent = "NOW PLAYING";
-    statusDot.classList.add("playing");
-    eqBars.classList.add("active");
-});
-
-snapAudio.addEventListener("pause", () => {
-    playButton.textContent = "▶";
-    playButton.setAttribute("aria-label", "Play");
-    statusText.textContent = "PAUSED";
-    statusDot.classList.remove("playing");
-    eqBars.classList.remove("active");
-});
-
-snapAudio.addEventListener("error", () => {
-    statusText.textContent = "STREAM UNAVAILABLE";
-});
-
-volumeSlider.addEventListener("input", () => {
-    snapAudio.volume = volumeSlider.value;
-    volumePercent.textContent = `${Math.round(volumeSlider.value * 100)}%`;
-});
-
-snapAudio.addEventListener("playing", () => {
-    playButton.textContent = "❚❚";
-    playButton.setAttribute("aria-label", "Pause");
-    statusText.textContent = "NOW PLAYING";
-    statusDot.classList.add("playing");
-});
-
-snapAudio.addEventListener("pause", () => {
-    playButton.textContent = "▶";
-    playButton.setAttribute("aria-label", "Play");
-    statusText.textContent = "PAUSED";
-    statusDot.classList.remove("playing");
-});
-
-snapAudio.addEventListener("error", () => {
-    statusText.textContent = "STREAM UNAVAILABLE";
-});
-
-volumeSlider.addEventListener("input", () => {
-    snapAudio.volume = volumeSlider.value;
-});
 </script>
 
 <script>
@@ -1183,7 +1129,7 @@ function renderTracks() {
     container.innerHTML = tracks.map((d, idx) =>
         `<div class="history-item"${idx===0 ? ' style="font-weight:bold;font-size:19px;"' : ''}>
             <span class="history-time">[${d.time}]</span>
-            <span${idx===0 ? ' style="color:#d95f66;"' : ''}>${d.track_title}</span>
+            <span${idx===0 ? ' style="color:#b8d2bf;"' : ''}>${d.track_title}</span>
         </div>`
     ).join('');
 }
@@ -1272,10 +1218,6 @@ async function flashFallback() {
     { element: document.getElementById('bg-animation'), newContent: `url(${FALLBACK_IMAGE})`, isBackground: true }
 ]);
 stopTitleScroll("SNAP 107 WWKL-IP");
-const playerNowPlaying = document.getElementById("player-now-playing");
-if (playerNowPlaying) {
-    playerNowPlaying.textContent = "SNAP 107 WWKL-IP";
-}
  
     setTimeout(applyRetroScroll, 100);
 
