@@ -390,7 +390,122 @@ body {
   transition: opacity 0.6s ease-in-out; /* fade in */
 }
 
+/* ===== SNAP 107 CUSTOM PLAYER ===== */
 
+#custom-player {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 35px;
+    min-height: 155px;
+    padding: 20px;
+    color: #E9E2CB;
+    background: linear-gradient(145deg, #082719, #103B28);
+    border-radius: 14px;
+    position: relative;
+}
+
+#player-status {
+    position: absolute;
+    top: 15px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    color: #D5B85B;
+}
+
+#player-status-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #B89B51;
+}
+
+#player-status-dot.playing {
+    background: #D04444;
+    box-shadow: 0 0 10px #D04444;
+}
+
+#play-button {
+    width: 85px;
+    height: 85px;
+    border-radius: 50%;
+    border: 3px solid #D5B85B;
+    background: #B83A3A;
+    color: white;
+    font-size: 32px;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+#play-button:hover {
+    transform: scale(1.07);
+    background: #CE4949;
+}
+
+#player-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#player-station-name {
+    font-size: 30px;
+    font-weight: bold;
+    letter-spacing: 3px;
+    color: #D5B85B;
+}
+
+#player-station-tagline {
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: #E9E2CB;
+}
+
+#volume-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+    color: #D5B85B;
+    font-weight: bold;
+}
+
+#volume-slider {
+    width: 180px;
+    accent-color: #B83A3A;
+    cursor: pointer;
+}
+
+@media (max-width: 600px) {
+    #custom-player {
+        gap: 18px;
+        padding: 35px 12px 15px;
+    }
+
+    #play-button {
+        width: 65px;
+        height: 65px;
+        font-size: 25px;
+    }
+
+    #player-station-name {
+        font-size: 22px;
+    }
+
+    #player-station-tagline {
+        font-size: 9px;
+    }
+
+    #volume-slider {
+        width: 110px;
+    }
+}
+ 
 /* ===== SNAP 107 CHRISTMAS 2026 THEME ===== */
 
 body {
@@ -532,17 +647,34 @@ body {
 
 </div>
 
-<!-- CASTER PLAYER BOX -->
+<!-- SNAP 107 CUSTOM PLAYER -->
 <div id="caster-container">
-    <div id="caster-overlay"></div>
-    <div data-type="newStreamPlayer"
-         data-publicToken="68bebccc-3f3d-406f-84e0-10e7cfe152d5"
-         data-theme="dark"
-         data-color="B83A3A"
-         class="cstrEmbed">
-         <a href="https://www.caster.fm">Shoutcast Hosting</a>
-         <a href="https://www.caster.fm">Stream Hosting</a>
-         <a href="https://www.caster.fm">Radio Server Hosting</a>
+    <div id="custom-player">
+
+        <div id="player-status">
+            <span id="player-status-dot"></span>
+            <span id="player-status-text">READY TO PLAY</span>
+        </div>
+
+        <button id="play-button" aria-label="Play">
+            ▶
+        </button>
+
+        <div id="player-controls">
+            <span id="player-station-name">SNAP 107</span>
+            <span id="player-station-tagline">#1 FOR TODAY'S HOTTEST NEW HITS & PARTY THROWBACKS!</span>
+
+            <div id="volume-control">
+                <span>−</span>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.8">
+                <span>+</span>
+            </div>
+        </div>
+
+        <audio id="snap-audio" preload="none">
+            <source src="https://radiofrenzy.duckdns.org/stream" type="audio/mpeg">
+        </audio>
+
     </div>
 </div>
 
@@ -551,7 +683,51 @@ body {
 </div> <!-- fixed-canvas -->
 </div> <!-- scale-wrapper -->
     
-<script src="//cdn.cloud.caster.fm/widgets/embed.js"></script>
+<script>
+const snapAudio = document.getElementById("snap-audio");
+const playButton = document.getElementById("play-button");
+const volumeSlider = document.getElementById("volume-slider");
+const statusText = document.getElementById("player-status-text");
+const statusDot = document.getElementById("player-status-dot");
+
+snapAudio.volume = 0.8;
+
+playButton.addEventListener("click", async () => {
+    if (snapAudio.paused) {
+        statusText.textContent = "CONNECTING...";
+
+        try {
+            await snapAudio.play();
+        } catch (error) {
+            statusText.textContent = "UNABLE TO PLAY";
+        }
+    } else {
+        snapAudio.pause();
+    }
+});
+
+snapAudio.addEventListener("playing", () => {
+    playButton.textContent = "Ⅱ";
+    playButton.setAttribute("aria-label", "Pause");
+    statusText.textContent = "NOW PLAYING";
+    statusDot.classList.add("playing");
+});
+
+snapAudio.addEventListener("pause", () => {
+    playButton.textContent = "▶";
+    playButton.setAttribute("aria-label", "Play");
+    statusText.textContent = "PAUSED";
+    statusDot.classList.remove("playing");
+});
+
+snapAudio.addEventListener("error", () => {
+    statusText.textContent = "STREAM UNAVAILABLE";
+});
+
+volumeSlider.addEventListener("input", () => {
+    snapAudio.volume = volumeSlider.value;
+});
+</script>
 
 <script>
 // Disable console output for visitors
