@@ -230,22 +230,45 @@ body {
     }
 }
 
+/* MODERN MESSAGE BUTTON */
 .btn-request {
-    margin-top: 15px;
-    padding: 6px 12px;
-    border: 1px solid #7898FB;
-    color: #7898FB;
-    text-decoration: none;
-    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 18px;
+    padding: 10px 20px;
     width: fit-content;
-    text-transform: uppercase;
-    transition: background 0.2s, color 0.2s; /* smooth transition */
 
+    background: linear-gradient(145deg, #780b28, #5b081e);
+    border: 1px solid #8c243d;
+    border-radius: 999px;
+
+    color: #f2f5f3;
+    text-decoration: none;
+    font-family: 'SnapFont', sans-serif;
+    font-size: 13px;
+    letter-spacing: 1px;
+
+    box-shadow:
+        0 4px 14px rgba(0, 0, 0, 0.35),
+        inset 0 1px 1px rgba(255, 255, 255, 0.12);
+
+    transition: transform 0.2s ease,
+                background 0.2s ease,
+                box-shadow 0.2s ease;
 }
-/* Hover Highlight */
+
 .btn-request:hover {
-    background-color: #92b4f3;
-    color: #020210; /* optional: makes text more readable on the highlight */
+    background: linear-gradient(145deg, #991438, #780b28);
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow:
+        0 0 18px rgba(140, 36, 61, 0.45),
+        0 5px 15px rgba(0, 0, 0, 0.35);
+}
+
+.btn-request:active {
+    transform: scale(0.97);
 }
 
 /* HISTORY BOX */
@@ -505,6 +528,24 @@ body {
     transition: height 0.2s ease, background 0.2s ease;
 }
 
+#loading-spinner {
+    display: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(201, 74, 83, 0.25);
+    border-top-color: #c94a53;
+    border-radius: 50%;
+    animation: spinWheel 0.75s linear infinite;
+}
+
+#loading-spinner.active {
+    display: inline-block;
+}
+
+@keyframes spinWheel {
+    to { transform: rotate(360deg); }
+} 
+ 
 #eq-bars.active span {
     background: #c94a53;
     animation: eqBounce 0.9s ease-in-out infinite;
@@ -583,7 +624,45 @@ body {
     box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
     cursor: pointer;
 }
- 
+/* Improve header readability over bright blurred backgrounds */
+#top-note,
+#listener-count {
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+}
+
+/* Give SNAP 107 and WWKL-IP a little more breathing room */
+#player-title-row {
+    gap: 14px;
+}
+
+#player-freq-badge {
+    color: #c9d6cf;
+    padding: 4px 9px;
+}
+
+/* Give the now-playing track line slightly more contrast */
+#player-now-playing {
+    color: #b4c7be;
+}
+
+/* Clean up equalizer bar spacing and pill width */
+#player-center {
+    padding: 12px 22px;
+}
+
+#eq-bars {
+    gap: 4px;
+    height: 18px;
+}
+
+#eq-bars span {
+    height: 10px;
+}
+
+@keyframes eqBounce {
+    0%, 100% { height: 6px; }
+    50% { height: 18px; }
+} 
 /* ===== SNAP 107 DARK FOREST & MUTED CRIMSON THEME ===== */
 
 body {
@@ -736,6 +815,29 @@ body {
             0 0 15px rgba(165, 35, 45, 0.45);
     }
 }
+
+/* PLAY BUTTON BUFFERING STATE */
+#play-button.loading {
+    pointer-events: none;
+}
+
+#loading-spinner {
+    display: none;
+    width: 22px;
+    height: 22px;
+    border: 3px solid rgba(242, 245, 243, 0.25);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spinWheel 0.75s linear infinite;
+}
+
+#loading-spinner.active {
+    display: inline-block;
+}
+
+#play-icon.hidden {
+    display: none;
+} 
  
 </style>
 </head>
@@ -769,7 +871,11 @@ body {
 <div class="marquee-container">
     <div id="title"><span id="title-text">SNAP 107 WWKL-IP</span></div>
 </div>
-<a href="https://forms.gle/cq1F9Z9KotTy78js5" target="_blank" class="btn-request">REQUEST SONGS 12-4p</a>
+<a href="https://forms.gle/HHNFa9bhC4TUmk8E7"
+   target="_blank"
+   class="btn-request">
+   SEND US A MESSAGE!
+</a>
 </div>
 </div>
 </div>
@@ -789,7 +895,10 @@ body {
     <div id="custom-player">
 
         <div id="player-left">
-            <button id="play-button" aria-label="Play">▶</button>
+            <button id="play-button" aria-label="Play">
+    <span id="play-icon">▶</span>
+    <span id="loading-spinner"></span>
+</button>
             <div id="player-controls">
                 <div id="player-title-row">
                     <span id="player-station-name">SNAP 107</span>
@@ -802,6 +911,7 @@ body {
         <div id="player-center">
             <div id="eq-bars" aria-hidden="true">
                 <span></span><span></span><span></span><span></span><span></span>
+             
             </div>
         </div>
 
@@ -826,29 +936,85 @@ body {
 </div> <!-- scale-wrapper -->
     
 <script>
+
 const snapAudio = document.getElementById("snap-audio");
 const playButton = document.getElementById("play-button");
+const playIcon = document.getElementById("play-icon");
+const loadingSpinner = document.getElementById("loading-spinner");
 const volumeSlider = document.getElementById("volume-slider");
 const eqBars = document.getElementById("eq-bars");
 const volumePercent = document.getElementById("volume-percent");
-const playerNowPlaying = document.getElementById("player-now-playing");
 
 snapAudio.volume = 0.8;
 
+function setLoading(loading) {
+    playButton.classList.toggle("loading", loading);
+    loadingSpinner.classList.toggle("active", loading);
+    playIcon.classList.toggle("hidden", loading);
+}
+
 playButton.addEventListener("click", async () => {
     if (snapAudio.paused) {
+        setLoading(true);
+
         try {
             await snapAudio.play();
         } catch (error) {
-            // handled via audio error event
+            setLoading(false);
         }
     } else {
         snapAudio.pause();
     }
 });
 
+// Stream successfully starts
 snapAudio.addEventListener("playing", () => {
-    playButton.textContent = "Ⅱ";
+    setLoading(false);
+    playIcon.textContent = "❚❚";
+    playButton.setAttribute("aria-label", "Pause");
+    eqBars.classList.add("active");
+});
+
+// Stream is paused
+snapAudio.addEventListener("pause", () => {
+    setLoading(false);
+    playIcon.textContent = "▶";
+    playButton.setAttribute("aria-label", "Play");
+    eqBars.classList.remove("active");
+});
+
+// Buffering or waiting for stream data
+snapAudio.addEventListener("waiting", () => {
+    if (!snapAudio.paused) {
+        setLoading(true);
+    }
+});
+
+// Buffering finished
+snapAudio.addEventListener("canplay", () => {
+    if (!snapAudio.paused && !snapAudio.ended) {
+        setLoading(false);
+    }
+});
+
+// Stream error
+snapAudio.addEventListener("error", () => {
+    setLoading(false);
+    playIcon.textContent = "▶";
+    playButton.setAttribute("aria-label", "Play");
+    eqBars.classList.remove("active");
+});
+
+// Volume control
+volumeSlider.addEventListener("input", () => {
+    snapAudio.volume = Number(volumeSlider.value);
+    volumePercent.textContent =
+        `${Math.round(volumeSlider.value * 100)}%`;
+});
+
+
+snapAudio.addEventListener("playing", () => {
+    playButton.textContent = "❚❚";
     playButton.setAttribute("aria-label", "Pause");
     eqBars.classList.add("active");
 });
@@ -865,7 +1031,7 @@ volumeSlider.addEventListener("input", () => {
 });
 
 snapAudio.addEventListener("playing", () => {
-    playButton.textContent = "Ⅱ";
+    playButton.textContent = "❚❚";
     playButton.setAttribute("aria-label", "Pause");
     statusText.textContent = "NOW PLAYING";
     statusDot.classList.add("playing");
@@ -890,7 +1056,7 @@ volumeSlider.addEventListener("input", () => {
 });
 
 snapAudio.addEventListener("playing", () => {
-    playButton.textContent = "Ⅱ";
+    playButton.textContent = "❚❚";
     playButton.setAttribute("aria-label", "Pause");
     statusText.textContent = "NOW PLAYING";
     statusDot.classList.add("playing");
@@ -1355,33 +1521,18 @@ function applyRetroScroll() {
 setInterval(updateDisplay, 5000);
 updateDisplay();
 
-// -------- AUTOMATE REQUEST BUTTON VISIBILITY --------
+// MESSAGE BUTTON
 function updateActionButton() {
-    const now = new Date();
-    const estTime = new Date(
-        now.toLocaleString("en-US", { timeZone: "America/New_York" })
-    );
-    const day = estTime.getDay();    // Sunday = 0, Monday = 1, ...
-    const hour = estTime.getHours(); // 0-23
-
     const btn = document.querySelector('.btn-request');
 
-    btn.style.display = 'inline-block';
-    btn.href = ''; // We'll set the correct link below
-
-    if (day >= 2 && day <= 5 && hour >= 12 && hour < 16) {
-        // Tue-Fri, 12-4 PM EST
-        btn.innerText = 'REQUEST SONGS! 12p-4p';
-        btn.href = 'https://forms.gle/cq1F9Z9KotTy78js5';
-    } else {
-        // All other times
-        btn.innerText = 'SEND US A MESSAGE!';
-        btn.href = 'https://forms.gle/HHNFa9bhC4TUmk8E7';
-    }
+    btn.style.display = 'inline-flex';
+    btn.innerText = 'SEND US A MESSAGE!';
+    btn.href = 'https://forms.gle/HHNFa9bhC4TUmk8E7';
 }
 
-// Run on page load and update every minute
 updateActionButton();
+
+// Run on page load and update every minute
 setInterval(updateActionButton, 60_000);
 </script>
 
