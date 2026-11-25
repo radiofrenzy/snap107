@@ -876,7 +876,7 @@ body {
 <div id="player-content">
 <img id="album-art" src="fallback.png">
 <div id="text-info">
-<div class="marquee-container"><div id="artist">#1 for Today's HOTTEST HITS & Variety!</div></div>
+<div class="marquee-container"><div id="artist">Central PA's Home For The Holidays</div></div>
 <div class="marquee-container">
     <div id="title"><span id="title-text">SNAP 107 WWKL-IP</span></div>
 </div>
@@ -1202,12 +1202,12 @@ async function flashFallback() {
 
     // Determine weekday/weekend text
     const artistText = (day >= 1 && day <= 5) 
-        ? "SNAP 107 listen with the myTuner or TuneIn apps!" // Weekdays 
-        : "SNAP 107"; // Weekends
+        ? "SNAP 107 listen w/ your smart speaker or on TuneIn!" // Weekdays 
+        : "SNAP 107 Central PA's Home For The Holidays"; // Weekends
 
     const titleText = (day >= 1 && day <= 5) 
-        ? "Today's HOTTEST HITS & Great Variety!" // Weekdays
-        : "Happy Weekend! Today's HOTTEST HITS & Great Variety!"; // Weekends
+        ? "The Christmas Station!" // Weekdays
+        : "Happy Holiday Weekend! The Christmas Station"; // Weekends
 
     // Update UI with fade
     await fadeUpdateMultiple([
@@ -1319,7 +1319,7 @@ handleNewSong(topTrack);
 
     } catch {
         document.getElementById('tracks-inner').innerText = 'Unable to load';
-        document.getElementById('artist').innerText = "#1 for Today's HOTTEST NEW HITS & Party Throwbacks!";
+        document.getElementById('artist').innerText = "Central PA's Home For The Holidays";
         document.getElementById('title-text').innerText = 'SNAP 107';
 setTimeout(applyRetroScroll, 100);
         document.getElementById('album-art').src = FALLBACK_IMAGE;
@@ -1361,7 +1361,7 @@ async function checkServer() {
         showingFallback = true;
 
         await fadeUpdateMultiple([
-            { element: document.getElementById('artist'), newContent: "#1 for Today's HOTTEST NEW HITS & Throwbacks! Music Req. 12-4p T-F" },
+            { element: document.getElementById('artist'), newContent: "Central PA's Home For The Holidays" },
             { element: document.getElementById('title-text'), newContent: "SNAP 107 WWKL-IP" },
             { element: document.getElementById('album-art'), newContent: FALLBACK_IMAGE, isImage: true },
             { element: document.getElementById('bg-animation'), newContent: `url(${FALLBACK_IMAGE})`, isBackground: true }
