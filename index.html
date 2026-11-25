@@ -1298,9 +1298,12 @@ visibleData.forEach(d => {
     });
 });
 
-// Sort tracks newest first using actual timestamps
+// Sort tracks newest first and remove consecutive duplicate logs
 Object.keys(daySections).forEach(day => {
     daySections[day].sort((a, b) => b.timestamp - a.timestamp);
+    daySections[day] = daySections[day].filter((t, i, arr) =>
+        i === 0 || t.track_title.trim().toLowerCase() !== arr[i - 1].track_title.trim().toLowerCase()
+    );
 });
         // Always render history (right box)
         renderTabs();
